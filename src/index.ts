@@ -2,8 +2,9 @@ import express from 'express'
 import { createConnection } from 'typeorm';
 import { User } from './db/models/User'
 
-const app = express()
+import "reflect-metadata";
 
+const app = express()
 
 app.use(express.json())
 

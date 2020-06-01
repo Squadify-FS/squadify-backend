@@ -19,6 +19,7 @@
     "bcrypt": "^4.0.1",
     "jsonwebtoken": "^8.5.1",
     "pg": "^8.2.1",
+    "reflect-metadata": "^0.1.13",
     "typeorm": "^0.2.25"
   },
   "devDependencies": {

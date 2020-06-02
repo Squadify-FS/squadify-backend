@@ -15,9 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.app = void 0;
 const express_1 = __importDefault(require("express"));
 const typeorm_1 = require("typeorm");
+const User_1 = require("./models/User");
+require("reflect-metadata");
 const app = express_1.default();
 exports.app = app;
-const PORT = process.env.PORT || 3000;
 app.use(express_1.default.json());
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
@@ -36,7 +37,7 @@ app.use((req, res, next) => {
         username: 'postgres',
         database: 'squadify_db',
         password: '123456',
-        entities: [],
+        entities: [User_1.User],
         synchronize: true,
         logging: false,
     });

@@ -1,6 +1,6 @@
 import express from 'express'
 import { createConnection } from 'typeorm';
-import { User } from './db/models/User'
+import { User } from './models/User'
 
 import "reflect-metadata";
 

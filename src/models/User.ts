@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, Index, Generated, OneToMany, JoinTable, ManyToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, Index, ManyToMany, JoinTable } from 'typeorm';
+import { Group } from './Group';
 
 @Entity()
 export class User {
@@ -13,5 +14,22 @@ export class User {
   password: string;
 
   @Column()
-  name: string; // or username
+  firstName: string; // or username
+
+  @Column()
+  lastName: string;
+
+  @Column()
+  dob: Date;
+
+  @ManyToMany(type => User, user => user.following)
+  @JoinTable()
+  followers: User[];
+
+  @ManyToMany(type => User, user => user.followers)
+  following: User[];
+
+  @ManyToMany(type => Group, group => group.users)
+  @JoinTable()
+  groups: Group[];
 }

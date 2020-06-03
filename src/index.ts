@@ -1,6 +1,9 @@
 import express from 'express'
+
 import { createConnection } from 'typeorm';
 import { User } from './models/User'
+
+// import { router as authRouter } from './auth/index'
 
 import "reflect-metadata";
 
@@ -34,7 +37,7 @@ app.use((req, res, next) => {
     logging: false,
   });
 
-
+  // app.use('/auth', authRouter)
 
   const PORT = process.env.PORT || 3000;
 

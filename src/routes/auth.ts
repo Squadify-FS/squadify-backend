@@ -1,5 +1,5 @@
 import express from 'express';
-import { getUserFromDb, comparePlaintextToHashedPassword, generateJwt } from '../controller/user';
+import { getUserFromDb, insertNewUserToDb, comparePlaintextToHashedPassword, generateJwt } from '../controller/user';
 const router = express.Router()
 
 export interface IRegisterBody {
@@ -43,4 +43,25 @@ router.post('/login', async (req, res, next) => {
   }
 });
 
-router.post('/register', async (req, res, next) => { })
+router.post('/register', async (req, res, next) => {
+  const { email, password, lastName, firstName, dob }: IRegisterBody = req.body
+
+  try {
+    const result = await insertNewUserToDb({ email, password, firstName, lastName, dob })
+    if (!result) return res.status(500).json({ message: 'An error occured' });
+    const user = result.identifiers[0]
+
+    const token = generateJwt({
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+    });
+
+    res.json({ message: 'success', token });
+
+  } catch (ex) {
+    console.log(ex)
+    next(ex)
+  }
+})

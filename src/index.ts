@@ -5,6 +5,7 @@ import { User } from './models/User'
 import { Group } from './models/Group';
 import { Chat } from './models/Chat';
 import { Message } from './models/Message';
+import { Event } from './models/Event'
 
 // import { router as authRouter } from './auth/index'
 

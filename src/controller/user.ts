@@ -28,7 +28,7 @@ const insertNewUserToDb = async ({ firstName, lastName, password, email, dob }: 
   }
 };
 
-const getUserFromDb = async (id?: string, email?: string) => {
+const getUserFromDb = async (email?: string, id?: string) => {
   try {
     if (id) {
       const user = await getConnection().getRepository(User).findOne({ id });

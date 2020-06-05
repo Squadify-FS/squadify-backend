@@ -10,6 +10,9 @@ export class Group {
   @Column()
   name: string;
 
+  @Column()
+  isPrivate: boolean;
+
   @OneToOne(type => Chat, chat => chat.group)
   @JoinColumn()
   chat: Chat;

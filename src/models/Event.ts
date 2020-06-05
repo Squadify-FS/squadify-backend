@@ -11,5 +11,6 @@ export class Event {
   @Column()
   description: string;
 
-
+  @Column()
+  isPrivate: boolean;
 }

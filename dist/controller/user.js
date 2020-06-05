@@ -19,6 +19,7 @@ const User_1 = require("../models/User");
 const typeorm_1 = require("typeorm");
 const insertNewUserToDb = ({ firstName, lastName, password, email, dob }) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        //TODO MANAGE ADDRESS AND LOCATION INPUT
         const user = yield typeorm_1.getConnection()
             .createQueryBuilder()
             .insert()

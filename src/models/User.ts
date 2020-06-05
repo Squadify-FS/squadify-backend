@@ -1,5 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn, Index, ManyToMany, JoinTable } from 'typeorm';
-import { Group } from './Group';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { Entity, Column, PrimaryGeneratedColumn, Index, OneToMany, ManyToOne } from 'typeorm';
+import { Message } from './Message';
+import { Geolocation } from '.';
 
 @Entity()
 export class User {
@@ -13,23 +15,22 @@ export class User {
   @Column()
   password: string;
 
-  @Column()
-  firstName: string; // or username
+  @Column("varchar", { length: 30 })
+  firstName: string;
 
-  @Column()
+  @Column("varchar", { length: 30 })
   lastName: string;
 
   @Column()
   dob: Date;
 
-  @ManyToMany(type => User, user => user.following)
-  @JoinTable()
-  followers: User[];
+  @Column()
+  avatarUrl: string;
 
-  @ManyToMany(type => User, user => user.followers)
-  following: User[];
+  @OneToMany(type => Message, message => message.user)
+  sentMessages: Message[]
 
-  @ManyToMany(type => Group, group => group.users)
-  @JoinTable()
-  groups: Group[];
+  @ManyToOne(type => Geolocation, geolocation => geolocation.users)
+  geolocation: Geolocation;
 }
+

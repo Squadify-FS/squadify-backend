@@ -11,6 +11,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Message = void 0;
 const typeorm_1 = require("typeorm");
+const User_1 = require("./User");
+const Chat_1 = require("./Chat");
 let Message = /** @class */ (() => {
     let Message = class Message {
     };
@@ -19,9 +21,21 @@ let Message = /** @class */ (() => {
         __metadata("design:type", Number)
     ], Message.prototype, "id", void 0);
     __decorate([
+        typeorm_1.Column({ nullable: true }),
+        __metadata("design:type", String)
+    ], Message.prototype, "imageUrl", void 0);
+    __decorate([
         typeorm_1.Column(),
         __metadata("design:type", String)
     ], Message.prototype, "text", void 0);
+    __decorate([
+        typeorm_1.ManyToOne(type => Chat_1.Chat, chat => chat.messages),
+        __metadata("design:type", Chat_1.Chat)
+    ], Message.prototype, "chat", void 0);
+    __decorate([
+        typeorm_1.ManyToOne(type => User_1.User, user => user.sentMessages),
+        __metadata("design:type", User_1.User)
+    ], Message.prototype, "user", void 0);
     Message = __decorate([
         typeorm_1.Entity()
     ], Message);

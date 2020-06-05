@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Chat = void 0;
 const typeorm_1 = require("typeorm");
 const Group_1 = require("./Group");
+const Message_1 = require("./Message");
 let Chat = /** @class */ (() => {
     let Chat = class Chat {
     };
@@ -23,6 +24,10 @@ let Chat = /** @class */ (() => {
         typeorm_1.OneToOne(type => Group_1.Group, group => group.chat),
         __metadata("design:type", Group_1.Group)
     ], Chat.prototype, "group", void 0);
+    __decorate([
+        typeorm_1.OneToMany(type => Message_1.Message, message => message.chat),
+        __metadata("design:type", Array)
+    ], Chat.prototype, "messages", void 0);
     Chat = __decorate([
         typeorm_1.Entity()
     ], Chat);

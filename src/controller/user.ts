@@ -16,6 +16,7 @@ interface TokenBody {
 
 const insertNewUserToDb = async ({ firstName, lastName, password, email, dob }: IRegisterBody) => {
   try {
+    //TODO MANAGE ADDRESS AND LOCATION INPUT
     const user = await getConnection()
       .createQueryBuilder()
       .insert()

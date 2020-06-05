@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 const typeorm_1 = require("typeorm");
 const Group_1 = require("./Group");
+const Message_1 = require("./Message");
 let User = /** @class */ (() => {
     var User_1;
     let User = User_1 = class User {
@@ -42,6 +43,10 @@ let User = /** @class */ (() => {
         __metadata("design:type", Date)
     ], User.prototype, "dob", void 0);
     __decorate([
+        typeorm_1.Column(),
+        __metadata("design:type", String)
+    ], User.prototype, "avatarUrl", void 0);
+    __decorate([
         typeorm_1.ManyToMany(type => User_1, user => user.following),
         typeorm_1.JoinTable(),
         __metadata("design:type", Array)
@@ -55,6 +60,10 @@ let User = /** @class */ (() => {
         typeorm_1.JoinTable(),
         __metadata("design:type", Array)
     ], User.prototype, "groups", void 0);
+    __decorate([
+        typeorm_1.OneToMany(type => Message_1.Message, message => message.user),
+        __metadata("design:type", Array)
+    ], User.prototype, "sentMessages", void 0);
     User = User_1 = __decorate([
         typeorm_1.Entity()
     ], User);

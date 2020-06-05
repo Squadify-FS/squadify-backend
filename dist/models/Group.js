@@ -25,6 +25,14 @@ let Group = /** @class */ (() => {
         __metadata("design:type", String)
     ], Group.prototype, "name", void 0);
     __decorate([
+        typeorm_1.Column(),
+        __metadata("design:type", Boolean)
+    ], Group.prototype, "isPrivate", void 0);
+    __decorate([
+        typeorm_1.Column(),
+        __metadata("design:type", String)
+    ], Group.prototype, "avatarUrl", void 0);
+    __decorate([
         typeorm_1.OneToOne(type => Chat_1.Chat, chat => chat.group),
         typeorm_1.JoinColumn(),
         __metadata("design:type", Chat_1.Chat)

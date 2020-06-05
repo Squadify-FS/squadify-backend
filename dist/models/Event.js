@@ -26,6 +26,22 @@ let Event = /** @class */ (() => {
         typeorm_1.Column(),
         __metadata("design:type", String)
     ], Event.prototype, "description", void 0);
+    __decorate([
+        typeorm_1.Column(),
+        __metadata("design:type", Boolean)
+    ], Event.prototype, "isPrivate", void 0);
+    __decorate([
+        typeorm_1.Column({ nullable: true }),
+        __metadata("design:type", String)
+    ], Event.prototype, "address", void 0);
+    __decorate([
+        typeorm_1.Column({ type: "decimal", precision: 10, scale: 6, nullable: true }),
+        __metadata("design:type", Number)
+    ], Event.prototype, "latitude", void 0);
+    __decorate([
+        typeorm_1.Column({ type: "decimal", precision: 10, scale: 6, nullable: true }),
+        __metadata("design:type", Number)
+    ], Event.prototype, "longitude", void 0);
     Event = __decorate([
         typeorm_1.Entity()
     ], Event);

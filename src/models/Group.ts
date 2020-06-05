@@ -1,6 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToMany, JoinTable } from 'typeorm';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
 import { Chat } from './Chat'
-import { User } from './User';
 
 @Entity()
 export class Group {
@@ -13,14 +13,10 @@ export class Group {
   @Column()
   isPrivate: boolean;
 
+  @Column()
+  avatarUrl: string;
+
   @OneToOne(type => Chat, chat => chat.group)
   @JoinColumn()
   chat: Chat;
-
-  @ManyToMany(type => User)
-  @JoinTable()
-  admins: User[]; // will have admin id, not admin object
-
-  @ManyToMany(type => User, user => user.groups)
-  users: User[]
 }

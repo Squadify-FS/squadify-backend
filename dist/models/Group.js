@@ -10,9 +10,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Group = void 0;
+/* eslint-disable @typescript-eslint/no-unused-vars */
 const typeorm_1 = require("typeorm");
 const Chat_1 = require("./Chat");
-const User_1 = require("./User");
 let Group = /** @class */ (() => {
     let Group = class Group {
     };
@@ -37,15 +37,6 @@ let Group = /** @class */ (() => {
         typeorm_1.JoinColumn(),
         __metadata("design:type", Chat_1.Chat)
     ], Group.prototype, "chat", void 0);
-    __decorate([
-        typeorm_1.ManyToMany(type => User_1.User),
-        typeorm_1.JoinTable(),
-        __metadata("design:type", Array)
-    ], Group.prototype, "admins", void 0);
-    __decorate([
-        typeorm_1.ManyToMany(type => User_1.User, user => user.groups),
-        __metadata("design:type", Array)
-    ], Group.prototype, "users", void 0);
     Group = __decorate([
         typeorm_1.Entity()
     ], Group);

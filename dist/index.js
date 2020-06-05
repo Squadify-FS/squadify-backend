@@ -15,11 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.app = void 0;
 const express_1 = __importDefault(require("express"));
 const typeorm_1 = require("typeorm");
-const User_1 = require("./models/User");
-const Group_1 = require("./models/Group");
-const Chat_1 = require("./models/Chat");
-const Message_1 = require("./models/Message");
-const Event_1 = require("./models/Event");
+const models_1 = require("./models/");
 const auth_1 = __importDefault(require("./routes/auth"));
 require("reflect-metadata");
 const app = express_1.default();
@@ -42,7 +38,7 @@ app.use((req, res, next) => {
         username: 'postgres',
         database: 'squadify_db',
         password: '123456',
-        entities: [User_1.User, Group_1.Group, Message_1.Message, Event_1.Event, Chat_1.Chat],
+        entities: [models_1.User, models_1.UserUser, models_1.UserGroup, models_1.Group, models_1.Message, models_1.Event, models_1.Chat, models_1.Geolocation],
         synchronize: true,
         logging: false,
     });

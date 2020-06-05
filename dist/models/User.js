@@ -10,12 +10,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
+/* eslint-disable @typescript-eslint/no-unused-vars */
 const typeorm_1 = require("typeorm");
-const Group_1 = require("./Group");
 const Message_1 = require("./Message");
+const _1 = require(".");
 let User = /** @class */ (() => {
-    var User_1;
-    let User = User_1 = class User {
+    let User = class User {
     };
     __decorate([
         typeorm_1.PrimaryGeneratedColumn('uuid'),
@@ -31,11 +31,11 @@ let User = /** @class */ (() => {
         __metadata("design:type", String)
     ], User.prototype, "password", void 0);
     __decorate([
-        typeorm_1.Column(),
+        typeorm_1.Column("varchar", { length: 30 }),
         __metadata("design:type", String)
     ], User.prototype, "firstName", void 0);
     __decorate([
-        typeorm_1.Column(),
+        typeorm_1.Column("varchar", { length: 30 }),
         __metadata("design:type", String)
     ], User.prototype, "lastName", void 0);
     __decorate([
@@ -47,24 +47,14 @@ let User = /** @class */ (() => {
         __metadata("design:type", String)
     ], User.prototype, "avatarUrl", void 0);
     __decorate([
-        typeorm_1.ManyToMany(type => User_1, user => user.following),
-        typeorm_1.JoinTable(),
-        __metadata("design:type", Array)
-    ], User.prototype, "followers", void 0);
-    __decorate([
-        typeorm_1.ManyToMany(type => User_1, user => user.followers),
-        __metadata("design:type", Array)
-    ], User.prototype, "following", void 0);
-    __decorate([
-        typeorm_1.ManyToMany(type => Group_1.Group, group => group.users),
-        typeorm_1.JoinTable(),
-        __metadata("design:type", Array)
-    ], User.prototype, "groups", void 0);
-    __decorate([
         typeorm_1.OneToMany(type => Message_1.Message, message => message.user),
         __metadata("design:type", Array)
     ], User.prototype, "sentMessages", void 0);
-    User = User_1 = __decorate([
+    __decorate([
+        typeorm_1.ManyToOne(type => _1.Geolocation, geolocation => geolocation.users),
+        __metadata("design:type", _1.Geolocation)
+    ], User.prototype, "geolocation", void 0);
+    User = __decorate([
         typeorm_1.Entity()
     ], User);
     return User;

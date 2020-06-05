@@ -9,37 +9,35 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Event = void 0;
-/* eslint-disable @typescript-eslint/no-unused-vars */
+exports.UserUser = void 0;
 const typeorm_1 = require("typeorm");
-const _1 = require(".");
-let Event = /** @class */ (() => {
-    let Event = class Event {
+let UserUser = /** @class */ (() => {
+    let UserUser = class UserUser {
     };
     __decorate([
         typeorm_1.PrimaryGeneratedColumn('uuid'),
         __metadata("design:type", String)
-    ], Event.prototype, "id", void 0);
+    ], UserUser.prototype, "id", void 0);
     __decorate([
         typeorm_1.Column(),
         __metadata("design:type", String)
-    ], Event.prototype, "name", void 0);
+    ], UserUser.prototype, "userId", void 0);
     __decorate([
         typeorm_1.Column(),
         __metadata("design:type", String)
-    ], Event.prototype, "description", void 0);
+    ], UserUser.prototype, "friendId", void 0);
     __decorate([
         typeorm_1.Column(),
         __metadata("design:type", Boolean)
-    ], Event.prototype, "isPrivate", void 0);
+    ], UserUser.prototype, "accepted", void 0);
     __decorate([
-        typeorm_1.ManyToOne(type => _1.Geolocation, geolocation => geolocation.events),
-        __metadata("design:type", _1.Geolocation)
-    ], Event.prototype, "geolocation", void 0);
-    Event = __decorate([
+        typeorm_1.CreateDateColumn(),
+        __metadata("design:type", Date)
+    ], UserUser.prototype, "createdAt", void 0);
+    UserUser = __decorate([
         typeorm_1.Entity()
-    ], Event);
-    return Event;
+    ], UserUser);
+    return UserUser;
 })();
-exports.Event = Event;
-//# sourceMappingURL=Event.js.map
+exports.UserUser = UserUser;
+//# sourceMappingURL=UserUser.js.map

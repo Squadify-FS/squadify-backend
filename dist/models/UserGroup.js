@@ -9,37 +9,35 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Event = void 0;
+exports.UserGroup = void 0;
 /* eslint-disable @typescript-eslint/no-unused-vars */
 const typeorm_1 = require("typeorm");
-const _1 = require(".");
-let Event = /** @class */ (() => {
-    let Event = class Event {
+const User_1 = require("./User");
+const Group_1 = require("./Group");
+const types_1 = require("../common/types");
+let UserGroup = /** @class */ (() => {
+    let UserGroup = class UserGroup {
     };
     __decorate([
         typeorm_1.PrimaryGeneratedColumn('uuid'),
         __metadata("design:type", String)
-    ], Event.prototype, "id", void 0);
+    ], UserGroup.prototype, "id", void 0);
     __decorate([
-        typeorm_1.Column(),
-        __metadata("design:type", String)
-    ], Event.prototype, "name", void 0);
+        typeorm_1.ManyToOne((type) => User_1.User),
+        __metadata("design:type", User_1.User)
+    ], UserGroup.prototype, "user", void 0);
     __decorate([
-        typeorm_1.Column(),
-        __metadata("design:type", String)
-    ], Event.prototype, "description", void 0);
+        typeorm_1.ManyToOne((type) => Group_1.Group),
+        __metadata("design:type", Group_1.Group)
+    ], UserGroup.prototype, "group", void 0);
     __decorate([
-        typeorm_1.Column(),
-        __metadata("design:type", Boolean)
-    ], Event.prototype, "isPrivate", void 0);
-    __decorate([
-        typeorm_1.ManyToOne(type => _1.Geolocation, geolocation => geolocation.events),
-        __metadata("design:type", _1.Geolocation)
-    ], Event.prototype, "geolocation", void 0);
-    Event = __decorate([
+        typeorm_1.Column('int'),
+        __metadata("design:type", Number)
+    ], UserGroup.prototype, "permissionLevel", void 0);
+    UserGroup = __decorate([
         typeorm_1.Entity()
-    ], Event);
-    return Event;
+    ], UserGroup);
+    return UserGroup;
 })();
-exports.Event = Event;
-//# sourceMappingURL=Event.js.map
+exports.UserGroup = UserGroup;
+//# sourceMappingURL=UserGroup.js.map

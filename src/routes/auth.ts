@@ -2,6 +2,8 @@ import express from 'express';
 import { getUserFromDb, insertNewUserToDb, comparePlaintextToHashedPassword, generateJwt } from '../controller/user';
 const router = express.Router()
 
+export default router;
+
 export interface IRegisterBody {
   firstName: string;
   lastName: string;

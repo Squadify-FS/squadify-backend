@@ -20,7 +20,7 @@ const Group_1 = require("./models/Group");
 const Chat_1 = require("./models/Chat");
 const Message_1 = require("./models/Message");
 const Event_1 = require("./models/Event");
-// import { router as authRouter } from './auth/index'
+const auth_1 = __importDefault(require("./routes/auth"));
 require("reflect-metadata");
 const app = express_1.default();
 exports.app = app;
@@ -46,7 +46,7 @@ app.use((req, res, next) => {
         synchronize: true,
         logging: false,
     });
-    // app.use('/auth', authRouter)
+    app.use('/auth', auth_1.default);
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => console.log(`listening on port ${PORT}`));
 }))();

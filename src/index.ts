@@ -7,7 +7,7 @@ import { Chat } from './models/Chat';
 import { Message } from './models/Message';
 import { Event } from './models/Event'
 
-// import { router as authRouter } from './auth/index'
+import authRouter from './routes/auth';
 
 import "reflect-metadata";
 
@@ -42,7 +42,7 @@ app.use((req, res, next) => {
     logging: false,
   });
 
-  // app.use('/auth', authRouter)
+  app.use('/auth', authRouter)
 
   const PORT = process.env.PORT || 3000;
 

@@ -32,7 +32,7 @@ const insertNewUserToDb = ({ firstName, lastName, password, email, dob }) => __a
     }
 });
 exports.insertNewUserToDb = insertNewUserToDb;
-const getUserFromDb = (id, email) => __awaiter(void 0, void 0, void 0, function* () {
+const getUserFromDb = (email, id) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (id) {
             const user = yield typeorm_1.getConnection().getRepository(User_1.User).findOne({ id });

@@ -2,7 +2,6 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
 import { User } from '../models/User'
-import { UsersUsers } from '../models/UsersUsers'
 
 import { getConnection } from 'typeorm';
 
@@ -45,15 +44,7 @@ const getUserFromDb = async (id?: string, email?: string) => {
 
 const followUser = async (senderId: string, receiverId: string) => {
   try {
-    const relation = await getConnection()
-      .createQueryBuilder()
-      .insert()
-      .into(UsersUsers)
-      .values({
-        sender: { id: senderId },
-        receiver: { id: receiverId }
-      })
-      .execute()
+
     // return what?
   } catch (ex) {
     console.log(ex)

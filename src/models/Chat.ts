@@ -9,5 +9,7 @@ export class Chat {
 
   @OneToOne(type => Group, group => group.chat)
   group: Group;
+
+
 }
 

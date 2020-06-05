@@ -16,6 +16,7 @@ exports.app = void 0;
 const express_1 = __importDefault(require("express"));
 const typeorm_1 = require("typeorm");
 const User_1 = require("./models/User");
+// import { router as authRouter } from './auth/index'
 require("reflect-metadata");
 const app = express_1.default();
 exports.app = app;
@@ -41,6 +42,7 @@ app.use((req, res, next) => {
         synchronize: true,
         logging: false,
     });
+    // app.use('/auth', authRouter)
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => console.log(`listening on port ${PORT}`));
 }))();

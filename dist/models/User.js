@@ -11,8 +11,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 const typeorm_1 = require("typeorm");
+const Group_1 = require("./Group");
 let User = /** @class */ (() => {
-    let User = class User {
+    var User_1;
+    let User = User_1 = class User {
     };
     __decorate([
         typeorm_1.PrimaryGeneratedColumn('uuid'),
@@ -30,8 +32,30 @@ let User = /** @class */ (() => {
     __decorate([
         typeorm_1.Column(),
         __metadata("design:type", String)
-    ], User.prototype, "name", void 0);
-    User = __decorate([
+    ], User.prototype, "firstName", void 0);
+    __decorate([
+        typeorm_1.Column(),
+        __metadata("design:type", String)
+    ], User.prototype, "lastName", void 0);
+    __decorate([
+        typeorm_1.Column(),
+        __metadata("design:type", Date)
+    ], User.prototype, "dob", void 0);
+    __decorate([
+        typeorm_1.ManyToMany(type => User_1, user => user.following),
+        typeorm_1.JoinTable(),
+        __metadata("design:type", Array)
+    ], User.prototype, "followers", void 0);
+    __decorate([
+        typeorm_1.ManyToMany(type => User_1, user => user.followers),
+        __metadata("design:type", Array)
+    ], User.prototype, "following", void 0);
+    __decorate([
+        typeorm_1.ManyToMany(type => Group_1.Group, group => group.users),
+        typeorm_1.JoinTable(),
+        __metadata("design:type", Array)
+    ], User.prototype, "groups", void 0);
+    User = User_1 = __decorate([
         typeorm_1.Entity()
     ], User);
     return User;

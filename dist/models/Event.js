@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Event = void 0;
 /* eslint-disable @typescript-eslint/no-unused-vars */
 const typeorm_1 = require("typeorm");
-const _1 = require(".");
 let Event = /** @class */ (() => {
     let Event = class Event {
     };
@@ -32,10 +31,6 @@ let Event = /** @class */ (() => {
         typeorm_1.Column(),
         __metadata("design:type", Boolean)
     ], Event.prototype, "isPrivate", void 0);
-    __decorate([
-        typeorm_1.ManyToOne(type => _1.Geolocation, geolocation => geolocation.events),
-        __metadata("design:type", _1.Geolocation)
-    ], Event.prototype, "geolocation", void 0);
     Event = __decorate([
         typeorm_1.Entity()
     ], Event);

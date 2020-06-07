@@ -13,7 +13,6 @@ exports.User = void 0;
 /* eslint-disable @typescript-eslint/no-unused-vars */
 const typeorm_1 = require("typeorm");
 const Message_1 = require("./Message");
-const _1 = require(".");
 let User = /** @class */ (() => {
     let User = class User {
     };
@@ -50,10 +49,6 @@ let User = /** @class */ (() => {
         typeorm_1.OneToMany(type => Message_1.Message, message => message.user),
         __metadata("design:type", Array)
     ], User.prototype, "sentMessages", void 0);
-    __decorate([
-        typeorm_1.ManyToOne(type => _1.Geolocation, geolocation => geolocation.users),
-        __metadata("design:type", _1.Geolocation)
-    ], User.prototype, "geolocation", void 0);
     User = __decorate([
         typeorm_1.Entity()
     ], User);

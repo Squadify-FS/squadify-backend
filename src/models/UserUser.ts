@@ -1,15 +1,16 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne } from 'typeorm';
+import { User } from '.';
 
 @Entity()
 export class UserUser {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  userId: string;
+  @ManyToOne((type) => User)
+  user: User;
 
-  @Column()
-  friendId: string;
+  @ManyToOne((type) => User)
+  friend: User;
 
   @Column({ default: false })
   accepted: boolean;

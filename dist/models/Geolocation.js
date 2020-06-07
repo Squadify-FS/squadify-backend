@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Geolocation = void 0;
 /* eslint-disable @typescript-eslint/no-unused-vars */
 const typeorm_1 = require("typeorm");
-const _1 = require(".");
 let Geolocation = /** @class */ (() => {
     let Geolocation = class Geolocation {
     };
@@ -32,14 +31,6 @@ let Geolocation = /** @class */ (() => {
         typeorm_1.Column({ type: "decimal", precision: 10, scale: 6, nullable: true }),
         __metadata("design:type", Number)
     ], Geolocation.prototype, "longitude", void 0);
-    __decorate([
-        typeorm_1.OneToMany(type => _1.User, user => user.geolocation),
-        __metadata("design:type", Array)
-    ], Geolocation.prototype, "users", void 0);
-    __decorate([
-        typeorm_1.OneToMany(type => _1.Event, event => event.geolocation),
-        __metadata("design:type", Array)
-    ], Geolocation.prototype, "events", void 0);
     Geolocation = __decorate([
         typeorm_1.Entity()
     ], Geolocation);

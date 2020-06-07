@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
-import { Geolocation } from '.';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Event {
@@ -15,7 +14,4 @@ export class Event {
 
   @Column()
   isPrivate: boolean;
-
-  @ManyToOne(type => Geolocation, geolocation => geolocation.events)
-  geolocation: Geolocation;
 }

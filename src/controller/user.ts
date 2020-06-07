@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-import { getConnection, Repository, InsertResult, UpdateResult } from 'typeorm';
+import { getConnection, Repository, InsertResult, UpdateResult, DeleteResult } from 'typeorm';
 
 import { User, Geolocation, UserGeolocation } from '../models'
 
@@ -34,6 +34,7 @@ const insertNewUserToDb = async ({ firstName, lastName, password, email, dob }: 
     return user;
   } catch (ex) {
     console.log(ex)
+    throw ex
   }
 };
 
@@ -47,7 +48,7 @@ const getUserFromDb = async (email?: string, id?: string) => {
     return user;
   } catch (ex) {
     console.log(ex)
-    return null
+    throw ex
   }
 };
 
@@ -58,66 +59,40 @@ const getUserFriendsFromDb = async (userId: string) => {
       .select(`u."id", u."firstName", u."lastName", u."email"`)
       .from(User, 'u')
       .innerJoin(UserUser, 'uu', 'u."id" = uu."userId" OR u."id" = uu."friendId"')
-      .where('uu."accepted" = true')
+      .where('u."id" = :userId AND uu."accepted" = true', { userId })
       .execute();
 
     return result;
   } catch (ex) {
     console.log(ex)
+    throw ex
   }
 }
 
-const sendFriendRequest = async (requesterId: string, requestedId: string) => {
+const getUserRequestsFromDb = async (userId: string) => {
   try {
-
-    const relation = await getConnection()
+    const sentRequests = await getConnection()
       .createQueryBuilder()
-      .insert()
-      .into(UserUser)
-      .values({
-        userId: requesterId,
-        friendId: requestedId
-      })
+      .select(`u."id", u."firstName", u."lastName", u."email"`)
+      .from(User, 'u')
+      .innerJoin(UserUser, 'uu', 'u."id" = uu."userId"')
+      .where('u."id" = :userId AND uu."accepted" = false', { userId })
+      .execute();
+    const incomingRequests = await getConnection()
+      .createQueryBuilder()
+      .select(`u."id", u."firstName", u."lastName", u."email"`)
+      .from(User, 'u')
+      .innerJoin(UserUser, 'uu', 'u."id" = uu."friendId"')
+      .where('u."id" = :userId AND uu."accepted" = false', { userId })
       .execute();
 
-    return relation
-
+    return { sentRequests, incomingRequests }
   } catch (ex) {
     console.log(ex)
+    throw ex
   }
 }
 
-const acceptFriendRequest = async (requesterId: string, requestedId: string) => {
-  try {
-    const acceptedRelation = await getConnection()
-      .createQueryBuilder()
-      .update(UserUser)
-      .set({ accepted: true })
-      .where(`userId = :requesterId AND friendId = :requestedId`, { requesterId, requestedId })
-      .execute();
-
-    return ({ message: 'success', acceptedRelation })
-  } catch (ex) {
-    console.log(ex)
-  }
-}
-
-const rejectFriendRequest = async (requesterId: string, requestedId: string) => {
-  try {
-
-    const deletedRequestRelation = await getConnection()
-      .createQueryBuilder()
-      .delete()
-      .from(UserUser)
-      .where("userId = :requesterId AND friendId = :requestedId", { requesterId, requestedId })
-      .execute();
-
-    return deletedRequestRelation
-
-  } catch (ex) {
-    console.log(ex)
-  }
-}
 
 const deleteFriend = async (userId: string, friendId: string) => {
   try {
@@ -132,6 +107,62 @@ const deleteFriend = async (userId: string, friendId: string) => {
     return deletedRelation
   } catch (ex) {
     console.log(ex)
+    throw ex
+  }
+}
+
+const sendFriendRequest = async (requesterId: string, requestedId: string) => {
+  try {
+
+    const relation = await getConnection()
+      .createQueryBuilder()
+      .insert()
+      .into(UserUser)
+      .values({
+        user: { id: requesterId },
+        friend: { id: requestedId }
+      })
+      .execute();
+
+    return relation
+
+  } catch (ex) {
+    console.log(ex)
+    throw ex
+  }
+}
+
+const acceptFriendRequest = async (requesterId: string, requestedId: string) => {
+  try {
+    const acceptedRelation: UpdateResult = await getConnection()
+      .createQueryBuilder()
+      .update(UserUser)
+      .set({ accepted: true })
+      .where(`userId = :requesterId AND friendId = :requestedId`, { requesterId, requestedId })
+      .execute();
+
+    return ({ message: 'success', acceptedRelation })
+  } catch (ex) {
+    console.log(ex)
+    throw ex
+  }
+}
+
+const rejectFriendRequest = async (requesterId: string, requestedId: string) => {
+  try {
+
+    const deletedRequestRelation: DeleteResult = await getConnection()
+      .createQueryBuilder()
+      .delete()
+      .from(UserUser)
+      .where("userId = :requesterId AND friendId = :requestedId", { requesterId, requestedId })
+      .execute();
+
+    return deletedRequestRelation
+
+  } catch (ex) {
+    console.log(ex)
+    throw ex
   }
 }
 
@@ -193,6 +224,7 @@ const setUserGeolocationInDb = async (userId: string, address?: string, latitude
 
   } catch (ex) {
     console.log(ex)
+    throw ex
   }
 }
 
@@ -253,6 +285,7 @@ const updateUserGeolocationInDb = async (userId: string, address?: string, latit
     }
   } catch (ex) {
     console.log(ex)
+    throw ex
   }
 }
 

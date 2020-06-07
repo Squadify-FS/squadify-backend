@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Geolocation = exports.UserGroup = exports.UserUser = exports.Message = exports.Event = exports.Chat = exports.Group = exports.User = void 0;
+exports.UserGeolocation = exports.Geolocation = exports.UserGroup = exports.UserUser = exports.Message = exports.Event = exports.Chat = exports.Group = exports.User = void 0;
 const User_1 = require("./User");
 Object.defineProperty(exports, "User", { enumerable: true, get: function () { return User_1.User; } });
 const Group_1 = require("./Group");
@@ -17,4 +17,6 @@ const UserGroup_1 = require("./UserGroup");
 Object.defineProperty(exports, "UserGroup", { enumerable: true, get: function () { return UserGroup_1.UserGroup; } });
 const Geolocation_1 = require("./Geolocation");
 Object.defineProperty(exports, "Geolocation", { enumerable: true, get: function () { return Geolocation_1.Geolocation; } });
+const UserGeolocation_1 = require("./UserGeolocation");
+Object.defineProperty(exports, "UserGeolocation", { enumerable: true, get: function () { return UserGeolocation_1.UserGeolocation; } });
 //# sourceMappingURL=index.js.map

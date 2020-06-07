@@ -27,7 +27,7 @@ let UserUser = /** @class */ (() => {
         __metadata("design:type", String)
     ], UserUser.prototype, "friendId", void 0);
     __decorate([
-        typeorm_1.Column(),
+        typeorm_1.Column({ default: false }),
         __metadata("design:type", Boolean)
     ], UserUser.prototype, "accepted", void 0);
     __decorate([

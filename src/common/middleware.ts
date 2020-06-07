@@ -1,23 +1,19 @@
 import jwt from 'jsonwebtoken'
 import { Request, Response, NextFunction } from 'express'
 
-import { User } from '../models';
+// import { User } from '../models';
 
-export interface RequestExtended extends Request {
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  user: string | object;
-}
 
-const isLoggedIn = async (req: RequestExtended, res: Response, next: NextFunction) => {
+const isLoggedIn = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers['authorization']
 
     if (!authHeader || !authHeader.split('Bearer ')[1]) return res.status(403).json({ message: 'Forbidden' });
 
     const token = authHeader.split('Bearer ')[1]
-    const user = jwt.verify(token, process.env.JWT_SECRET || 'CMON MAN MAKE A SECRET JESUS CHRIST')
+    const user = jwt.verify(token, process.env.JWT_SECRET || 'SHHHHHH')
 
-    req.user = user
+    req.body.user = user
     next()
   } catch (ex) {
     console.log(ex)
@@ -25,3 +21,6 @@ const isLoggedIn = async (req: RequestExtended, res: Response, next: NextFunctio
   }
 }
 
+export {
+  isLoggedIn
+}

@@ -2,7 +2,7 @@
 import { Entity, PrimaryGeneratedColumn, ManyToOne, Column } from 'typeorm';
 import { User } from './User';
 import { Group } from './Group';
-import { PermissionLevelEnum } from '../common/types';
+import { GroupPermissionLevelEnum } from '../common/types';
 
 @Entity()
 export class UserGroup {
@@ -16,5 +16,5 @@ export class UserGroup {
   group: Group;
 
   @Column('int')
-  permissionLevel: PermissionLevelEnum;
+  permissionLevel: GroupPermissionLevelEnum;
 }

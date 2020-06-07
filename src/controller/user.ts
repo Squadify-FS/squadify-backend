@@ -48,7 +48,7 @@ const hashAndSaltPassword = (plaintextPassword: string) => {
   return bcrypt.hashSync(plaintextPassword, 10);
 };
 
-const comparePlaintextToHashedPassword = (plaintextPassword: string, hashedPassword: string) => {
+const comparePassword = (plaintextPassword: string, hashedPassword: string) => {
   return bcrypt.compareSync(plaintextPassword, hashedPassword);
 };
 
@@ -56,5 +56,5 @@ export {
   insertNewUserToDb,
   getUserFromDb,
   generateJwt,
-  comparePlaintextToHashedPassword
+  comparePassword
 }

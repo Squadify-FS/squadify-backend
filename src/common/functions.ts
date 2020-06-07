@@ -16,3 +16,7 @@ const decodeJwt = (token: string) => {
     return null;
   }
 };
+
+export {
+  decodeJwt
+}

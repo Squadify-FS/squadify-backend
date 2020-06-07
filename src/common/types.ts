@@ -1,6 +1,6 @@
-export type PermissionLevelKey = keyof typeof PermissionLevelEnum;
+export type GroupPermissionLevelKey = keyof typeof GroupPermissionLevelEnum;
 
-export enum PermissionLevelEnum {
+export enum GroupPermissionLevelEnum {
   'User' = 0,
-  'Admin' = 2,
+  'Admin' = 1,
 }

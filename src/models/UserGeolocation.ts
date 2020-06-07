@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Entity, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
 
 import { User, Geolocation } from '.'

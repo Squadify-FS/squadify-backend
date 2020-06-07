@@ -29,8 +29,5 @@ export class User {
 
   @OneToMany(type => Message, message => message.user)
   sentMessages: Message[]
-
-  @ManyToOne(type => Geolocation, geolocation => geolocation.users)
-  geolocation: Geolocation;
 }
 

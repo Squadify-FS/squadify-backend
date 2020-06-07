@@ -11,7 +11,7 @@ export class UserUser {
   @Column()
   friendId: string;
 
-  @Column()
+  @Column({ default: false })
   accepted: boolean;
 
   @CreateDateColumn()

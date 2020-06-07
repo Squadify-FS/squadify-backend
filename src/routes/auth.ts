@@ -71,8 +71,13 @@ router.post('/register', async (req, res, next) => {
 
 router.get('/me', isLoggedIn, async (req, res, next) => {
   try {
-    const user = req.body.user
-    res.status(200).json(user)
+    //TODO ADD LOCATION STUFF
+    const user = await getUserFromDb('', req.body.user.id) // comes from the isLoggedIn function through the jwt, not the actual axios call
+    if (!user) return res.status(500).json({ message: 'Something went wrong' })
+
+    const { firstName, lastName, email, id, avatarUrl } = user
+
+    return res.status(200).json({ firstName, lastName, email, id, avatarUrl })
   } catch (ex) {
     console.log(ex)
     next(ex)

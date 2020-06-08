@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Entity, Column, PrimaryGeneratedColumn, Index, OneToMany, ManyToOne } from 'typeorm';
-import { Message } from './Message';
-import { Geolocation } from '.';
+import { Message } from '../Group/Message';
 
 @Entity()
 export class User {

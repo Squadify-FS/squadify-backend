@@ -12,6 +12,13 @@ export class Event {
   @Column()
   description: string;
 
+  @Column({ type: 'timestamp with time zone' })
+  dateAndTime: Date;
+  // '2016-06-22 19:10:25-07' is format, where 07 is the timezone
+
   @Column()
   isPrivate: boolean;
+
+  @Column()
+  isFinished: boolean;
 }

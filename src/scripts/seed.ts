@@ -1,8 +1,8 @@
 import { createConnection } from "typeorm";
-import { User } from "../models/User";
-import { Group } from "../models/Group";
-import { Message } from "../models/Message";
-import { Chat } from "../models/Chat";
+import { User } from "../models/User/User";
+import { Group } from "../models/Group/Group";
+import { Message } from "../models/Group/Message";
+import { Chat } from "../models/Group/Chat";
 
 
 

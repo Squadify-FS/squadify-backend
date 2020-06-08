@@ -1,7 +1,7 @@
 import express from 'express'
 
 import { createConnection } from 'typeorm';
-import { User, Group, Chat, Message, Event, UserUser, UserGroup, Geolocation } from './models/'
+import { User, Group, Chat, Message, Event, UserUser, UserGroup, UserGeolocation, EventGeolocation, Geolocation } from './models/'
 
 
 import authRouter from './routes/auth';
@@ -34,7 +34,18 @@ app.use((req, res, next) => {
     username: 'postgres', //can be changed, but each of us would have to make a user with this username in their psql
     database: 'squadify_db',
     password: '123456',
-    entities: [User, UserUser, UserGroup, Group, Message, Event, Chat, Geolocation], // DB models go here, have to be imported on top of this file
+    entities: [
+      User,
+      UserUser,
+      UserGroup,
+      UserGeolocation,
+      Group,
+      Message,
+      Event,
+      EventGeolocation,
+      Chat,
+      Geolocation
+    ], // DB models go here, have to be imported on top of this file
     synchronize: true,
     logging: false,
   });

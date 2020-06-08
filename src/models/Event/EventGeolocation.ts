@@ -7,7 +7,7 @@ export class EventGeolocation {
   id: string;
 
   @ManyToOne((type) => Event)
-  user: Event;
+  event: Event;
 
   @ManyToOne((type) => Geolocation)
   geolocation: Geolocation;

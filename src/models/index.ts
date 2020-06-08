@@ -9,4 +9,4 @@ import { Geolocation } from './Geolocation'
 import { UserGeolocation } from './User/UserGeolocation'
 import { EventGeolocation } from './Event/EventGeolocation'
 
-export { User, Group, Chat, Event, Message, UserUser, UserGroup, Geolocation, UserGeolocation }
+export { User, Group, Chat, Event, Message, UserUser, UserGroup, Geolocation, UserGeolocation, EventGeolocation }

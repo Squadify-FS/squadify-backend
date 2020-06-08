@@ -1,8 +1,8 @@
 import { getConnection, InsertResult } from 'typeorm';
 
-import { User, Group, UserGroup, Chat } from '../models'
+import { Group, UserGroup, Chat } from '../models'
 
-interface INewGroupInterface {
+interface IGroupInterface {
   name: string;
   isPrivate: boolean;
   creatorId: string;
@@ -17,10 +17,10 @@ FUNCTION WILL:
   send invitations to users admin invited when creating group in frontend form by creating relation in UserGroup join table
   return newly created group and chat
 */
-const insertNewGroupToDb = async ({ name, isPrivate, creatorId, invitedUsersIds }: INewGroupInterface) => {
+const insertNewGroupToDb = async ({ name, isPrivate, creatorId, invitedUsersIds }: IGroupInterface) => {
   try {
 
-    const group: InsertResult = await getConnection() //create group and get Id
+    const group: InsertResult = await getConnection() //create group and get id
       .createQueryBuilder()
       .insert()
       .into(Group)
@@ -28,7 +28,7 @@ const insertNewGroupToDb = async ({ name, isPrivate, creatorId, invitedUsersIds 
       .execute()
     const groupId: string = group.identifiers[0].id;
 
-    const chat: InsertResult = await getConnection() // create chat, assign group to it and get Id
+    const chat: InsertResult = await getConnection() // create chat, assign group to it and get id
       .createQueryBuilder()
       .insert()
       .into(Chat)
@@ -43,7 +43,7 @@ const insertNewGroupToDb = async ({ name, isPrivate, creatorId, invitedUsersIds 
       .where({ id: groupId })
       .execute();
 
-    await getConnection() // create relation between group and admin (note accepted is automatically true)
+    await getConnection() // create relation between group and admin (note accepted is set to true)
       .createQueryBuilder()
       .insert()
       .into(UserGroup)
@@ -96,8 +96,68 @@ const inviteUserToGroup = async (groupId: string, inviterId: string, inviteeId: 
   }
 }
 
+const acceptInviteToGroup = async (userId: string, groupId: string) => {
+  try {
+    const relation = await getConnection()
+      .createQueryBuilder()
+      .update(UserGroup)
+      .set({ accepted: true })
+      .where({ user: { id: userId }, group: { id: groupId } })
+      .execute()
+
+    return relation
+  } catch (ex) {
+    console.log(ex)
+    throw ex
+  }
+}
+
+const rejectInviteToGroup = async (userId: string, groupId: string) => {
+  try {
+    const deletedRelation = await getConnection()
+      .createQueryBuilder()
+      .delete()
+      .from(UserGroup)
+      .where({ user: { id: userId }, group: { id: groupId } })
+      .execute()
+
+    return deletedRelation
+  } catch (ex) {
+    console.log(ex)
+    throw ex
+  }
+}
+
+const removeUserFromGroup = async (removerId: string, userId: string, groupId: string) => {
+  try {
+    if (removerId !== userId) { // used to manage if user is leaving group or admin is removing them
+      const removerRelationToGroup = await getConnection()
+        .getRepository(UserGroup)
+        .findOne({ user: { id: removerId }, group: { id: groupId } });
+      if (!removerRelationToGroup || removerRelationToGroup.permissionLevel < 1) throw new Error("You don't have permission to perform this action")
+    }
+
+    const deletedRelation = await getConnection()
+      .createQueryBuilder()
+      .delete()
+      .from(UserGroup)
+      .where({ user: { id: userId }, group: { id: groupId } })
+      .execute()
+
+    return deletedRelation
+  } catch (ex) {
+    console.log(ex)
+    throw ex
+  }
+}
+
+
+
 
 export {
   insertNewGroupToDb,
-  inviteUserToGroup
+  inviteUserToGroup,
+  acceptInviteToGroup,
+  rejectInviteToGroup,
+  removeUserFromGroup
 }

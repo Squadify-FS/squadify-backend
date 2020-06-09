@@ -64,7 +64,33 @@ const insertNewGroupToDb = async ({ name, isPrivate, creatorId, invitedUsersIds 
     return { group, chat }
   } catch (ex) {
     console.log(ex)
-    throw ex
+  }
+}
+
+const deleteGroup = async (groupId: string, adminId: string) => {
+  try {
+    const adminRelation = await getConnection()
+      .getRepository(UserGroup)
+      .findOne({ user: { id: adminId }, group: { id: groupId } });
+    if (adminRelation && adminRelation.permissionLevel < 1) throw new Error("You don't have admin permission in this group")
+
+    const deletedRelations = await getConnection()
+      .createQueryBuilder()
+      .delete()
+      .from(UserGroup)
+      .where({ group: { id: groupId } })
+      .execute()
+
+    const deletedGroup = await getConnection()
+      .createQueryBuilder()
+      .delete()
+      .from(Group)
+      .where({ id: groupId })
+
+    return { deletedGroup, deletedRelations }
+
+  } catch (ex) {
+    console.log(ex)
   }
 }
 
@@ -92,7 +118,6 @@ const inviteUserToGroup = async (groupId: string, inviterId: string, inviteeId: 
 
   } catch (ex) {
     console.log(ex)
-    throw ex
   }
 }
 
@@ -108,7 +133,6 @@ const acceptInviteToGroup = async (userId: string, groupId: string) => {
     return relation
   } catch (ex) {
     console.log(ex)
-    throw ex
   }
 }
 
@@ -124,7 +148,6 @@ const rejectInviteToGroup = async (userId: string, groupId: string) => {
     return deletedRelation
   } catch (ex) {
     console.log(ex)
-    throw ex
   }
 }
 
@@ -147,7 +170,6 @@ const removeUserFromGroup = async (removerId: string, userId: string, groupId: s
     return deletedRelation
   } catch (ex) {
     console.log(ex)
-    throw ex
   }
 }
 

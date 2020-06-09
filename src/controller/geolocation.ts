@@ -5,16 +5,7 @@ import { User, Geolocation, UserGeolocation } from "../models";
 // this function will only be used when a user registers, as they will always have a set location after they register and will only have to update it
 const setUserGeolocationInDb = async (userId: string, address?: string, latitude?: number, longitude?: number) => {
   try {
-    const userRepo: Repository<User> = await getConnection().getRepository(User); // get user repo from db
     const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation); // get geolocation repo from db
-
-    const user: User | undefined = await userRepo //get user from db
-      .createQueryBuilder('user')
-      .where({ id: userId })
-      .select(['user.id', 'user.email', 'user.firstName', 'user.lastName'])
-      .getOne();
-
-    if (!user) throw new Error('Something went wrong querying user');
 
     const existingGeolocation: Geolocation | undefined = await geolocationRepo // find existing location if it exists
       .createQueryBuilder('geolocation')
@@ -31,7 +22,7 @@ const setUserGeolocationInDb = async (userId: string, address?: string, latitude
         .createQueryBuilder()
         .insert()
         .into(UserGeolocation)
-        .values({ user: { id: user.id }, geolocation: { id: existingGeolocation.id } })
+        .values({ user: { id: userId }, geolocation: { id: existingGeolocation.id } })
         .execute();
 
       return result;
@@ -52,7 +43,7 @@ const setUserGeolocationInDb = async (userId: string, address?: string, latitude
         .createQueryBuilder()
         .insert()
         .into(UserGeolocation)
-        .values({ user: { id: user.id }, geolocation: { id: newGeolocation.id } })
+        .values({ user: { id: userId }, geolocation: { id: newGeolocation.id } })
         .execute();
 
       return result
@@ -66,17 +57,8 @@ const setUserGeolocationInDb = async (userId: string, address?: string, latitude
 
 const updateUserGeolocationInDb = async (userId: string, address?: string, latitude?: number, longitude?: number) => {
   try {
-    const userRepo: Repository<User> = await getConnection().getRepository(User) // get user repo from db
     const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation) // get geolocation repo from db
     const userGeolocationRepo: Repository<UserGeolocation> = await getConnection().getRepository(UserGeolocation)
-
-    const user: User | undefined = await userRepo //get user from db
-      .createQueryBuilder('user')
-      .where({ id: userId })
-      .select(['user.id', 'user.email', 'user.firstName', 'user.lastName'])
-      .getOne();
-
-    if (!user) throw new Error('Something went wrong querying user')
 
     const existingGeolocation: Geolocation | undefined = await geolocationRepo // find existing location if it exists
       .createQueryBuilder('geolocation')
@@ -93,7 +75,7 @@ const updateUserGeolocationInDb = async (userId: string, address?: string, latit
         .createQueryBuilder('relation')
         .update(UserGeolocation)
         .set({ geolocation: existingGeolocation })
-        .where(`relation.user.id = userId`, { userId: user.id })
+        .where({ user: { id: userId } })
         .execute()
 
       return result;
@@ -114,7 +96,7 @@ const updateUserGeolocationInDb = async (userId: string, address?: string, latit
         .createQueryBuilder('relation')
         .update(UserGeolocation)
         .set({ geolocation: newGeolocation })
-        .where(`relation.user.id = userId`, { userId: user.id })
+        .where({ user: { id: userId } })
         .execute()
 
       return result;

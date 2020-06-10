@@ -1,7 +1,7 @@
 import { createConnection, getConnection } from "typeorm";
 import { User, Group, Message, Event, Chat, UserUser, UserGroup, UserGeolocation, EventGeolocation, Geolocation } from "../models";
 
-import { insertNewUserToDb, sendFriendRequest, getUserFriendsFromDb, getUserRequestsFromDb } from '../controller/user'
+import { insertNewUserToDb, sendFriendRequest, getUserFriendsFromDb, getUserRequestsFromDb, acceptFriendRequest } from '../controller/user'
 import { insertNewGroupToDb } from '../controller/group'
 
 import "reflect-metadata";
@@ -33,41 +33,62 @@ import "reflect-metadata";
   const admin = await insertNewUserToDb({ firstName: 'admin', lastName: 'admin', password: 'password', email: 'admin@gmail.com', dob: '08-10-1995' })
   const user1 = await insertNewUserToDb({ firstName: 'user1', lastName: 'user1', password: 'password', email: 'user1@gmail.com', dob: '08-10-1995' })
   const user2 = await insertNewUserToDb({ firstName: 'user2', lastName: 'user2', password: 'password', email: 'user2@gmail.com', dob: '08-10-1995' })
+  const user3 = await insertNewUserToDb({ firstName: 'user3', lastName: 'user3', password: 'password', email: 'user3@gmail.com', dob: '08-10-1995' })
 
 
-  const repository = await getConnection().getRepository(User);
-  // const user3 = await User.create({ firstName: 'user2', lastName: 'user2', password: 'password', email: 'user2@gmail.com', dob: '08-10-1995' })
-  const user3 = new User()
-  user3.firstName = 'user3'
-  user3.lastName = 'user3'
-  user3.email = 'user3@gmail.com'
-  user3.dob = new Date('08-10-1995')
-  user3.password = 'password'
-  const saved = await repository.save(user3)
-
-  console.log('SAVED', saved)
-
-  console.log('ADMIN ID', admin.identifiers[0].id)
-  console.log('USER1', user1.identifiers[0])
-  console.log('USER2', user2.identifiers[0])
+  const group1 = await insertNewGroupToDb({ name: 'group1', isPrivate: false, creatorId: admin.identifiers[0].id, invitedUsersIds: [user1.identifiers[0].id, user2.identifiers[0].id] })
+  console.log('GROUP1', group1?.group.identifiers[0], group1?.chat.identifiers[0])
 
 
-
-  // const group1 = await insertNewGroupToDb({ name: 'group1', isPrivate: false, creatorId: admin.identifiers[0].id, invitedUsersIds: [user1.identifiers[0].id, user2.identifiers[0].id] })
-  // console.log('GROUP1', group1?.group.identifiers[0], group1?.chat.identifiers[0])
-
-  /*
   const relation1 = await sendFriendRequest(admin.identifiers[0].id, user1.identifiers[0].id)
-  const relation2 = await sendFriendRequest(user1.identifiers[0].id, user2.identifiers[0].id)
-  const relation3 = await sendFriendRequest(admin.identifiers[0].id, user2.identifiers[0].id)
+  const relation2 = await sendFriendRequest(admin.identifiers[0].id, user2.identifiers[0].id)
+  const relation3 = await sendFriendRequest(admin.identifiers[0].id, user3.identifiers[0].id)
 
-  console.log(relation1, relation2, relation3)
+  const relation4 = await sendFriendRequest(user2.identifiers[0].id, user1.identifiers[0].id)
+  const relation5 = await sendFriendRequest(user1.identifiers[0].id, user3.identifiers[0].id)
+
+  const acceptedRelation1 = await acceptFriendRequest(admin.identifiers[0].id, user1.identifiers[0].id)
+
+  console.log('RELATION1 after accepted', relation1)
+  console.log('RELATION2', relation2)
+  console.log('RELATION3', relation3)
+  console.log('RELATION4', relation4)
+  console.log('RELATION5', relation5)
+
 
   const adminFriends = await getUserFriendsFromDb(admin.identifiers[0].id)
   const adminRequests = await getUserRequestsFromDb(admin.identifiers[0].id)
 
+  const user1Friends = await getUserFriendsFromDb(user1.identifiers[0].id)
+  const user1Requests = await getUserRequestsFromDb(user1.identifiers[0].id)
+
+
+  // THIS IS HOW TO GET FRIENDS AND REQUESTS NOW
+  // const test = await getConnection() // gets all friends and requests
+  //   .getRepository(UserUser)
+  //   .createQueryBuilder('relation')
+  //   .leftJoinAndSelect('relation.friend', 'friend')
+  //   .where(`relation."userId" = :userId OR relation."friendId" = :userId`, { userId: admin.identifiers[0].id })
+  //   .getMany()
+
+  // console.log('TEST', test)
+
+  // const test2 = await getConnection() //gets incoming requests
+  //   .getRepository(UserUser)
+  //   .createQueryBuilder('relation')
+  //   .leftJoinAndSelect('relation.user', 'user')
+  //   .where(`relation."friendId" = :userId`, { userId: user2.identifiers[0].id })
+  //   .andWhere(`relation."accepted" = false`)
+  //   .getMany()
+
+  // console.log('TEST2', test2)
+
   console.log('ADMIN FRIENDS', adminFriends)
-  console.log('ADMIN REQUESTS', adminRequests)
-  */
+  console.log('ADMIN REQUESTS', adminRequests.sentRequests[0].friend)
+  console.log('ADMIN REQUESTS', adminRequests.incomingRequests[0].friend)
+
+  console.log('user1 friends', user1Friends)
+  console.log('user1 reqs', user1Requests.sentRequests[0].friend)
+  console.log('user1 reqs', user1Requests.incomingRequests[0].friend)
 
 })()

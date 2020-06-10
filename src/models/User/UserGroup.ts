@@ -9,7 +9,7 @@ export class UserGroup {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne((type) => User)
+  @ManyToOne((type) => User, user => user.groups)
   user: User;
 
   @ManyToOne((type) => Group)

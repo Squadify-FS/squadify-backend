@@ -6,10 +6,10 @@ export class UserUser {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne((type) => User)
+  @ManyToOne((type) => User, user => user.friends)
   user: User;
 
-  @ManyToOne((type) => User)
+  @ManyToOne((type) => User, user => user.friendsInverse)
   friend: User;
 
   @Column({ default: false })

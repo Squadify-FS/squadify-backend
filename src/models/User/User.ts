@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Entity, Column, PrimaryGeneratedColumn, Index, OneToMany, ManyToOne } from 'typeorm';
 import { Message } from '../Group/Message';
+import { UserUser, UserGroup, Group } from '..';
 
 @Entity()
 export class User {
@@ -28,5 +29,14 @@ export class User {
 
   @OneToMany(type => Message, message => message.user)
   sentMessages: Message[]
+
+  @OneToMany(type => UserUser, useruser => useruser.user)
+  friends: UserUser[]
+
+  @OneToMany(type => UserUser, useruser => useruser.friend)
+  friendsInverse: UserUser[]
+
+  @OneToMany(type => UserGroup, usergroup => usergroup.user)
+  groups: UserGroup[]
 }
 

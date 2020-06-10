@@ -30,6 +30,7 @@ const insertNewUserToDb = async ({ firstName, lastName, password, email, dob }: 
       .insert()
       .into(User)
       .values({ firstName, lastName, email, dob, password: hashAndSaltPassword(password) })
+      .returning('*')
       .execute();
     return user;
   } catch (ex) {
@@ -55,12 +56,12 @@ const getUserFromDb = async (email?: string, id?: string) => {
 const getUserFriendsFromDb = async (userId: string) => {
   try {
     const result = await getConnection()
-      .createQueryBuilder()
-      .select(`u."id", u."firstName", u."lastName", u."email"`)
-      .from(User, 'u')
-      .innerJoin(UserUser, 'uu', 'u."id" = uu."userId" OR u."id" = uu."friendId"')
-      .where('u."id" = :userId AND uu."accepted" = true', { userId })
-      .execute();
+      .getRepository(UserUser)
+      .createQueryBuilder('relation')
+      .leftJoinAndSelect('relation.friend', 'friend')
+      .where(`relation."userId" = :userId`, { userId })
+      .andWhere(`relation."accepted" = true`)
+      .getMany()
 
     return result;
   } catch (ex) {
@@ -72,19 +73,20 @@ const getUserFriendsFromDb = async (userId: string) => {
 const getUserRequestsFromDb = async (userId: string) => {
   try {
     const sentRequests = await getConnection()
-      .createQueryBuilder()
-      .select(`u."id", u."firstName", u."lastName", u."email"`)
-      .from(User, 'u')
-      .innerJoin(UserUser, 'uu', 'u."id" = uu."userId"')
-      .where('u."id" = :userId AND uu."accepted" = false', { userId })
-      .execute();
+      .getRepository(UserUser)
+      .createQueryBuilder('relation')
+      .leftJoinAndSelect('relation.friend', 'friend')
+      .where(`relation."userId" = :userId`, { userId })
+      .andWhere(`relation."accepted" = false`)
+      .getMany()
+
     const incomingRequests = await getConnection()
-      .createQueryBuilder()
-      .select(`u."id", u."firstName", u."lastName", u."email"`)
-      .from(User, 'u')
-      .innerJoin(UserUser, 'uu', 'u."id" = uu."friendId"')
-      .where('u."id" = :userId AND uu."accepted" = false', { userId })
-      .execute();
+      .getRepository(UserUser)
+      .createQueryBuilder('relation')
+      .leftJoinAndSelect('relation.friend', 'friend')
+      .where(`relation."friendId" = :userId`, { userId })
+      .andWhere(`relation."accepted" = false`)
+      .getMany()
 
     return { sentRequests, incomingRequests }
   } catch (ex) {
@@ -101,7 +103,9 @@ const deleteFriend = async (userId: string, friendId: string) => {
       .createQueryBuilder()
       .delete()
       .from(UserUser)
-      .where("userId = :userId AND friendId = :friendId", { userId, friendId })
+      .where(`"userId" = :userId AND "friendId" = :friendId`, { userId, friendId })
+      .orWhere(`"userId" = :friendId AND "friendId" = :userId`, { userId, friendId })
+      .returning('*')
       .execute()
 
     return deletedRelation
@@ -122,6 +126,7 @@ const sendFriendRequest = async (requesterId: string, requestedId: string) => {
         user: { id: requesterId },
         friend: { id: requestedId }
       })
+      .returning('*')
       .execute();
 
     return relation
@@ -138,10 +143,23 @@ const acceptFriendRequest = async (requesterId: string, requestedId: string) => 
       .createQueryBuilder()
       .update(UserUser)
       .set({ accepted: true })
-      .where(`userId = :requesterId AND friendId = :requestedId`, { requesterId, requestedId })
+      .where(`"userId" = :requesterId AND "friendId" = :requestedId`, { requesterId, requestedId })
+      .returning('*')
       .execute();
 
-    return ({ message: 'success', acceptedRelation })
+    const inverseRelation = await getConnection()
+      .createQueryBuilder()
+      .insert()
+      .into(UserUser)
+      .values({
+        user: { id: requestedId },
+        friend: { id: requesterId },
+        accepted: true
+      })
+      .returning('*')
+      .execute();
+
+    return ({ message: 'success', acceptedRelation, inverseRelation })
   } catch (ex) {
     console.log(ex)
     throw ex
@@ -155,7 +173,8 @@ const rejectFriendRequest = async (requesterId: string, requestedId: string) => 
       .createQueryBuilder()
       .delete()
       .from(UserUser)
-      .where("userId = :requesterId AND friendId = :requestedId", { requesterId, requestedId })
+      .where('"userId" = :requesterId AND "friendId" = :requestedId', { requesterId, requestedId })
+      .returning('*')
       .execute();
 
     return deletedRequestRelation

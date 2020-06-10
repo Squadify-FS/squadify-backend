@@ -10,10 +10,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const typeorm_1 = require("typeorm");
-const User_1 = require("../models/User");
-const Group_1 = require("../models/Group");
-const Message_1 = require("../models/Message");
-const Chat_1 = require("../models/Chat");
+const User_1 = require("../models/User/User");
+const Group_1 = require("../models/Group/Group");
+const Message_1 = require("../models/Group/Message");
+const Chat_1 = require("../models/Group/Chat");
 (() => __awaiter(void 0, void 0, void 0, function* () {
     return yield typeorm_1.createConnection({
         type: 'postgres',

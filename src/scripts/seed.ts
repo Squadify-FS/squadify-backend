@@ -1,8 +1,5 @@
 import { createConnection } from "typeorm";
-import { User } from "../models/User/User";
-import { Group } from "../models/Group/Group";
-import { Message } from "../models/Group/Message";
-import { Chat } from "../models/Group/Chat";
+import { User, Group, Message, Event, Chat } from "../models";
 
 
 
@@ -17,6 +14,4 @@ import { Chat } from "../models/Group/Chat";
   synchronize: true,
   logging: false,
 })
-
-
 )()

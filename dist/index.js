@@ -38,7 +38,18 @@ app.use((req, res, next) => {
         username: 'postgres',
         database: 'squadify_db',
         password: '123456',
-        entities: [models_1.User, models_1.UserUser, models_1.UserGroup, models_1.Group, models_1.Message, models_1.Event, models_1.Chat, models_1.Geolocation],
+        entities: [
+            models_1.User,
+            models_1.UserUser,
+            models_1.UserGroup,
+            models_1.UserGeolocation,
+            models_1.Group,
+            models_1.Message,
+            models_1.Event,
+            models_1.EventGeolocation,
+            models_1.Chat,
+            models_1.Geolocation
+        ],
         synchronize: true,
         logging: false,
     });

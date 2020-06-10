@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUserGeolocationInDb = exports.setUserGeolocationInDb = exports.deleteFriend = exports.rejectFriendRequest = exports.acceptFriendRequest = exports.sendFriendRequest = exports.comparePassword = exports.generateJwt = exports.getUserFromDb = exports.insertNewUserToDb = void 0;
+exports.rejectFriendRequest = exports.acceptFriendRequest = exports.sendFriendRequest = exports.deleteFriend = exports.getUserRequestsFromDb = exports.getUserFriendsFromDb = exports.comparePassword = exports.generateJwt = exports.getUserFromDb = exports.insertNewUserToDb = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const typeorm_1 = require("typeorm");
@@ -44,6 +44,7 @@ const insertNewUserToDb = ({ firstName, lastName, password, email, dob }) => __a
     }
     catch (ex) {
         console.log(ex);
+        throw ex;
     }
 });
 exports.insertNewUserToDb = insertNewUserToDb;
@@ -58,7 +59,7 @@ const getUserFromDb = (email, id) => __awaiter(void 0, void 0, void 0, function*
     }
     catch (ex) {
         console.log(ex);
-        return null;
+        throw ex;
     }
 });
 exports.getUserFromDb = getUserFromDb;
@@ -69,14 +70,56 @@ const getUserFriendsFromDb = (userId) => __awaiter(void 0, void 0, void 0, funct
             .select(`u."id", u."firstName", u."lastName", u."email"`)
             .from(models_1.User, 'u')
             .innerJoin(models_2.UserUser, 'uu', 'u."id" = uu."userId" OR u."id" = uu."friendId"')
-            .where('uu."accepted" = true')
+            .where('u."id" = :userId AND uu."accepted" = true', { userId })
             .execute();
         return result;
     }
     catch (ex) {
         console.log(ex);
+        throw ex;
     }
 });
+exports.getUserFriendsFromDb = getUserFriendsFromDb;
+const getUserRequestsFromDb = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const sentRequests = yield typeorm_1.getConnection()
+            .createQueryBuilder()
+            .select(`u."id", u."firstName", u."lastName", u."email"`)
+            .from(models_1.User, 'u')
+            .innerJoin(models_2.UserUser, 'uu', 'u."id" = uu."userId"')
+            .where('u."id" = :userId AND uu."accepted" = false', { userId })
+            .execute();
+        const incomingRequests = yield typeorm_1.getConnection()
+            .createQueryBuilder()
+            .select(`u."id", u."firstName", u."lastName", u."email"`)
+            .from(models_1.User, 'u')
+            .innerJoin(models_2.UserUser, 'uu', 'u."id" = uu."friendId"')
+            .where('u."id" = :userId AND uu."accepted" = false', { userId })
+            .execute();
+        return { sentRequests, incomingRequests };
+    }
+    catch (ex) {
+        console.log(ex);
+        throw ex;
+    }
+});
+exports.getUserRequestsFromDb = getUserRequestsFromDb;
+const deleteFriend = (userId, friendId) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const deletedRelation = yield typeorm_1.getConnection()
+            .createQueryBuilder()
+            .delete()
+            .from(models_2.UserUser)
+            .where("userId = :userId AND friendId = :friendId", { userId, friendId })
+            .execute();
+        return deletedRelation;
+    }
+    catch (ex) {
+        console.log(ex);
+        throw ex;
+    }
+});
+exports.deleteFriend = deleteFriend;
 const sendFriendRequest = (requesterId, requestedId) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const relation = yield typeorm_1.getConnection()
@@ -84,14 +127,15 @@ const sendFriendRequest = (requesterId, requestedId) => __awaiter(void 0, void 0
             .insert()
             .into(models_2.UserUser)
             .values({
-            userId: requesterId,
-            friendId: requestedId
+            user: { id: requesterId },
+            friend: { id: requestedId }
         })
             .execute();
         return relation;
     }
     catch (ex) {
         console.log(ex);
+        throw ex;
     }
 });
 exports.sendFriendRequest = sendFriendRequest;
@@ -107,6 +151,7 @@ const acceptFriendRequest = (requesterId, requestedId) => __awaiter(void 0, void
     }
     catch (ex) {
         console.log(ex);
+        throw ex;
     }
 });
 exports.acceptFriendRequest = acceptFriendRequest;
@@ -122,122 +167,8 @@ const rejectFriendRequest = (requesterId, requestedId) => __awaiter(void 0, void
     }
     catch (ex) {
         console.log(ex);
+        throw ex;
     }
 });
 exports.rejectFriendRequest = rejectFriendRequest;
-const deleteFriend = (userId, friendId) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const deletedRelation = yield typeorm_1.getConnection()
-            .createQueryBuilder()
-            .delete()
-            .from(models_2.UserUser)
-            .where("userId = :userId AND friendId = :friendId", { userId, friendId })
-            .execute();
-        return deletedRelation;
-    }
-    catch (ex) {
-        console.log(ex);
-    }
-});
-exports.deleteFriend = deleteFriend;
-// this function will only be used when a user registers, as they will always have a set location after they register and will only have to update it
-const setUserGeolocationInDb = (userId, address, latitude, longitude) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const userRepo = yield typeorm_1.getConnection().getRepository(models_1.User); // get user repo from db
-        const geolocationRepo = yield typeorm_1.getConnection().getRepository(models_1.Geolocation); // get geolocation repo from db
-        const user = yield userRepo //get user from db
-            .createQueryBuilder('user')
-            .where({ id: userId })
-            .select(['user.id', 'user.email', 'user.firstName', 'user.lastName'])
-            .getOne();
-        if (!user)
-            throw new Error('Something went wrong querying user');
-        const existingGeolocation = yield geolocationRepo // find existing location if it exists
-            .createQueryBuilder('geolocation')
-            .where(`geolocation.address = :address`, { address })
-            .orWhere(`latitude = :latitude AND longitude = :longitude`, { latitude, longitude })
-            .getOne();
-        if (existingGeolocation) {
-            const result = yield typeorm_1.getConnection()
-                .createQueryBuilder()
-                .insert()
-                .into(models_1.UserGeolocation)
-                .values({ user: { id: user.id }, geolocation: { id: existingGeolocation.id } })
-                .execute();
-            return result;
-        }
-        else {
-            const newGeolocationId = (yield typeorm_1.getConnection()
-                .createQueryBuilder()
-                .insert()
-                .into(models_1.Geolocation)
-                .values({ address, latitude, longitude })
-                .execute()).identifiers[0].id;
-            const newGeolocation = yield geolocationRepo.findOne({ id: newGeolocationId });
-            if (!newGeolocation)
-                throw new Error('Something went wrong with new geolocation');
-            const result = yield typeorm_1.getConnection()
-                .createQueryBuilder()
-                .insert()
-                .into(models_1.UserGeolocation)
-                .values({ user: { id: user.id }, geolocation: { id: newGeolocation.id } })
-                .execute();
-            return result;
-        }
-    }
-    catch (ex) {
-        console.log(ex);
-    }
-});
-exports.setUserGeolocationInDb = setUserGeolocationInDb;
-const updateUserGeolocationInDb = (userId, address, latitude, longitude) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const userRepo = yield typeorm_1.getConnection().getRepository(models_1.User); // get user repo from db
-        const geolocationRepo = yield typeorm_1.getConnection().getRepository(models_1.Geolocation); // get geolocation repo from db
-        const userGeolocationRepo = yield typeorm_1.getConnection().getRepository(models_1.UserGeolocation);
-        const user = yield userRepo //get user from db
-            .createQueryBuilder('user')
-            .where({ id: userId })
-            .select(['user.id', 'user.email', 'user.firstName', 'user.lastName'])
-            .getOne();
-        if (!user)
-            throw new Error('Something went wrong querying user');
-        const existingGeolocation = yield geolocationRepo // find existing location if it exists
-            .createQueryBuilder('geolocation')
-            .where(`geolocation.address = :address`, { address })
-            .orWhere(`latitude = :latitude AND longitude = :longitude`, { latitude, longitude })
-            .getOne();
-        if (existingGeolocation) {
-            const result = yield userGeolocationRepo
-                .createQueryBuilder('relation')
-                .update(models_1.UserGeolocation)
-                .set({ geolocation: existingGeolocation })
-                .where(`relation.user.id = userId`, { userId: user.id })
-                .execute();
-            return result;
-        }
-        else {
-            const newGeolocationId = (yield typeorm_1.getConnection()
-                .createQueryBuilder()
-                .insert()
-                .into(models_1.Geolocation)
-                .values({ address, latitude, longitude })
-                .execute()).identifiers[0].id;
-            const newGeolocation = yield geolocationRepo.findOne({ id: newGeolocationId });
-            if (!newGeolocation)
-                throw new Error('Something went wrong with new geolocation');
-            const result = yield userGeolocationRepo
-                .createQueryBuilder('relation')
-                .update(models_1.UserGeolocation)
-                .set({ geolocation: newGeolocation })
-                .where(`relation.user.id = userId`, { userId: user.id })
-                .execute();
-            return result;
-        }
-    }
-    catch (ex) {
-        console.log(ex);
-    }
-});
-exports.updateUserGeolocationInDb = updateUserGeolocationInDb;
 //# sourceMappingURL=user.js.map

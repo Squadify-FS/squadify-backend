@@ -1,6 +1,6 @@
 import { getConnection, InsertResult } from 'typeorm';
 
-import { Group, UserGroup, Chat } from '../models'
+import { Group, UserGroup, Chat, User } from '../models'
 
 interface IGroupInterface {
   name: string;
@@ -25,6 +25,7 @@ const insertNewGroupToDb = async ({ name, isPrivate, creatorId, invitedUsersIds 
       .insert()
       .into(Group)
       .values({ name, isPrivate })
+      .returning('*')
       .execute()
     const groupId: string = group.identifiers[0].id;
 
@@ -33,6 +34,7 @@ const insertNewGroupToDb = async ({ name, isPrivate, creatorId, invitedUsersIds 
       .insert()
       .into(Chat)
       .values({ group: { id: groupId } })
+      .returning('*')
       .execute()
     const chatId: string = chat.identifiers[0].id;
 
@@ -41,27 +43,30 @@ const insertNewGroupToDb = async ({ name, isPrivate, creatorId, invitedUsersIds 
       .update(Group)
       .set({ chat: { id: chatId } })
       .where({ id: groupId })
+      .returning('*')
       .execute();
 
-    await getConnection() // create relation between group and admin (note accepted is set to true)
+    const adminRelation = await getConnection() // create relation between group and admin (note accepted is set to true)
       .createQueryBuilder()
       .insert()
       .into(UserGroup)
       .values({ user: { id: creatorId }, group: { id: groupId }, permissionLevel: 1, accepted: true })
+      .returning('*')
       .execute();
 
     if (invitedUsersIds) { // invite users to join group, by setting accepted to false
-      invitedUsersIds.forEach(async (userId: string): Promise<void> => {
-        await getConnection()
+      invitedUsersIds.map(async (userId: string): Promise<InsertResult> => {
+        return await getConnection()
           .createQueryBuilder()
           .insert()
           .into(UserGroup)
           .values({ user: { id: userId }, group: { id: groupId }, permissionLevel: 0, accepted: false })
+          .returning('*')
           .execute();
       })
     }
 
-    return { group, chat }
+    return { group, chat, adminRelation, invitedUsers: invitedUsersIds }
   } catch (ex) {
     console.log(ex)
   }
@@ -94,6 +99,52 @@ const deleteGroup = async (groupId: string, adminId: string) => {
   }
 }
 
+const getUserGroups = async (userId: string) => {
+  try {
+    const groups: Group[] = await getConnection()
+      .getRepository(UserGroup)
+      .createQueryBuilder('relation')
+      .leftJoinAndSelect('relation.group', 'group')
+      .where(`relation."userId" = :userId AND relation.accepted = true`, { userId })
+      .getMany()
+      .then(relations => relations.map(relation => relation.group))
+
+    return groups
+  } catch (ex) {
+    console.log(ex)
+    throw ex
+  }
+}
+
+const getUserGroupInvitations = async (userId: string) => {
+  try {
+    const sentInvitations: User[] = await getConnection()
+      .getRepository(UserGroup)
+      .createQueryBuilder('relation')
+      .leftJoinAndSelect('relation.user', 'user')
+      .where(`relation."inviterId" = :userId AND relation.accepted = false`, { userId })
+      .getMany()
+      .then(relations => relations.map(relation => relation.user))
+
+    const receivedInvitations: {
+      inviter: User;
+      group: Group;
+    }[] = await getConnection()
+      .getRepository(UserGroup)
+      .createQueryBuilder('relation')
+      .leftJoinAndSelect('relation.user', 'user')
+      .where(`relation."userId" = :userId AND relation.accepted = false`, { userId })
+      .getMany()
+      .then(relations => relations.map(relation => ({ inviter: relation.inviter, group: relation.group })))
+
+    return { sentInvitations, receivedInvitations }
+
+  } catch (ex) {
+    console.log(ex)
+    throw ex
+  }
+}
+
 const inviteUserToGroup = async (groupId: string, inviterId: string, inviteeId: string) => {
   try {
     const group = await getConnection().getRepository(Group).findOne({ id: groupId })
@@ -103,15 +154,14 @@ const inviteUserToGroup = async (groupId: string, inviterId: string, inviteeId: 
       .getRepository(UserGroup)
       .findOne({ user: { id: inviterId }, group: { id: groupId } });
     if (!inviterRelationWithGroup) throw new Error('User is not part of this group!!')
-    if (group.isPrivate) {
-      if (inviterRelationWithGroup.permissionLevel < 1) throw new Error("You don't have permission to perform this action")
-    }
+    if (group.isPrivate && inviterRelationWithGroup.permissionLevel < 1) throw new Error("You don't have permission to perform this action")
+
 
     const newRelation = await getConnection()
       .createQueryBuilder()
       .insert()
       .into(UserGroup)
-      .values({ user: { id: inviteeId }, group: { id: groupId }, permissionLevel: 0, accepted: false })
+      .values({ inviter: { id: inviterId }, user: { id: inviteeId }, group: { id: groupId }, permissionLevel: 0, accepted: false })
       .execute();
 
     return newRelation
@@ -178,6 +228,9 @@ const removeUserFromGroup = async (removerId: string, userId: string, groupId: s
 
 export {
   insertNewGroupToDb,
+  deleteGroup,
+  getUserGroups,
+  getUserGroupInvitations,
   inviteUserToGroup,
   acceptInviteToGroup,
   rejectInviteToGroup,

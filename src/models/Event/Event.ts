@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { Geolocation } from '..';
 
 @Entity()
 export class Event {
@@ -21,4 +22,7 @@ export class Event {
 
   @Column()
   isFinished: boolean;
+
+  @ManyToOne(() => Geolocation, geolocation => geolocation.events)
+  geolocation: Geolocation;
 }

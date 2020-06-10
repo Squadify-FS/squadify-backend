@@ -9,10 +9,13 @@ export class UserGroup {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne((type) => User, user => user.groups)
+  @ManyToOne(() => User)
+  inviter: User;
+
+  @ManyToOne(() => User, user => user.groups)
   user: User;
 
-  @ManyToOne((type) => Group)
+  @ManyToOne(() => Group)
   group: Group;
 
   // invitation to join group must be accepted, defaults to true for creator of group

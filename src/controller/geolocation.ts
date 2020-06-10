@@ -1,11 +1,14 @@
 import { Repository, getConnection, InsertResult, UpdateResult } from "typeorm";
-import { User, Geolocation, UserGeolocation } from "../models";
+import { User, Geolocation } from "../models";
 
 
 // this function will only be used when a user registers, as they will always have a set location after they register and will only have to update it
 const setUserGeolocationInDb = async (userId: string, address?: string, latitude?: number, longitude?: number) => {
   try {
     const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation); // get geolocation repo from db
+
+    const user = await getConnection().getRepository(User).findOne({ id: userId })
+    if (!user) throw new Error('User not found')
 
     const existingGeolocation: Geolocation | undefined = await geolocationRepo // find existing location if it exists
       .createQueryBuilder('geolocation')
@@ -17,15 +20,11 @@ const setUserGeolocationInDb = async (userId: string, address?: string, latitude
       .getOne();
 
     if (existingGeolocation) {
-
-      const result: InsertResult = await getConnection()
-        .createQueryBuilder()
-        .insert()
-        .into(UserGeolocation)
-        .values({ user: { id: userId }, geolocation: { id: existingGeolocation.id } })
-        .execute();
-
-      return result;
+      existingGeolocation.users.push(user)
+      user.geolocation = existingGeolocation
+      await getConnection().manager.save(user)
+      await getConnection().manager.save(existingGeolocation)
+      return { user, geolocation: existingGeolocation }
 
     } else {
 
@@ -39,14 +38,12 @@ const setUserGeolocationInDb = async (userId: string, address?: string, latitude
       const newGeolocation: Geolocation | undefined = await geolocationRepo.findOne({ id: newGeolocationId })
       if (!newGeolocation) throw new Error('Something went wrong with new geolocation')
 
-      const result: InsertResult = await getConnection()
-        .createQueryBuilder()
-        .insert()
-        .into(UserGeolocation)
-        .values({ user: { id: userId }, geolocation: { id: newGeolocation.id } })
-        .execute();
+      newGeolocation.users.push(user)
+      user.geolocation = newGeolocation
+      await getConnection().manager.save(user)
+      await getConnection().manager.save(newGeolocation)
 
-      return result
+      return { user, geolocation: newGeolocation }
     }
 
   } catch (ex) {
@@ -58,7 +55,15 @@ const setUserGeolocationInDb = async (userId: string, address?: string, latitude
 const updateUserGeolocationInDb = async (userId: string, address?: string, latitude?: number, longitude?: number) => {
   try {
     const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation) // get geolocation repo from db
-    const userGeolocationRepo: Repository<UserGeolocation> = await getConnection().getRepository(UserGeolocation)
+
+    const user = await getConnection().getRepository(User).findOne({ id: userId })
+    if (!user) throw new Error('User not found')
+
+    //remove user from old relation with geolocation TODO onUpdate and onDelete CASCADE
+    const oldGeolocation = await geolocationRepo.findOne({ id: user.geolocation.id })
+    if (oldGeolocation) {
+      oldGeolocation.users = oldGeolocation.users.filter((user: User) => user.id !== userId)
+    }
 
     const existingGeolocation: Geolocation | undefined = await geolocationRepo // find existing location if it exists
       .createQueryBuilder('geolocation')
@@ -71,14 +76,12 @@ const updateUserGeolocationInDb = async (userId: string, address?: string, latit
 
     if (existingGeolocation) {
 
-      const result: UpdateResult = await userGeolocationRepo
-        .createQueryBuilder('relation')
-        .update(UserGeolocation)
-        .set({ geolocation: existingGeolocation })
-        .where({ user: { id: userId } })
-        .execute()
+      existingGeolocation.users.push(user)
+      user.geolocation = existingGeolocation
+      await getConnection().manager.save(user)
+      await getConnection().manager.save(existingGeolocation)
 
-      return result;
+      return { user, geolocation: existingGeolocation }
 
     } else {
 
@@ -92,14 +95,12 @@ const updateUserGeolocationInDb = async (userId: string, address?: string, latit
       const newGeolocation: Geolocation | undefined = await geolocationRepo.findOne({ id: newGeolocationId })
       if (!newGeolocation) throw new Error('Something went wrong with new geolocation')
 
-      const result: UpdateResult = await userGeolocationRepo
-        .createQueryBuilder('relation')
-        .update(UserGeolocation)
-        .set({ geolocation: newGeolocation })
-        .where({ user: { id: userId } })
-        .execute()
+      newGeolocation.users.push(user)
+      user.geolocation = newGeolocation
+      await getConnection().manager.save(user)
+      await getConnection().manager.save(newGeolocation)
 
-      return result;
+      return { user, geolocation: newGeolocation }
     }
   } catch (ex) {
     console.log(ex)

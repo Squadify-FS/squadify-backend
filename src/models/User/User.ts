@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Entity, Column, PrimaryGeneratedColumn, Index, OneToMany, ManyToOne } from 'typeorm';
 import { Message } from '../Group/Message';
-import { UserUser, UserGroup, Group } from '..';
+import { UserUser, UserGroup, Group, Geolocation } from '..';
 
 @Entity()
 export class User {
@@ -27,16 +27,19 @@ export class User {
   @Column({ nullable: true })
   avatarUrl: string;
 
-  @OneToMany(type => Message, message => message.user)
+  @OneToMany(() => Message, message => message.user)
   sentMessages: Message[]
 
-  @OneToMany(type => UserUser, useruser => useruser.user)
+  @OneToMany(type => UserUser, usersjointable => usersjointable.user)
   friends: UserUser[]
 
-  @OneToMany(type => UserUser, useruser => useruser.friend)
+  @OneToMany(() => UserUser, usersjointable => usersjointable.friend)
   friendsInverse: UserUser[]
 
-  @OneToMany(type => UserGroup, usergroup => usergroup.user)
+  @OneToMany(() => UserGroup, usergroup => usergroup.user)
   groups: UserGroup[]
+
+  @ManyToOne(() => Geolocation, geolocation => geolocation.users)
+  geolocation: Geolocation;
 }
 

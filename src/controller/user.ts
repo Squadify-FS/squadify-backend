@@ -62,6 +62,7 @@ const getUserFriendsFromDb = async (userId: string) => {
       .where(`relation."userId" = :userId`, { userId })
       .andWhere(`relation."accepted" = true`)
       .getMany()
+      .then(relations => relations.map(relation => relation.friend))
 
     return result;
   } catch (ex) {
@@ -72,21 +73,23 @@ const getUserFriendsFromDb = async (userId: string) => {
 
 const getUserRequestsFromDb = async (userId: string) => {
   try {
-    const sentRequests = await getConnection()
+    const sentRequests: User[] = await getConnection()
       .getRepository(UserUser)
       .createQueryBuilder('relation')
       .leftJoinAndSelect('relation.friend', 'friend')
       .where(`relation."userId" = :userId`, { userId })
       .andWhere(`relation."accepted" = false`)
       .getMany()
+      .then(relations => relations.map(relation => relation.friend))
 
-    const incomingRequests = await getConnection()
+    const incomingRequests: User[] = await getConnection()
       .getRepository(UserUser)
       .createQueryBuilder('relation')
       .leftJoinAndSelect('relation.friend', 'friend')
       .where(`relation."friendId" = :userId`, { userId })
       .andWhere(`relation."accepted" = false`)
       .getMany()
+      .then(relations => relations.map(relation => relation.user))
 
     return { sentRequests, incomingRequests }
   } catch (ex) {
@@ -103,7 +106,7 @@ const deleteFriend = async (userId: string, friendId: string) => {
       .createQueryBuilder()
       .delete()
       .from(UserUser)
-      .where(`"userId" = :userId AND "friendId" = :friendId`, { userId, friendId })
+      .where(` "userId" = :userId AND "friendId" = :friendId`, { userId, friendId })
       .orWhere(`"userId" = :friendId AND "friendId" = :userId`, { userId, friendId })
       .returning('*')
       .execute()

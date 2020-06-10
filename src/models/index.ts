@@ -6,7 +6,7 @@ import { Message } from './Group/Message'
 import { UserUser } from './User/UserUser'
 import { UserGroup } from './User/UserGroup'
 import { Geolocation } from './Geolocation'
-import { UserGeolocation } from './User/UserGeolocation'
-import { EventGeolocation } from './Event/EventGeolocation'
+// import { UserGeolocation } from './User/TODOUserGeolocation'
+// import { EventGeolocation } from './Event/TODOEventGeolocation'
 
-export { User, Group, Chat, Event, Message, UserUser, UserGroup, Geolocation, UserGeolocation, EventGeolocation }
+export { User, Group, Chat, Event, Message, UserUser, UserGroup, Geolocation }

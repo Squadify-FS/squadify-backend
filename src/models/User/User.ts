@@ -23,7 +23,7 @@ export class User {
   @Column()
   dob: Date;
 
-  @Column()
+  @Column({ nullable: true })
   avatarUrl: string;
 
   @OneToMany(type => Message, message => message.user)

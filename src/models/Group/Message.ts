@@ -5,8 +5,8 @@ import { Chat } from './Chat'
 
 @Entity()
 export class Message {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ nullable: true })
   imageUrl: string;

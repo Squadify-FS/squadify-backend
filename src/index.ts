@@ -2,7 +2,7 @@ import express from 'express'
 
 import { createConnection } from 'typeorm';
 import { User, Group, Chat, Message, Event, UserUser, UserGroup, UserGeolocation, EventGeolocation, Geolocation } from './models/'
-
+import { insertNewUserToDb, sendFriendRequest, getUserFriendsFromDb, getUserRequestsFromDb } from './controller/user'
 
 import authRouter from './routes/auth';
 

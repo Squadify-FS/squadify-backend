@@ -8,7 +8,7 @@
     "tsc": "tsc",
     "lint": "eslint . --ext .ts",
     "compile": "tsc",
-    "seed": "npm run start:dev && node dist/scripts/seed.js",
+    "seed": "tsc && node dist/scripts/seed.js",
     "start:dev": "npm run compile && node dist/index.js"
   },
   "keywords": [],

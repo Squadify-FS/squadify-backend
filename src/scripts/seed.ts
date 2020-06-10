@@ -1,7 +1,8 @@
-import { createConnection } from "typeorm";
+import { createConnection, getConnection } from "typeorm";
 import { User, Group, Message, Event, Chat, UserUser, UserGroup, UserGeolocation, EventGeolocation, Geolocation } from "../models";
 
 import { insertNewUserToDb, sendFriendRequest, getUserFriendsFromDb, getUserRequestsFromDb } from '../controller/user'
+import { insertNewGroupToDb } from '../controller/group'
 
 import "reflect-metadata";
 
@@ -33,9 +34,27 @@ import "reflect-metadata";
   const user1 = await insertNewUserToDb({ firstName: 'user1', lastName: 'user1', password: 'password', email: 'user1@gmail.com', dob: '08-10-1995' })
   const user2 = await insertNewUserToDb({ firstName: 'user2', lastName: 'user2', password: 'password', email: 'user2@gmail.com', dob: '08-10-1995' })
 
+
+  const repository = await getConnection().getRepository(User);
+  // const user3 = await User.create({ firstName: 'user2', lastName: 'user2', password: 'password', email: 'user2@gmail.com', dob: '08-10-1995' })
+  const user3 = new User()
+  user3.firstName = 'user3'
+  user3.lastName = 'user3'
+  user3.email = 'user3@gmail.com'
+  user3.dob = new Date('08-10-1995')
+  user3.password = 'password'
+  const saved = await repository.save(user3)
+
+  console.log('SAVED', saved)
+
   console.log('ADMIN ID', admin.identifiers[0].id)
   console.log('USER1', user1.identifiers[0])
   console.log('USER2', user2.identifiers[0])
+
+
+
+  // const group1 = await insertNewGroupToDb({ name: 'group1', isPrivate: false, creatorId: admin.identifiers[0].id, invitedUsersIds: [user1.identifiers[0].id, user2.identifiers[0].id] })
+  // console.log('GROUP1', group1?.group.identifiers[0], group1?.chat.identifiers[0])
 
   /*
   const relation1 = await sendFriendRequest(admin.identifiers[0].id, user1.identifiers[0].id)
@@ -50,4 +69,5 @@ import "reflect-metadata";
   console.log('ADMIN FRIENDS', adminFriends)
   console.log('ADMIN REQUESTS', adminRequests)
   */
+
 })()

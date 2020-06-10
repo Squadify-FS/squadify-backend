@@ -13,7 +13,7 @@ export class Group {
   @Column()
   isPrivate: boolean;
 
-  @Column()
+  @Column({ nullable: true })
   avatarUrl: string;
 
   @OneToOne(type => Chat, chat => chat.group)

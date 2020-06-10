@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, OneToMany } from 'typeorm';
-import { Chat } from './Chat'
-import { UserGroup } from '..';
+import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, OneToMany, ManyToMany } from 'typeorm';
+
+import { Chat, UserGroup, Event } from '..';
 
 @Entity()
 export class Group {
@@ -17,10 +16,13 @@ export class Group {
   @Column({ nullable: true })
   avatarUrl: string;
 
-  @OneToOne(type => Chat, chat => chat.group)
+  @OneToOne(() => Chat, chat => chat.group)
   @JoinColumn()
   chat: Chat;
 
-  @OneToMany(type => UserGroup, usergroup => usergroup.group)
+  @OneToMany(() => UserGroup, usergroup => usergroup.group)
   users: UserGroup[]
+
+  @ManyToMany(() => Event, event => event.groups)
+  events: Event[]
 }

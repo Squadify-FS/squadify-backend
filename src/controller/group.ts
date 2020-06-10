@@ -6,7 +6,7 @@ interface IGroupInterface {
   name: string;
   isPrivate: boolean;
   creatorId: string;
-  invitedUsersIds?: string[];
+  friendIds?: string[];
 }
 
 /*
@@ -17,7 +17,7 @@ FUNCTION WILL:
   send invitations to users admin invited when creating group in frontend form by creating relation in UserGroup join table
   return newly created group and chat
 */
-const insertNewGroupToDb = async ({ name, isPrivate, creatorId, invitedUsersIds }: IGroupInterface) => {
+const insertNewGroupToDb = async ({ name, isPrivate, creatorId, friendIds }: IGroupInterface) => {
   try {
 
     const group: InsertResult = await getConnection() //create group and get id
@@ -50,23 +50,24 @@ const insertNewGroupToDb = async ({ name, isPrivate, creatorId, invitedUsersIds 
       .createQueryBuilder()
       .insert()
       .into(UserGroup)
-      .values({ user: { id: creatorId }, group: { id: groupId }, permissionLevel: 1, accepted: true })
+      .values({ user: { id: creatorId }, group: { id: groupId }, permissionLevel: 2, accepted: true })
       .returning('*')
       .execute();
 
-    if (invitedUsersIds) { // invite users to join group, by setting accepted to false
-      invitedUsersIds.map(async (userId: string): Promise<InsertResult> => {
+    if (friendIds) { // invite users to join group, by setting accepted to false
+      friendIds.map(async (userId: string): Promise<InsertResult> => {
         return await getConnection()
           .createQueryBuilder()
           .insert()
           .into(UserGroup)
-          .values({ user: { id: userId }, group: { id: groupId }, permissionLevel: 0, accepted: false })
+          .values({ user: { id: userId }, group: { id: groupId }, permissionLevel: 1, accepted: false })
           .returning('*')
           .execute();
       })
     }
 
-    return { group, chat, adminRelation, invitedUsers: invitedUsersIds }
+
+    return { group, chat, adminRelation, friends: friendIds }
   } catch (ex) {
     console.log(ex)
   }
@@ -161,7 +162,8 @@ const inviteUserToGroup = async (groupId: string, inviterId: string, inviteeId: 
       .createQueryBuilder()
       .insert()
       .into(UserGroup)
-      .values({ inviter: { id: inviterId }, user: { id: inviteeId }, group: { id: groupId }, permissionLevel: 0, accepted: false })
+      .values({ inviter: { id: inviterId }, user: { id: inviteeId }, group: { id: groupId }, permissionLevel: 1, accepted: false })
+      .returning('*')
       .execute();
 
     return newRelation
@@ -207,7 +209,7 @@ const removeUserFromGroup = async (removerId: string, userId: string, groupId: s
       const removerRelationToGroup = await getConnection()
         .getRepository(UserGroup)
         .findOne({ user: { id: removerId }, group: { id: groupId } });
-      if (!removerRelationToGroup || removerRelationToGroup.permissionLevel < 1) throw new Error("You don't have permission to perform this action")
+      if (!removerRelationToGroup || removerRelationToGroup.permissionLevel < 2) throw new Error("You don't have permission to perform this action")
     }
 
     const deletedRelation = await getConnection()
@@ -223,8 +225,26 @@ const removeUserFromGroup = async (removerId: string, userId: string, groupId: s
   }
 }
 
+const followPublicGroup = async (userId: string, groupId: string) => {
+  try {
+    const group = await getConnection().getRepository(Group).findOne({ id: groupId })
+    if (!group) throw new Error('Something went wrong finding group')
 
+    if (group.isPrivate) throw new Error('Cannot follow a private group. Invitation only.')
 
+    const relation = await getConnection()
+      .createQueryBuilder()
+      .insert()
+      .into(UserGroup)
+      .values({ user: { id: userId }, group: { id: groupId }, permissionLevel: 0, accepted: false })
+      .returning('*')
+      .execute();
+
+    return relation
+  } catch (ex) {
+    console.log(ex)
+  }
+}
 
 export {
   insertNewGroupToDb,
@@ -234,5 +254,6 @@ export {
   inviteUserToGroup,
   acceptInviteToGroup,
   rejectInviteToGroup,
-  removeUserFromGroup
+  removeUserFromGroup,
+  followPublicGroup
 }

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
-import { Geolocation } from '..';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany, ManyToMany, JoinTable } from 'typeorm';
+import { Geolocation, Group, User } from '..';
+import { EventGroup } from './EventGroup';
 
 @Entity()
 export class Event {
@@ -20,9 +21,15 @@ export class Event {
   @Column()
   isPrivate: boolean;
 
-  @Column()
-  isFinished: boolean;
-
   @ManyToOne(() => Geolocation, geolocation => geolocation.events)
   geolocation: Geolocation;
+
+  @ManyToMany(() => Group, group => group.events)
+  @JoinTable()
+  groups: Group[]
+
+  // approval or confirmation to go to event will be handled in user by adding the event in the user's events property
+  @ManyToMany(() => User, user => user.events)
+  @JoinTable()
+  users: User[]
 }

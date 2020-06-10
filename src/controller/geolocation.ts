@@ -1,4 +1,4 @@
-import { Repository, getConnection, InsertResult, UpdateResult } from "typeorm";
+import { Repository, getConnection } from "typeorm";
 import { User, Geolocation } from "../models";
 
 

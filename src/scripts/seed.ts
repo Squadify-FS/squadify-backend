@@ -33,7 +33,7 @@ import "reflect-metadata";
   const user2 = await insertNewUserToDb({ firstName: 'user2', lastName: 'user2', password: 'password', email: 'user2@gmail.com', dob: '08-10-1995' })
   const user3 = await insertNewUserToDb({ firstName: 'user3', lastName: 'user3', password: 'password', email: 'user3@gmail.com', dob: '08-10-1995' })
 
-  const group1 = await insertNewGroupToDb({ name: 'group1', isPrivate: false, creatorId: admin.identifiers[0].id, invitedUsersIds: [user1.identifiers[0].id, user2.identifiers[0].id] })
+  const group1 = await insertNewGroupToDb({ name: 'group1', isPrivate: false, creatorId: admin.identifiers[0].id })
   console.log('GROUP1', group1?.group.identifiers[0], group1?.chat.identifiers[0])
 
   const relation1 = await sendFriendRequest(admin.identifiers[0].id, user1.identifiers[0].id)

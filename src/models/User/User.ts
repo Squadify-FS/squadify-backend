@@ -35,14 +35,13 @@ export class User {
   @ManyToMany(() => Event, event => event.users)
   events: Event[]
 
-  @OneToMany(() => UserUser, usersjointable => usersjointable.user)
+  @OneToMany(() => UserUser, (usersjointable) => usersjointable.user)
   friends: UserUser[]
 
-  @OneToMany(() => UserUser, usersjointable => usersjointable.friend)
+  @OneToMany(() => UserUser, (usersjointable) => usersjointable.friend)
   friendsInverse: UserUser[]
 
   @OneToMany(() => UserGroup, usergroup => usergroup.user)
   groups: UserGroup[]
-
 }
 

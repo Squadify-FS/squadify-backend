@@ -66,7 +66,6 @@ const insertNewGroupToDb = async ({ name, isPrivate, creatorId, friendIds }: IGr
       })
     }
 
-
     return { group, chat, adminRelation, friends: friendIds }
   } catch (ex) {
     console.log(ex)

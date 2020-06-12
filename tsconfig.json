@@ -62,7 +62,11 @@
     "src/**/*.ts",
     "src/**/**/*.ts",
     "src/**/**/**/*.ts",
-    "jest.config.ts"
+    "src/*.js",
+    "src/**/*.js",
+    "src/**/**/*.js",
+    "src/**/**/**/*.js",
+    "jest.config.js"
   ],
   "exclude": [
     "node_modules/",

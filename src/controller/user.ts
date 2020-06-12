@@ -32,7 +32,8 @@ const insertNewUserToDb = async ({ firstName, lastName, password, email, dob }: 
       .values({ firstName, lastName, email, dob, password: hashAndSaltPassword(password) })
       .returning('*')
       .execute();
-    return user;
+
+    return user
   } catch (ex) {
     console.log(ex)
     throw ex

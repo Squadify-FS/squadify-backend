@@ -1,6 +1,6 @@
 import { getConnection } from 'typeorm';
 
-import { Event, Group, Geolocation, User, UserGroup } from '../models'
+import { Event, Group, User, UserGroup } from '../models'
 
 // interface NewEventDetails {
 //   name: string;
@@ -34,7 +34,50 @@ const insertEventToDb = async (userId: string, name: string, description: string
     await getConnection().manager.save(user)
 
     return event
+
   } catch (ex) {
     console.log(ex)
   }
+}
+
+const assignEventToGroup = async (userId: string, eventId: string, groupId: string) => {
+  try {
+    const group = await getConnection().getRepository(Group).findOne({ id: groupId })
+    const event = await getConnection().getRepository(Event).findOne({ id: eventId })
+    const user = await getConnection().getRepository(User).findOne({ id: userId })
+
+    const userGroupRelation = await getConnection()
+      .getRepository(UserGroup)
+      .findOne({ user: { id: userId }, group: { id: groupId } })
+    if (!userGroupRelation) throw new Error('User is not in group')
+    if (userGroupRelation.permissionLevel < 1) throw new Error('User does not have permission to perform this action')
+
+    await getConnection()
+      .createQueryBuilder()
+      .relation(Event, 'groups')
+      .of(event)
+      .add(group);
+
+    await getConnection()
+      .createQueryBuilder()
+      .relation(Group, 'events')
+      .of(group)
+      .add(event);
+
+    await getConnection()
+      .createQueryBuilder()
+      .relation(Event, 'users')
+      .of(event)
+      .add(user);
+
+    return { group, event }
+
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+export {
+  insertEventToDb,
+  assignEventToGroup
 }

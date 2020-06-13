@@ -1,15 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, Column } from 'typeorm';
+// import { Entity, PrimaryGeneratedColumn, ManyToOne, Column } from 'typeorm';
 
-import { Group, Event } from '..'
+// import { Group, Event } from '..'
 
-@Entity()
-export class EventGroup {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+// @Entity()
+// export class EventGroup {
+//   @PrimaryGeneratedColumn('uuid')
+//   id: string;
 
-  @ManyToOne(() => Group)
-  group: Group;
+//   @ManyToOne(() => Group)
+//   group: Group;
 
-  @ManyToOne(() => Event)
-  event: Event;
-}
+//   @ManyToOne(() => Event)
+//   event: Event;
+// }

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
 import { User } from '../User/User'
 import { Chat } from './Chat'
@@ -14,9 +13,9 @@ export class Message {
   @Column()
   text: string;
 
-  @ManyToOne(type => Chat, chat => chat.messages)
+  @ManyToOne(() => Chat, chat => chat.messages)
   chat: Chat
 
-  @ManyToOne(type => User, user => user.sentMessages)
+  @ManyToOne(() => User, user => user.sentMessages)
   user: User;
 }

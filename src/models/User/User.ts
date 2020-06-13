@@ -1,6 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn, Index, OneToMany, ManyToOne, ManyToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, Index, OneToMany, ManyToOne } from 'typeorm';
 import { Message } from '../Group/Message';
-import { UserUser, UserGroup, Geolocation, Event } from '..';
+import { UserUser, UserGroup, Geolocation, } from '..';
+import { UserEvent } from './UserEvent';
 
 @Entity()
 export class User {
@@ -26,14 +27,14 @@ export class User {
   @Column()
   avatarUrl: string;
 
-  @OneToMany(() => Message, message => message.user)
-  sentMessages: Message[]
-
   @ManyToOne(() => Geolocation, geolocation => geolocation.users)
   geolocation: Geolocation;
 
-  @ManyToMany(() => Event, event => event.users)
-  events: Event[]
+  @OneToMany(() => UserGroup, usergroup => usergroup.user)
+  groups: UserGroup[]
+
+  @OneToMany(() => UserEvent, userevent => userevent.user)
+  events: UserEvent[]
 
   @OneToMany(() => UserUser, usersjointable => usersjointable.user)
   friends: UserUser[]
@@ -41,8 +42,7 @@ export class User {
   @OneToMany(() => UserUser, usersjointable => usersjointable.friend)
   friendsInverse: UserUser[]
 
-  @OneToMany(() => UserGroup, usergroup => usergroup.user)
-  groups: UserGroup[]
-
+  @OneToMany(() => Message, message => message.user)
+  sentMessages: Message[]
 }
 

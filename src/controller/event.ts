@@ -1,6 +1,6 @@
 import { getConnection } from 'typeorm';
 
-import { Event, Group, Geolocation, User, UserGroup } from '../models'
+import { Event, Group, User, UserGroup, UserEvent } from '../models'
 
 // interface NewEventDetails {
 //   name: string;
@@ -10,30 +10,31 @@ import { Event, Group, Geolocation, User, UserGroup } from '../models'
 // }
 
 //TODO
-const insertEventToDb = async (userId: string, name: string, description: string, dateAndTime: Date, isPrivate: boolean) => {
+const insertEventToDb = async (userId: string, name: string, description: string, isPrivate: boolean, startTime: Date, endTime?: Date) => {
   try {
     const user = await getConnection().getRepository(User).findOne({ id: userId });
     if (!user) throw new Error('Something went wrong finding user')
-    // const event = await getConnection()
-    //   .createQueryBuilder()
-    //   .insert()
-    //   .into(Event)
-    //   .values({ name, description, dateAndTime, isPrivate })
-    //   .returning('*')
-    //   .execute();
+    const event = await getConnection()
+      .createQueryBuilder()
+      .insert()
+      .into(Event)
+      .values({ name, description, startTime, endTime, isPrivate })
+      .returning('*')
+      .execute();
 
-    const event = new Event()
-    event.name = name
-    event.description = description
-    event.dateAndTime = dateAndTime
-    event.isPrivate = isPrivate
+    const relation = await getConnection()
+      .createQueryBuilder()
+      .insert()
+      .into(UserEvent)
+      .values({
+        user: { id: userId },
+        event: { id: event.identifiers[0].id },
+        permissionLevel: 2
+      })
+      .returning('*')
+      .execute()
 
-    user.events.push(event)
-
-    await getConnection().manager.save(event)
-    await getConnection().manager.save(user)
-
-    return event
+    return { event, relation }
   } catch (ex) {
     console.log(ex)
   }
@@ -67,18 +68,23 @@ const assignEventToGroup = async (userId: string, eventId: string, groupId: stri
 
     await getConnection()
       .createQueryBuilder()
-      .relation(Event, 'users')
-      .of(event)
-      .add(user);
+      .insert()
+      .into(UserEvent)
+      .values({
+        user: { id: userId },
+        permissionLevel: 2
+      })
+      .returning('*')
+      .execute()
 
-    return { group, event, user }
+    return { group, event }
 
   } catch (ex) {
     console.log(ex)
   }
 }
 
-const removeEventFromGroup = async (userId: string, eventId: string, groupId: string) => {
+const unassignEventFromGroup = async (userId: string, eventId: string, groupId: string) => {
   try {
     const group = await getConnection().getRepository(Group).findOne({ id: groupId })
     const event = await getConnection().getRepository(Event).findOne({ id: eventId })
@@ -111,26 +117,31 @@ const removeEventFromGroup = async (userId: string, eventId: string, groupId: st
   }
 }
 
-const assignEventToUser = async (userId: string, eventId: string) => {
+const assignEventToUser = async (userId: string, eventId: string, inviterId?: string) => {
   try {
     const event = await getConnection().getRepository(Event).findOne({ id: eventId })
-    const user = await getConnection().getRepository(User).findOne({ id: userId })
+    if (inviterId) {
+      const inviterRelationToEvent = await getConnection()
+        .getRepository(UserEvent)
+        .findOne({ user: { id: inviterId }, event: { id: eventId } })
+      if (event && event.isPrivate) {
+        if (!inviterRelationToEvent || inviterRelationToEvent.permissionLevel < 1) throw new Error('User is not related or not enough permission')
+      }
+    }
 
-    if (!event || !user) throw new Error('Something went wrong')
-
-    await getConnection()
+    const relation = await getConnection()
       .createQueryBuilder()
-      .relation(Event, 'users')
-      .of(event)
-      .add(user);
+      .insert()
+      .into(UserEvent)
+      .values({
+        inviter: { id: inviterId },
+        user: { id: userId },
+        permissionLevel: inviterId ? 1 : 0
+      })
+      .returning('*')
+      .execute()
 
-    await getConnection()
-      .createQueryBuilder()
-      .relation(User, 'events')
-      .of(user)
-      .add(event);
-
-    return { event, user }
+    return { event, relation }
   } catch (ex) {
     console.log(ex)
   }
@@ -138,24 +149,14 @@ const assignEventToUser = async (userId: string, eventId: string) => {
 
 const unassignEventFromUser = async (userId: string, eventId: string) => {
   try {
-    const event = await getConnection().getRepository(Event).findOne({ id: eventId })
-    const user = await getConnection().getRepository(User).findOne({ id: userId })
 
-    if (!event || !user) throw new Error('Something went wrong')
-
-    await getConnection()
+    const deletedRelation = await getConnection()
       .createQueryBuilder()
-      .relation(Event, 'users')
-      .of(event)
-      .remove(user);
+      .delete()
+      .from(UserEvent)
+      .where({ user: { id: userId }, event: { id: eventId } })
 
-    await getConnection()
-      .createQueryBuilder()
-      .relation(User, 'events')
-      .of(user)
-      .remove(event);
-
-    return { event, user }
+    return deletedRelation
   } catch (ex) {
     console.log(ex)
   }
@@ -163,13 +164,13 @@ const unassignEventFromUser = async (userId: string, eventId: string) => {
 
 const getUserEvents = async (userId: string) => {
   try {
-    const user = await getConnection().getRepository(User).findOne({ id: userId })
-
     const events: Event[] = await getConnection()
-      .createQueryBuilder()
-      .relation(User, 'events')
-      .of(user)
-      .loadMany()
+      .getRepository(UserEvent)
+      .createQueryBuilder('relation')
+      .leftJoinAndSelect('relation.event', 'event')
+      .where(`relation."userId" = :userId`, { userId })
+      .getMany()
+      .then(relations => relations.map(relation => relation.event))
 
     return events
   } catch (ex) {
@@ -177,10 +178,14 @@ const getUserEvents = async (userId: string) => {
   }
 }
 
+// const updateEvent = async (eventId: string) => {
+
+// }
+
 export {
   insertEventToDb,
   assignEventToGroup,
-  removeEventFromGroup,
+  unassignEventFromGroup,
   assignEventToUser,
   unassignEventFromUser,
   getUserEvents

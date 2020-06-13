@@ -1,5 +1,5 @@
 import { Repository, getConnection } from "typeorm";
-import { User, Geolocation } from "../models";
+import { User, Geolocation, UserEvent, Event } from "../models";
 
 
 // this function will only be used when a user registers, as they will always have a set location after they register and will only have to update it
@@ -64,7 +64,7 @@ const updateUserGeolocationInDb = async (userId: string, address?: string, latit
     if (oldGeolocation) {
       oldGeolocation.users = oldGeolocation.users.filter((user: User) => user.id !== userId)
       await getConnection().manager.save(oldGeolocation);
-    } 
+    }
 
     const existingGeolocation: Geolocation | undefined = await geolocationRepo // find existing location if it exists
       .createQueryBuilder('geolocation')
@@ -109,7 +109,121 @@ const updateUserGeolocationInDb = async (userId: string, address?: string, latit
   }
 }
 
+const setEventGeolocationInDb = async (userId: string, eventId: string, address?: string, latitude?: number, longitude?: number) => {
+  try {
+    const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation);
+
+    const event = await getConnection().getRepository(Event).findOne({ id: eventId })
+    if (!event) throw new Error('Cannot find event')
+
+    const userRelationToEvent = await getConnection().getRepository(UserEvent).findOne({ user: { id: userId }, event: { id: eventId } })
+    if (!userRelationToEvent) throw new Error('User not related to event')
+    if (userRelationToEvent.permissionLevel < 1) throw new Error('No permission to perform this action')
+
+    const existingGeolocation: Geolocation | undefined = await geolocationRepo // find existing location if it exists
+      .createQueryBuilder('geolocation')
+      .where(
+        `geolocation.address = :address`,
+        { address }
+      )
+      .orWhere(`latitude = :latitude AND longitude = :longitude`, { latitude, longitude })
+      .getOne();
+
+    if (existingGeolocation) {
+
+      existingGeolocation.events.push(event)
+      event.geolocation = existingGeolocation
+      await getConnection().manager.save(event)
+      await getConnection().manager.save(existingGeolocation)
+      return { event, geolocation: existingGeolocation }
+
+    } else {
+
+      const newGeolocationId: string = (await getConnection()
+        .createQueryBuilder()
+        .insert()
+        .into(Geolocation)
+        .values({ address, latitude, longitude })
+        .execute()).identifiers[0].id;
+
+      const newGeolocation: Geolocation | undefined = await geolocationRepo.findOne({ id: newGeolocationId })
+      if (!newGeolocation) throw new Error('Something went wrong with new geolocation')
+
+      newGeolocation.events.push(event)
+      event.geolocation = newGeolocation
+      await getConnection().manager.save(event)
+      await getConnection().manager.save(newGeolocation)
+
+      return { event, geolocation: newGeolocation }
+    }
+
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+const updateEventGeolocationInDb = async (userId: string, eventId: string, address?: string, latitude?: number, longitude?: number) => {
+  try {
+    const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation);
+
+    const event = await getConnection().getRepository(Event).findOne({ id: eventId })
+    if (!event) throw new Error('Cannot find event')
+
+    const userRelationToEvent = await getConnection().getRepository(UserEvent).findOne({ user: { id: userId }, event: { id: eventId } })
+    if (!userRelationToEvent) throw new Error('User not related to event')
+    if (userRelationToEvent.permissionLevel < 1) throw new Error('No permission to perform this action')
+
+    const oldGeolocation = await geolocationRepo.findOne({ id: event.geolocation.id })
+    if (oldGeolocation) {
+      oldGeolocation.events = oldGeolocation.events.filter((event: Event) => event.id !== eventId)
+      await getConnection().manager.save(oldGeolocation);
+    }
+
+    const existingGeolocation: Geolocation | undefined = await geolocationRepo // find existing location if it exists
+      .createQueryBuilder('geolocation')
+      .where(
+        `geolocation.address = :address`,
+        { address }
+      )
+      .orWhere(`latitude = :latitude AND longitude = :longitude`, { latitude, longitude })
+      .getOne();
+
+    if (existingGeolocation) {
+
+      existingGeolocation.events.push(event)
+      event.geolocation = existingGeolocation
+      await getConnection().manager.save(event)
+      await getConnection().manager.save(existingGeolocation)
+      return { event, geolocation: existingGeolocation }
+
+    } else {
+
+      const newGeolocationId: string = (await getConnection()
+        .createQueryBuilder()
+        .insert()
+        .into(Geolocation)
+        .values({ address, latitude, longitude })
+        .execute()).identifiers[0].id;
+
+      const newGeolocation: Geolocation | undefined = await geolocationRepo.findOne({ id: newGeolocationId })
+      if (!newGeolocation) throw new Error('Something went wrong with new geolocation')
+
+      newGeolocation.events.push(event)
+      event.geolocation = newGeolocation
+      await getConnection().manager.save(event)
+      await getConnection().manager.save(newGeolocation)
+
+      return { event, geolocation: newGeolocation }
+    }
+
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
 export {
   setUserGeolocationInDb,
-  updateUserGeolocationInDb
+  updateUserGeolocationInDb,
+  setEventGeolocationInDb,
+  updateEventGeolocationInDb
 }

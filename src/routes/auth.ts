@@ -51,7 +51,7 @@ router.post('/register', async (req, res, next) => {
 
   try {
     const result = await insertNewUserToDb({ email, password, firstName, lastName, dob })
-    if (!result) return res.status(500).json({ message: 'Something went wrong ' });
+    if (!result) return res.status(500).json({ message: 'Something went wrong' });
     const user = result.identifiers[0]
 
     const token = generateJwt({

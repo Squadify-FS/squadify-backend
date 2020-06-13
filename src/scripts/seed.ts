@@ -56,6 +56,4 @@ import "reflect-metadata";
   // console.log('user1 reqs', user1Requests.sentRequests[0].friend)
   // console.log('user1 reqs', user1Requests.incomingRequests[0].friend)
 
-
-
 })()

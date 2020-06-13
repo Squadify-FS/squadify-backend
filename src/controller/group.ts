@@ -124,6 +124,7 @@ const deleteGroup = async (groupId: string, adminId: string) => {
       .delete()
       .from(Group)
       .where({ id: groupId })
+      .execute()
 
     return { deletedGroup, deletedRelations }
 

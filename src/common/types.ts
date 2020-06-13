@@ -5,3 +5,11 @@ export enum GroupPermissionLevelEnum {
   'Friend' = 1,
   'Admin' = 2,
 }
+
+export type EventPermissionLevelKey = keyof typeof EventPermissionLevelEnum;
+
+export enum EventPermissionLevelEnum {
+  'Attendee' = 0,
+  'Host' = 1,
+  'Admin' = 2
+}

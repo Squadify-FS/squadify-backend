@@ -1,5 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, ManyToMany, JoinTable } from 'typeorm';
-import { Geolocation, Group, User } from '..';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, ManyToMany, JoinTable, OneToMany } from 'typeorm';
+import { Geolocation, Group, UserEvent, GroupEvent } from '..';
 // import { EventGroup } from './EventGroup';
 
 @Entity()
@@ -14,7 +14,11 @@ export class Event {
   description: string;
 
   @Column({ type: 'timestamp with time zone' })
-  dateAndTime: Date;
+  startTime: Date;
+  // '2016-06-22 19:10:25-07' is format, where 07 is the timezone
+
+  @Column({ type: 'timestamp with time zone', nullable: true })
+  endTime: Date;
   // '2016-06-22 19:10:25-07' is format, where 07 is the timezone
 
   @Column()
@@ -23,12 +27,12 @@ export class Event {
   @ManyToOne(() => Geolocation, geolocation => geolocation.events)
   geolocation: Geolocation;
 
-  @ManyToMany(() => Group, group => group.events)
+  @OneToMany(() => Group, group => group.events)
   @JoinTable()
   groups: Group[]
 
   // approval or confirmation to go to event will be handled in user by adding the event in the user's events property
-  @ManyToMany(() => User, user => user.events)
+  @OneToMany(() => UserEvent, userevent => userevent.event)
   @JoinTable()
-  users: User[]
+  users: UserEvent[]
 }

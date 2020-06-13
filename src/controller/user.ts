@@ -188,6 +188,7 @@ const rejectFriendRequest = async (requesterId: string, requestedId: string) => 
   }
 }
 
+
 export {
   insertNewUserToDb,
   getUserFromDb,

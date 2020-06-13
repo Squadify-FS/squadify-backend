@@ -13,6 +13,9 @@ export class Group {
   @Column()
   isPrivate: boolean;
 
+  @Column({ default: true })
+  followersReadOnly: boolean;
+
   @Column({ nullable: true })
   avatarUrl: string;
 

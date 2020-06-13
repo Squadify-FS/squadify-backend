@@ -11,6 +11,7 @@ export interface IRegisterBody {
   email: string;
   password: string;
   dob: Date | string;
+  avatarUrl: string;
 }
 
 
@@ -47,11 +48,11 @@ router.post('/login', async (req, res, next) => {
 });
 
 router.post('/register', async (req, res, next) => {
-  const { email, password, lastName, firstName, dob }: IRegisterBody = req.body
+  const { email, password, lastName, firstName, dob, avatarUrl }: IRegisterBody = req.body
 
   try {
-    const result = await insertNewUserToDb({ email, password, firstName, lastName, dob })
-    if (!result) return res.status(500).json({ message: 'Something went wrong' });
+    const result = await insertNewUserToDb({ email, password, firstName, lastName, dob, avatarUrl })
+    if (!result) return res.status(500).json({ message: 'Something went wrong ' });
     const user = result.identifiers[0]
 
     const token = generateJwt({

@@ -63,7 +63,8 @@ const updateUserGeolocationInDb = async (userId: string, address?: string, latit
     const oldGeolocation = await geolocationRepo.findOne({ id: user.geolocation.id })
     if (oldGeolocation) {
       oldGeolocation.users = oldGeolocation.users.filter((user: User) => user.id !== userId)
-    }
+      await getConnection().manager.save(oldGeolocation);
+    } 
 
     const existingGeolocation: Geolocation | undefined = await geolocationRepo // find existing location if it exists
       .createQueryBuilder('geolocation')

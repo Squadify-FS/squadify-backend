@@ -85,7 +85,7 @@ const getUserRequestsFromDb = async (userId: string) => {
     const incomingRequests: User[] = await getConnection()
       .getRepository(UserUser)
       .createQueryBuilder('relation')
-      .leftJoinAndSelect('relation.friend', 'friend')
+      .leftJoinAndSelect('relation.user', 'user')
       .where(`relation."friendId" = :userId`, { userId })
       .andWhere(`relation."accepted" = false`)
       .getMany()

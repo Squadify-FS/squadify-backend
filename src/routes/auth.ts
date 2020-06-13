@@ -1,5 +1,6 @@
 import express from 'express';
-import { getUserFromDb, insertNewUserToDb, comparePlaintextToHashedPassword, generateJwt } from '../controller/user';
+import { getUserFromDb, insertNewUserToDb, comparePassword, generateJwt } from '../controller/user';
+import { isLoggedIn } from '../common/middleware';
 const router = express.Router()
 
 export default router;
@@ -24,10 +25,10 @@ router.post('/login', async (req, res, next) => {
     const { email, password }: ILoginBody = req.body;
 
     const user = await getUserFromDb(email);
-    if (user === undefined || user === null) return res.status(403).json({ message: 'There was an error authenticating' });
+    if (user === undefined || user === null) return res.status(403).json({ message: 'Invalid credentials' });
 
-    if (!comparePlaintextToHashedPassword(password, user.password))
-      return res.status(403).json({ message: 'There was an error authenticating' });
+    if (!comparePassword(password, user.password))
+      return res.status(403).json({ message: 'Invalid credentials' });
 
     const token = generateJwt({
       id: user.id,
@@ -50,7 +51,7 @@ router.post('/register', async (req, res, next) => {
 
   try {
     const result = await insertNewUserToDb({ email, password, firstName, lastName, dob })
-    if (!result) return res.status(500).json({ message: 'An error occured' });
+    if (!result) return res.status(500).json({ message: 'Something went wrong ' });
     const user = result.identifiers[0]
 
     const token = generateJwt({
@@ -62,6 +63,21 @@ router.post('/register', async (req, res, next) => {
 
     res.json({ message: 'success', token });
 
+  } catch (ex) {
+    console.log(ex)
+    next(ex)
+  }
+})
+
+router.get('/me', isLoggedIn, async (req, res, next) => {
+  try {
+    //TODO ADD LOCATION STUFF
+    const user = await getUserFromDb('', req.body.user.id) // comes from the isLoggedIn function through the jwt, not the actual axios call
+    if (!user) return res.status(500).json({ message: 'Something went wrong' })
+
+    const { firstName, lastName, email, id, avatarUrl } = user
+
+    return res.status(200).json({ firstName, lastName, email, id, avatarUrl })
   } catch (ex) {
     console.log(ex)
     next(ex)

@@ -1,57 +1,12 @@
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { getConnection, UpdateResult, DeleteResult } from 'typeorm';
 
-import { User } from '../models/User'
+import { User } from '../models'
 
-import { getConnection } from 'typeorm';
-
+import { TokenBody } from '../common/functions'
 import { IRegisterBody } from '../routes/auth'
-
-interface TokenBody {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-}
-
-const insertNewUserToDb = async ({ firstName, lastName, password, email, dob }: IRegisterBody) => {
-  try {
-    const user = await getConnection()
-      .createQueryBuilder()
-      .insert()
-      .into(User)
-      .values({ firstName, lastName, email, dob, password: hashAndSaltPassword(password) })
-      .execute();
-    return user
-  } catch (ex) {
-    console.log(ex)
-  }
-};
-
-const getUserFromDb = async (email?: string, id?: string) => {
-  try {
-    if (id) {
-      const user = await getConnection().getRepository(User).findOne({ id });
-      return user
-    }
-    const user = await getConnection().getRepository(User).findOne({ email });
-    return user
-  } catch (ex) {
-    console.log(ex)
-    return null
-  }
-};
-
-const followUser = async (senderId: string, receiverId: string) => {
-  try {
-
-    // return what?
-  } catch (ex) {
-    console.log(ex)
-    return null
-  }
-}
-
+import { UserUser } from '../models';
 
 const generateJwt = ({ id, email, firstName, lastName }: TokenBody) => {
   return jwt.sign({ id, email, firstName, lastName }, process.env.JWT_SECRET || 'SHHHHHH', {
@@ -59,29 +14,189 @@ const generateJwt = ({ id, email, firstName, lastName }: TokenBody) => {
   });
 };
 
-const decodeJwt = (token: string) => {
-  try {
-    const body = jwt.verify(token, process.env.JWT_SECRET || 'SHHHHHH') as TokenBody;
-    return body;
-  } catch (ex) {
-    console.log(ex)
-    return null;
-  }
-};
-
 const hashAndSaltPassword = (plaintextPassword: string) => {
   return bcrypt.hashSync(plaintextPassword, 10);
 };
 
-const comparePlaintextToHashedPassword = (plaintextPassword: string, hashedPassword: string) => {
+const comparePassword = (plaintextPassword: string, hashedPassword: string) => {
   return bcrypt.compareSync(plaintextPassword, hashedPassword);
 };
+
+const insertNewUserToDb = async ({ firstName, lastName, password, email, dob }: IRegisterBody) => {
+  try {
+    //TODO MANAGE ADDRESS AND LOCATION INPUT WITH GOOGLE MAPS STUFF ETC
+    const user = await getConnection()
+      .createQueryBuilder()
+      .insert()
+      .into(User)
+      .values({ firstName, lastName, email, dob, password: hashAndSaltPassword(password) })
+      .returning('*')
+      .execute();
+    return user;
+  } catch (ex) {
+    console.log(ex)
+    throw ex
+  }
+};
+
+const getUserFromDb = async (email?: string, id?: string) => {
+  try {
+    if (id) {
+      const user = await getConnection().getRepository(User).findOne({ id });
+      return user;
+    }
+    const user = await getConnection().getRepository(User).findOne({ email });
+    return user;
+  } catch (ex) {
+    console.log(ex)
+    throw ex
+  }
+};
+
+const getUserFriendsFromDb = async (userId: string) => {
+  try {
+    const result = await getConnection()
+      .getRepository(UserUser)
+      .createQueryBuilder('relation')
+      .leftJoinAndSelect('relation.friend', 'friend')
+      .where(`relation."userId" = :userId`, { userId })
+      .andWhere(`relation."accepted" = true`)
+      .getMany()
+      .then(relations => relations.map(relation => relation.friend))
+
+    return result;
+  } catch (ex) {
+    console.log(ex)
+    throw ex
+  }
+}
+
+const getUserRequestsFromDb = async (userId: string) => {
+  try {
+    const sentRequests: User[] = await getConnection()
+      .getRepository(UserUser)
+      .createQueryBuilder('relation')
+      .leftJoinAndSelect('relation.friend', 'friend')
+      .where(`relation."userId" = :userId`, { userId })
+      .andWhere(`relation."accepted" = false`)
+      .getMany()
+      .then(relations => relations.map(relation => relation.friend))
+
+    const incomingRequests: User[] = await getConnection()
+      .getRepository(UserUser)
+      .createQueryBuilder('relation')
+      .leftJoinAndSelect('relation.friend', 'friend')
+      .where(`relation."friendId" = :userId`, { userId })
+      .andWhere(`relation."accepted" = false`)
+      .getMany()
+      .then(relations => relations.map(relation => relation.user))
+
+    return { sentRequests, incomingRequests }
+  } catch (ex) {
+    console.log(ex)
+    throw ex
+  }
+}
+
+
+const deleteFriend = async (userId: string, friendId: string) => {
+  try {
+
+    const deletedRelation = await getConnection()
+      .createQueryBuilder()
+      .delete()
+      .from(UserUser)
+      .where(` "userId" = :userId AND "friendId" = :friendId`, { userId, friendId })
+      .orWhere(`"userId" = :friendId AND "friendId" = :userId`, { userId, friendId })
+      .returning('*')
+      .execute()
+
+    return deletedRelation
+  } catch (ex) {
+    console.log(ex)
+    throw ex
+  }
+}
+
+const sendFriendRequest = async (requesterId: string, requestedId: string) => {
+  try {
+
+    const relation = await getConnection()
+      .createQueryBuilder()
+      .insert()
+      .into(UserUser)
+      .values({
+        user: { id: requesterId },
+        friend: { id: requestedId }
+      })
+      .returning('*')
+      .execute();
+
+    return relation
+
+  } catch (ex) {
+    console.log(ex)
+    throw ex
+  }
+}
+
+const acceptFriendRequest = async (requesterId: string, requestedId: string) => {
+  try {
+    const acceptedRelation: UpdateResult = await getConnection()
+      .createQueryBuilder()
+      .update(UserUser)
+      .set({ accepted: true })
+      .where(`"userId" = :requesterId AND "friendId" = :requestedId`, { requesterId, requestedId })
+      .returning('*')
+      .execute();
+
+    const inverseRelation = await getConnection()
+      .createQueryBuilder()
+      .insert()
+      .into(UserUser)
+      .values({
+        user: { id: requestedId },
+        friend: { id: requesterId },
+        accepted: true
+      })
+      .returning('*')
+      .execute();
+
+    return ({ message: 'success', acceptedRelation, inverseRelation })
+  } catch (ex) {
+    console.log(ex)
+    throw ex
+  }
+}
+
+const rejectFriendRequest = async (requesterId: string, requestedId: string) => {
+  try {
+
+    const deletedRequestRelation: DeleteResult = await getConnection()
+      .createQueryBuilder()
+      .delete()
+      .from(UserUser)
+      .where('"userId" = :requesterId AND "friendId" = :requestedId', { requesterId, requestedId })
+      .returning('*')
+      .execute();
+
+    return deletedRequestRelation
+
+  } catch (ex) {
+    console.log(ex)
+    throw ex
+  }
+}
 
 export {
   insertNewUserToDb,
   getUserFromDb,
-  followUser,
   generateJwt,
-  decodeJwt,
-  comparePlaintextToHashedPassword
+  comparePassword,
+  getUserFriendsFromDb,
+  getUserRequestsFromDb,
+  deleteFriend,
+  sendFriendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest,
 }

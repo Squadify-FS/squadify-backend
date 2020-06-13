@@ -92,6 +92,7 @@ const deleteGroup = async (groupId: string, adminId: string) => {
       .delete()
       .from(Group)
       .where({ id: groupId })
+      .execute()
 
     return { deletedGroup, deletedRelations }
 
@@ -123,6 +124,7 @@ const getUserGroupInvitations = async (userId: string) => {
       .getRepository(UserGroup)
       .createQueryBuilder('relation')
       .leftJoinAndSelect('relation.user', 'user')
+      .leftJoinAndSelect('relation.group', 'group')
       .where(`relation."inviterId" = :userId AND relation.accepted = false`, { userId })
       .getMany()
       .then(relations => relations.map(relation => relation.user))
@@ -133,7 +135,8 @@ const getUserGroupInvitations = async (userId: string) => {
     }[] = await getConnection()
       .getRepository(UserGroup)
       .createQueryBuilder('relation')
-      .leftJoinAndSelect('relation.user', 'user')
+      .leftJoinAndSelect('relation.inviter', 'inviter')
+      .leftJoinAndSelect('relation.group', 'group')
       .where(`relation."userId" = :userId AND relation.accepted = false`, { userId })
       .getMany()
       .then(relations => relations.map(relation => ({ inviter: relation.inviter, group: relation.group })))

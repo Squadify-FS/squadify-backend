@@ -161,10 +161,27 @@ const unassignEventFromUser = async (userId: string, eventId: string) => {
   }
 }
 
+const getUserEvents = async (userId: string) => {
+  try {
+    const user = await getConnection().getRepository(User).findOne({ id: userId })
+
+    const events: Event[] = await getConnection()
+      .createQueryBuilder()
+      .relation(User, 'events')
+      .of(user)
+      .loadMany()
+
+    return events
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
 export {
   insertEventToDb,
   assignEventToGroup,
   removeEventFromGroup,
   assignEventToUser,
-  unassignEventFromUser
+  unassignEventFromUser,
+  getUserEvents
 }

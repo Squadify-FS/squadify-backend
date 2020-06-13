@@ -38,3 +38,150 @@ const insertEventToDb = async (userId: string, name: string, description: string
     console.log(ex)
   }
 }
+
+const assignEventToGroup = async (userId: string, eventId: string, groupId: string) => {
+  try {
+    const group = await getConnection().getRepository(Group).findOne({ id: groupId })
+    const event = await getConnection().getRepository(Event).findOne({ id: eventId })
+    const user = await getConnection().getRepository(User).findOne({ id: userId })
+
+    if (!group || !event || !user) throw new Error('Something went wrong')
+
+    const userGroupRelation = await getConnection()
+      .getRepository(UserGroup)
+      .findOne({ user: { id: userId }, group: { id: groupId } })
+    if (!userGroupRelation) throw new Error('User is not in group')
+    if (userGroupRelation.permissionLevel < 1) throw new Error('User does not have permission to perform this action')
+
+    await getConnection()
+      .createQueryBuilder()
+      .relation(Event, 'groups')
+      .of(event)
+      .add(group);
+
+    await getConnection()
+      .createQueryBuilder()
+      .relation(Group, 'events')
+      .of(group)
+      .add(event);
+
+    await getConnection()
+      .createQueryBuilder()
+      .relation(Event, 'users')
+      .of(event)
+      .add(user);
+
+    return { group, event, user }
+
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+const removeEventFromGroup = async (userId: string, eventId: string, groupId: string) => {
+  try {
+    const group = await getConnection().getRepository(Group).findOne({ id: groupId })
+    const event = await getConnection().getRepository(Event).findOne({ id: eventId })
+    const user = await getConnection().getRepository(User).findOne({ id: userId })
+
+    if (!group || !event || !user) throw new Error('Something went wrong')
+
+    const userGroupRelation = await getConnection()
+      .getRepository(UserGroup)
+      .findOne({ user: { id: userId }, group: { id: groupId } })
+    if (!userGroupRelation) throw new Error('User is not in group')
+    if (userGroupRelation.permissionLevel < 1) throw new Error('User does not have permission to perform this action')
+
+    await getConnection()
+      .createQueryBuilder()
+      .relation(Event, 'groups')
+      .of(event)
+      .remove(group);
+
+    await getConnection()
+      .createQueryBuilder()
+      .relation(Group, 'events')
+      .of(group)
+      .remove(event);
+
+    return { group, event, user }
+
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+const assignEventToUser = async (userId: string, eventId: string) => {
+  try {
+    const event = await getConnection().getRepository(Event).findOne({ id: eventId })
+    const user = await getConnection().getRepository(User).findOne({ id: userId })
+
+    if (!event || !user) throw new Error('Something went wrong')
+
+    await getConnection()
+      .createQueryBuilder()
+      .relation(Event, 'users')
+      .of(event)
+      .add(user);
+
+    await getConnection()
+      .createQueryBuilder()
+      .relation(User, 'events')
+      .of(user)
+      .add(event);
+
+    return { event, user }
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+const unassignEventFromUser = async (userId: string, eventId: string) => {
+  try {
+    const event = await getConnection().getRepository(Event).findOne({ id: eventId })
+    const user = await getConnection().getRepository(User).findOne({ id: userId })
+
+    if (!event || !user) throw new Error('Something went wrong')
+
+    await getConnection()
+      .createQueryBuilder()
+      .relation(Event, 'users')
+      .of(event)
+      .remove(user);
+
+    await getConnection()
+      .createQueryBuilder()
+      .relation(User, 'events')
+      .of(user)
+      .remove(event);
+
+    return { event, user }
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+const getUserEvents = async (userId: string) => {
+  try {
+    const user = await getConnection().getRepository(User).findOne({ id: userId })
+
+    const events: Event[] = await getConnection()
+      .createQueryBuilder()
+      .relation(User, 'events')
+      .of(user)
+      .loadMany()
+
+    return events
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+export {
+  insertEventToDb,
+  assignEventToGroup,
+  removeEventFromGroup,
+  assignEventToUser,
+  unassignEventFromUser,
+  getUserEvents
+}

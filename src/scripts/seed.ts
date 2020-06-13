@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { createConnection, getConnection } from "typeorm";
 import { User, Group, Message, Event, Chat, UserUser, UserGroup, Geolocation } from "../models";
 
@@ -55,5 +56,7 @@ import "reflect-metadata";
   // console.log('user1 friends', user1Friends)
   // console.log('user1 reqs', user1Requests.sentRequests[0].friend)
   // console.log('user1 reqs', user1Requests.incomingRequests[0].friend)
+
+
 
 })()

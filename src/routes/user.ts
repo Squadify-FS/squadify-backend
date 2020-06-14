@@ -1,5 +1,5 @@
 import express from 'express';
-import { getUserFromDb, getUserFriendsFromDb, sendFriendRequest, getUserRequestsFromDb, deleteFriend, acceptFriendRequest, rejectFriendRequest } from '../controller/user';
+import { getUserFromDb, getUserFriendsFromDb, sendFriendRequest, getUserRequestsFromDb, deleteFriend, acceptFriendRequest, rejectFriendRequest, updateUser } from '../controller/user';
 import { isLoggedIn } from '../common/middleware';
 const router = express.Router()
 
@@ -18,6 +18,17 @@ router.get('/:email', isLoggedIn, async (req, res, next) => {
     const { email } = req.params;
     try {
         res.send(await getUserFromDb(email))
+    } catch(err) {
+        next(err);
+    }
+});
+
+// updates user info
+router.put('/:yourId/updateProfile', isLoggedIn, async (req, res, next) => {
+    const { yourId } = req.params;
+    const { firstName, lastName, email, password, avatarUrl } = req.body
+    try {
+        res.send(await updateUser(yourId, firstName, lastName, email, password, avatarUrl ));
     } catch(err) {
         next(err);
     }

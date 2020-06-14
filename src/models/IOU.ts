@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, ManyToMany, JoinTable, OneToMany } from 'typeorm';
-import { User, Group } from '..';
+import { User, Group } from '.';
 
 @Entity()
 export class IOU {

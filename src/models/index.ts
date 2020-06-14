@@ -8,6 +8,6 @@ import { UserUser } from './User/UserUser'
 import { UserGroup } from './User/UserGroup'
 import { UserEvent } from './User/UserEvent'
 import { Geolocation } from './Geolocation'
-import { IOU } from './IOU/IOU'
+import { IOU } from './IOU'
 
 export { User, Group, Chat, Event, Message, UserUser, UserGroup, UserEvent, Geolocation, Hashtag, IOU }

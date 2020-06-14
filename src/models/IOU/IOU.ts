@@ -15,9 +15,9 @@ export class IOU {
   @ManyToOne(() => Group, group => group.ious)
   group: Group;
 
-  @Column()
+  @ManyToOne(() => User, user => user.expenses)
   payer: User;
 
-  @OneToMany()
+  @OneToMany(() => User, user => user.debts)
   payees: User[]
 }

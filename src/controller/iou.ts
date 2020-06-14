@@ -3,7 +3,7 @@ import { getConnection, UpdateResult, DeleteResult } from 'typeorm';
 import { IOU, User, Group } from '../models'
 import { Alias } from 'typeorm/query-builder/Alias';
 
-//TODO TEST
+//TODO  TEST
 const insertIOUToDb = async (amount: number, groupId: string, payerId: string, payeeIds: string[], description?: string) => {
   try {
 

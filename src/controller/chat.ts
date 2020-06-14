@@ -1,6 +1,6 @@
 import { getConnection } from 'typeorm';
 
-import { Message, UserGroup } from '../models'
+import { Message, UserGroup, Group, Chat } from '../models'
 
 const addMessageToChat = async (userId: string, chatId: string, groupId: string, text: string, imageUrl?: string) => {
   try {
@@ -24,6 +24,32 @@ const addMessageToChat = async (userId: string, chatId: string, groupId: string,
   }
 }
 
+const getChatFromGroup = async(groupId: string)=>{
+  try{
+    const group = await getConnection()
+    .getRepository(Group)
+    .findOne(groupId , {relations: ['chat']})
+    return group?.chat
+
+  } catch(ex){
+    console.log(ex)
+  }
+}
+
+const getMessagesFromChat = async(chatId: string)=>{
+  try{
+    const chat = await getConnection()
+    .getRepository(Chat)
+    .findOne(chatId , {relations: ['messages']})
+    return chat?.messages
+
+  } catch(ex){
+    console.log(ex)
+  }
+}
+
 export {
-  addMessageToChat
+  addMessageToChat,
+  getChatFromGroup,
+  getMessagesFromChat
 }

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { createConnection, getConnection } from "typeorm";
-import { User, Group, Message, Event, Chat, UserUser, UserGroup, Geolocation, UserEvent } from "../models";
+import { User, Group, Message, Event, Chat, UserUser, UserGroup, Geolocation, UserEvent, IOU, Hashtag } from "../models";
 
 import { insertNewUserToDb, sendFriendRequest, getUserFriendsFromDb, getUserRequestsFromDb, acceptFriendRequest } from '../controller/user'
 import { insertNewGroupToDb, inviteUserToGroup, acceptInviteToGroup } from '../controller/group'
@@ -24,7 +24,9 @@ import "reflect-metadata";
       Event,
       Chat,
       Geolocation,
-      UserEvent
+      UserEvent,
+      IOU,
+      Hashtag
     ], // DB models go here, have to be imported on top of this file
     synchronize: true,
     logging: false,

@@ -22,14 +22,14 @@ const comparePassword = (plaintextPassword: string, hashedPassword: string) => {
   return bcrypt.compareSync(plaintextPassword, hashedPassword);
 };
 
-const insertNewUserToDb = async ({ firstName, lastName, password, email, dob }: IRegisterBody) => {
+const insertNewUserToDb = async ({ firstName, lastName, password, email, dob, avatarUrl }: IRegisterBody) => {
   try {
     //TODO MANAGE ADDRESS AND LOCATION INPUT WITH GOOGLE MAPS STUFF ETC
     const user = await getConnection()
       .createQueryBuilder()
       .insert()
       .into(User)
-      .values({ firstName, lastName, email, dob, password: hashAndSaltPassword(password) })
+      .values({ firstName, lastName, email, dob, password: hashAndSaltPassword(password), avatarUrl })
       .returning('*')
       .execute();
     return user;

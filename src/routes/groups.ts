@@ -19,9 +19,9 @@ router.get('/:userId', isLoggedIn, async (req, res, next) => {
 
 // make a new group 
 router.post('/', isLoggedIn, async(req, res, next) => {
-    const { name, isPrivate, creatorId, friendIds } = req.body;
+    const { name, isPrivate, creatorId, friendIds, avatarUrl } = req.body;
     try {
-        res.send(await insertNewGroupToDb({ name, isPrivate, creatorId, friendIds }));
+        res.send(await insertNewGroupToDb({ name, isPrivate, creatorId, friendIds, avatarUrl }));
     } catch(err) {
         console.log(err);
     }

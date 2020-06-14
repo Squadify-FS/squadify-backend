@@ -7,6 +7,7 @@ interface IGroupInterface {
   isPrivate: boolean;
   creatorId: string;
   friendIds?: string[];
+  avatarUrl: string;
 }
 
 /*
@@ -17,14 +18,14 @@ FUNCTION WILL:
   send invitations to users admin invited when creating group in frontend form by creating relation in UserGroup join table
   return newly created group and chat
 */
-const insertNewGroupToDb = async ({ name, isPrivate, creatorId, friendIds }: IGroupInterface) => {
+const insertNewGroupToDb = async ({ name, isPrivate, creatorId, friendIds, avatarUrl }: IGroupInterface) => {
   try {
 
     const group: InsertResult = await getConnection() //create group and get id
       .createQueryBuilder()
       .insert()
       .into(Group)
-      .values({ name, isPrivate })
+      .values({ name, isPrivate, avatarUrl })
       .returning('*')
       .execute()
     const groupId: string = group.identifiers[0].id;

@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, Index, OneToMany, ManyToOne } from 'typeorm';
 import { Message } from '../Group/Message';
-import { UserUser, UserGroup, Geolocation, } from '..';
+import { UserUser, UserGroup, Geolocation, IOU } from '..';
 import { UserEvent } from './UserEvent';
 
 @Entity()
@@ -44,5 +44,10 @@ export class User {
 
   @OneToMany(() => Message, message => message.user)
   sentMessages: Message[]
-}
 
+  @OneToMany(() => IOU, iou => iou.payer)
+  expenses: IOU[];
+
+  @ManyToOne(() => IOU, iou => iou.payees)
+  debts: IOU[];
+}

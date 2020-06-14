@@ -2,11 +2,11 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { getConnection, UpdateResult, DeleteResult } from 'typeorm';
 
-import { User } from '../models'
+import { User, UserUser } from '../models'
 
 import { TokenBody } from '../common/functions'
 import { IRegisterBody } from '../routes/auth'
-import { UserUser } from '../models';
+
 
 const generateJwt = ({ id, email, firstName, lastName }: TokenBody) => {
   return jwt.sign({ id, email, firstName, lastName }, process.env.JWT_SECRET || 'SHHHHHH', {
@@ -85,7 +85,7 @@ const getUserRequestsFromDb = async (userId: string) => {
     const incomingRequests: User[] = await getConnection()
       .getRepository(UserUser)
       .createQueryBuilder('relation')
-      .leftJoinAndSelect('relation.friend', 'friend')
+      .leftJoinAndSelect('relation.user', 'user')
       .where(`relation."friendId" = :userId`, { userId })
       .andWhere(`relation."accepted" = false`)
       .getMany()
@@ -190,7 +190,7 @@ const rejectFriendRequest = async (requesterId: string, requestedId: string) => 
 
 const updateUser = async (userId: string, firstName?: string, lastName?: string, email?: string, password?: string, avatarUrl?: string) => {
   try {
-      const user = await getConnection()
+    const user = await getConnection()
       .getRepository(User)
       .createQueryBuilder()
       .update(User)
@@ -198,12 +198,12 @@ const updateUser = async (userId: string, firstName?: string, lastName?: string,
       .where({ id: userId })
       .returning('*')
       .execute();
-      return user;
-    } catch (ex) {
-      console.log(ex)
-      throw ex
-    }
+    return user;
+  } catch (ex) {
+    console.log(ex)
+    throw ex
   }
+}
 
 export {
   insertNewUserToDb,

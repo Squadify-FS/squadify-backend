@@ -221,6 +221,10 @@ const updateEventGeolocationInDb = async (userId: string, eventId: string, addre
   }
 }
 
+//get geolocation for user and event
+// fetch events based on geolocation (radius)
+// STRETCH: fetch group activity based on geolocation through user's activity if the group is public
+
 export {
   setUserGeolocationInDb,
   updateUserGeolocationInDb,

@@ -1,7 +1,7 @@
 import express from 'express'
 
 import { createConnection } from 'typeorm';
-import { User, Group, Chat, Message, Event, UserUser, UserGroup, UserEvent, Geolocation } from './models/'
+import { User, Group, Chat, Message, Event, UserUser, UserGroup, UserEvent, Geolocation, IOU, Hashtag } from './models/'
 import { insertNewUserToDb, sendFriendRequest, getUserFriendsFromDb, getUserRequestsFromDb } from './controller/user'
 
 // import routes 
@@ -48,7 +48,9 @@ app.use((req, res, next) => {
       Event,
       // EventGeolocation,
       Chat,
-      Geolocation
+      Geolocation,
+      IOU,
+      Hashtag
     ], // DB models go here, have to be imported on top of this file
     synchronize: true,
     logging: false,

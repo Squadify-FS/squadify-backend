@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, ManyToMany, JoinTable, OneToMany } from 'typeorm';
-import { Geolocation, Group, UserEvent, } from '..';
-// import { EventGroup } from './EventGroup';
+import { Geolocation, Group, UserEvent, Hashtag } from '..';
+
 
 @Entity()
 export class Event {
@@ -24,10 +24,13 @@ export class Event {
   @Column()
   isPrivate: boolean;
 
+  @ManyToMany(() => Hashtag, hashtag => hashtag.events)
+  hashtags: Hashtag[]
+
   @ManyToOne(() => Geolocation, geolocation => geolocation.events)
   geolocation: Geolocation;
 
-  @OneToMany(() => Group, group => group.events)
+  @ManyToMany(() => Group, group => group.events)
   @JoinTable()
   groups: Group[]
 

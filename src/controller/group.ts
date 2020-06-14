@@ -134,6 +134,38 @@ const deleteGroup = async (groupId: string, adminId: string) => {
   }
 }
 
+const getGroupUsers = async (groupId: string) => {
+  try {
+    const users: User[] = await getConnection()
+      .getRepository(UserGroup)
+      .createQueryBuilder('relation')
+      .leftJoinAndSelect('relation.user', 'group')
+      .where(`relation."groupId" = :groupId AND relation.accepted = true`, { groupId })
+      .getMany()
+      .then(relations => relations.map(relation => relation.user))
+
+    return users
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+const getGroupUserInvitations = async (groupId: string) => {
+  try {
+    const users: User[] = await getConnection()
+      .getRepository(UserGroup)
+      .createQueryBuilder('relation')
+      .leftJoinAndSelect('relation.user', 'group')
+      .where(`relation."groupId" = :groupId AND relation.accepted = false`, { groupId })
+      .getMany()
+      .then(relations => relations.map(relation => relation.user))
+
+    return users
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
 const getUserGroups = async (userId: string) => {
   try {
     const groups: Group[] = await getConnection()
@@ -286,6 +318,8 @@ export {
   insertNewGroupToDb,
   deleteGroup,
   updateGroupInfo,
+  getGroupUsers,
+  getGroupUserInvitations,
   getUserGroups,
   getUserGroupInvitations,
   inviteUserToGroup,

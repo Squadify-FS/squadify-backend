@@ -1,7 +1,7 @@
 import express from 'express'
 
 import { createConnection } from 'typeorm';
-import { User, Group, Chat, Message, Event, UserUser, UserGroup, Geolocation } from './models/'
+import { User, Group, Chat, Message, Event, UserUser, UserGroup, UserEvent, Geolocation } from './models/'
 import { insertNewUserToDb, sendFriendRequest, getUserFriendsFromDb, getUserRequestsFromDb } from './controller/user'
 
 // import routes 
@@ -41,6 +41,7 @@ app.use((req, res, next) => {
       User,
       UserUser,
       UserGroup,
+      UserEvent,
       // UserGeolocation,
       Group,
       Message,

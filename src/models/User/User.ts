@@ -24,7 +24,7 @@ export class User {
   @Column()
   dob: Date;
 
-  @Column()
+  @Column({ nullable: true })
   avatarUrl: string;
 
   @ManyToOne(() => Geolocation, geolocation => geolocation.users)

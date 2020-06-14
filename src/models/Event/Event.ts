@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, ManyToMany, JoinTable, OneToMany } from 'typeorm';
-import { Geolocation, Group, UserEvent, GroupEvent } from '..';
+import { Geolocation, Group, UserEvent, } from '..';
 // import { EventGroup } from './EventGroup';
 
 @Entity()

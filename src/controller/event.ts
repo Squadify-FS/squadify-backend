@@ -178,9 +178,39 @@ const getUserEvents = async (userId: string) => {
   }
 }
 
-// const updateEvent = async (eventId: string) => {
+const updateEvent = async (userId: string, eventId: string, name: string, description: string, startTime: Date, endTime: Date, isPrivate?: boolean) => {
+  try {
+    const userRelation = await getConnection()
+      .getRepository(UserEvent)
+      .findOne({ user: { id: userId }, event: { id: eventId } })
+    if (!userRelation || userRelation.permissionLevel < 1) throw new Error('No relation or permission level error')
 
-// }
+    if ((isPrivate === true || isPrivate === false)) {
+      if (userRelation.permissionLevel < 2) throw new Error('No permission to set privacy')
+      else await getConnection()
+        .createQueryBuilder()
+        .update(Event)
+        .set({ isPrivate })
+        .where({ id: eventId })
+        .returning('*')
+        .execute();
+    }
+
+    const updatedEvent = await getConnection()
+      .createQueryBuilder()
+      .update(Event)
+      .set({ name, description, startTime, endTime })
+      .where({ id: eventId })
+      .returning('*')
+      .execute();
+
+    return updatedEvent
+
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
 
 export {
   insertEventToDb,
@@ -188,5 +218,6 @@ export {
   unassignEventFromGroup,
   assignEventToUser,
   unassignEventFromUser,
-  getUserEvents
+  getUserEvents,
+  updateEvent
 }

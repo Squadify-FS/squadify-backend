@@ -9,7 +9,7 @@ import { Event, Group, User, UserGroup, UserEvent } from '../models'
 //   isPrivate: boolean;
 // }
 
-//TODO
+// TODO
 const insertEventToDb = async (userId: string, name: string, description: string, isPrivate: boolean, startTime: Date, endTime?: Date) => {
   try {
     const user = await getConnection().getRepository(User).findOne({ id: userId });

@@ -45,4 +45,3 @@ export class User {
   @OneToMany(() => Message, message => message.user)
   sentMessages: Message[]
 }
-

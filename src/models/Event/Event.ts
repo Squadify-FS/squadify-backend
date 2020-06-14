@@ -27,7 +27,7 @@ export class Event {
   @ManyToOne(() => Geolocation, geolocation => geolocation.events)
   geolocation: Geolocation;
 
-  @OneToMany(() => Group, group => group.events)
+  @ManyToMany(() => Group, group => group.events)
   @JoinTable()
   groups: Group[]
 

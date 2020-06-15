@@ -1,7 +1,6 @@
-import { getConnection, UpdateResult, DeleteResult } from 'typeorm';
+import { getConnection } from 'typeorm';
 
 import { IOU, User, Group } from '../models'
-import { Alias } from 'typeorm/query-builder/Alias';
 
 //TODO  TEST
 const insertIOUToDb = async (amount: number, groupId: string, payerId: string, payeeIds: string[], description?: string) => {
@@ -30,30 +29,30 @@ const insertIOUToDb = async (amount: number, groupId: string, payerId: string, p
   }
 }
 
-const getGroupIOUS = async(groupId: string)=>{
-  try{
+const getGroupIOUS = async (groupId: string) => {
+  try {
     const group = await getConnection()
-    .getRepository(Group)
-    .findOne(groupId, {relations: ['ious']})
+      .getRepository(Group)
+      .findOne(groupId, { relations: ['ious'] })
     return group?.ious
 
-  } catch (ex){
+  } catch (ex) {
     console.log(ex)
   }
 }
 
-const getUserIOUS = async(userId: string)=>{
-  try{
+const getUserIOUS = async (userId: string) => {
+  try {
     const user = await getConnection()
-    .getRepository(User)
-    .findOne(userId, {relations: ['expenses', 'debts']})
-    return {expenses: user?.expenses, debts: user?.debts}
+      .getRepository(User)
+      .findOne(userId, { relations: ['expenses', 'debts'] })
+    return { expenses: user?.expenses, debts: user?.debts }
 
-  } catch (ex){
+  } catch (ex) {
     console.log(ex)
   }
 }
 
 
 
-export { insertIOUToDb , getGroupIOUS, getUserIOUS }
+export { insertIOUToDb, getGroupIOUS, getUserIOUS }

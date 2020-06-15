@@ -1,6 +1,6 @@
 import { getConnection, InsertResult } from 'typeorm';
 
-import { Group, UserGroup, Chat, User } from '../models'
+import { Group, UserGroup, Chat, User, Geolocation } from '../models'
 
 interface IGroupInterface {
   name: string;

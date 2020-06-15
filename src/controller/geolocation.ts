@@ -1,7 +1,7 @@
 import { Repository, getConnection } from "typeorm";
 import { User, Geolocation, UserEvent, Event } from "../models";
 
-
+// general purpose controller to create new geolocations
 const insertGeolocationToDb = async (latitude: number, longitude: number, address?: string, city?: string, region?: string, postalCode?: string, country?: string) => {
   try {
 
@@ -76,6 +76,7 @@ const setUserGeolocationInDb = async (userId: string, localized_address?: string
   }
 }
 
+//name explains its function
 const updateUserGeolocationInDb = async (userId: string, localized_address?: string, latitude?: number, longitude?: number) => {
   try {
     const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation) // get geolocation repo from db
@@ -133,6 +134,7 @@ const updateUserGeolocationInDb = async (userId: string, localized_address?: str
   }
 }
 
+// returns the geolocation object that user has assigned
 const getUserGeolocation = async (userId: string) => {
   try {
 
@@ -147,6 +149,7 @@ const getUserGeolocation = async (userId: string) => {
   }
 }
 
+// sets event geolocation when eent is first created
 const setEventGeolocationInDb = async (userId: string, eventId: string, localized_address?: string, latitude?: number, longitude?: number) => {
   try {
     const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation);
@@ -200,6 +203,7 @@ const setEventGeolocationInDb = async (userId: string, eventId: string, localize
   }
 }
 
+// same as update user geolocation but with event
 const updateEventGeolocationInDb = async (userId: string, eventId: string, localized_address?: string, latitude?: number, longitude?: number) => {
   try {
     const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation);
@@ -259,6 +263,7 @@ const updateEventGeolocationInDb = async (userId: string, eventId: string, local
   }
 }
 
+// gets geolocation corresponding to this event
 const getEventGeolocation = async (eventId: string) => {
   try {
 
@@ -273,7 +278,6 @@ const getEventGeolocation = async (eventId: string) => {
   }
 }
 
-// fetch events based on geolocation (radius)
 // STRETCH: fetch group activity based on geolocation through user's activity if the group is public
 
 export {

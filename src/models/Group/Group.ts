@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, OneToMany, ManyToMany } from 'typeorm';
 
 import { Chat, UserGroup, Event } from '..';
-import { IOU } from '../IOU/IOU';
+import { IOU } from '../IOU';
 
 @Entity()
 export class Group {

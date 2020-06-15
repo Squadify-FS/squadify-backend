@@ -1,6 +1,6 @@
-import { getConnection } from 'typeorm';
+import { getConnection, getRepository } from 'typeorm';
 
-import { Event, Group, User, UserGroup, UserEvent } from '../models'
+import { Event, Group, User, UserGroup, UserEvent, Geolocation, Hashtag } from '../models'
 
 // interface NewEventDetails {
 //   name: string;
@@ -211,6 +211,76 @@ const updateEvent = async (userId: string, eventId: string, name: string, descri
   }
 }
 
+const fetchEventsUsingRadius = async (geolocationId: string, radius: number) => {
+  try {
+    const location = await getConnection().getRepository(Geolocation).findOne({ id: geolocationId })
+
+    if (location) {
+      const radiusInKM = radius * 0.621371
+      const latitudeTolerance = (1 / 110.54) * radiusInKM
+      const longitudeTolerance = (1 / (111.320 * Math.cos(Number(location.latitude.toFixed(4))))) * radiusInKM
+
+      const results = await getConnection()
+        .createQueryBuilder()
+        .select()
+        .from(Geolocation, 'location')
+        .leftJoinAndSelect('location.events', 'location')
+        .where(`location."latitude" BETWEEN (location."latitude" - ${latitudeTolerance}) AND (location."latitude" + ${latitudeTolerance})`)
+        .andWhere(`location."longitude" BETWEEN (location."longitude" - ${longitudeTolerance}) AND (location."longitude" + ${longitudeTolerance})`)
+        .limit(50) //TODO
+        .getMany()
+        .then(geolocations => geolocations.reduce((acc: Event[], curr: Geolocation) => {
+          acc.concat(curr.events)
+          return acc
+        }, []))
+
+      // const results = await getConnection()
+      //   .createQueryBuilder()
+      //   .select()
+      //   .from(Event, 'event')
+      //   .leftJoin('event.geolocation', 'geolocation')
+      //   .where(`event.geolocation."latitude" BETWEEN (event.geolocation."latitude" - ${latitudeTolerance}) AND (event.geolocation."latitude" + ${latitudeTolerance})`)
+      //   .andWhere(`event.geolocation."longitude" BETWEEN (event.geolocation."longitude" - ${longitudeTolerance}) AND (event.geolocation."longitude" + ${longitudeTolerance})`)
+      //   .limit(50) //TODO
+      //   .getMany()
+
+      return results
+    }
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+const fetchEventsUsingNameOrTags = async (searchVal: string) => {
+  try {
+
+    const nameResults = await getConnection()
+      .createQueryBuilder()
+      .select()
+      .from(Event, 'event')
+      .leftJoin('event.hashtags', 'hashtag')
+      .where(`event.name LIKE "%${searchVal}%"`)
+      .getMany()
+
+    const hashtagResults = await getConnection()
+      .createQueryBuilder()
+      .select()
+      .from(Hashtag, 'hashtag')
+      .leftJoinAndSelect('hashtag.events', 'events')
+      .where(`hashtag.text LIKE "%${searchVal}%"`)
+      .getMany()
+      .then(hashtags => hashtags.reduce((acc: Event[], curr) => {
+        acc.concat(curr.events)
+        return acc
+      }, []))
+
+    return [...nameResults, hashtagResults]
+
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
 
 export {
   insertEventToDb,
@@ -219,5 +289,7 @@ export {
   assignEventToUser,
   unassignEventFromUser,
   getUserEvents,
-  updateEvent
+  updateEvent,
+  fetchEventsUsingRadius,
+  fetchEventsUsingNameOrTags
 }

@@ -1,4 +1,4 @@
-import { getConnection, getRepository } from 'typeorm';
+import { getConnection } from 'typeorm';
 
 import { Event, Group, User, UserGroup, UserEvent, Geolocation, Hashtag } from '../models'
 import { insertGeolocationToDb } from './geolocation';

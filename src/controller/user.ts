@@ -147,6 +147,7 @@ const acceptFriendRequest = async (requesterId: string, requestedId: string) => 
       .update(UserUser)
       .set({ accepted: true })
       .where(`"userId" = :requesterId AND "friendId" = :requestedId`, { requesterId, requestedId })
+      .orWhere(`"userId" = :requestedId AND "friendId" = :requesterId`, { requesterId, requestedId })
       .returning('*')
       .execute();
 
@@ -177,6 +178,7 @@ const rejectFriendRequest = async (requesterId: string, requestedId: string) => 
       .delete()
       .from(UserUser)
       .where('"userId" = :requesterId AND "friendId" = :requestedId', { requesterId, requestedId })
+      .orWhere(`"userId" = :requestedId AND "friendId" = :requesterId`, { requesterId, requestedId })
       .returning('*')
       .execute();
 

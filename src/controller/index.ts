@@ -60,11 +60,15 @@ import {
   rejectFriendRequest,
   updateUser
 } from './user'
-
+//
+//
+//
 export {
+  // chat
   addMessageToChat,
   getChatFromGroup,
   getMessagesFromChat,
+  // events
   insertEventToDb,
   assignEventToGroup,
   unassignEventFromGroup,
@@ -75,6 +79,7 @@ export {
   updateEvent,
   fetchEventsUsingRadius,
   fetchEventsUsingNameOrTags,
+  // geolocation
   insertGeolocationToDb,
   setUserGeolocationInDb,
   updateUserGeolocationInDb,
@@ -82,6 +87,7 @@ export {
   setEventGeolocationInDb,
   updateEventGeolocationInDb,
   getEventGeolocation,
+  // group
   insertNewGroupToDb,
   deleteGroup,
   updateGroupInfo,
@@ -95,9 +101,11 @@ export {
   removeUserFromGroup,
   followPublicGroup,
   setGroupFollowersReadOnly,
+  // iou
   insertIOUToDb,
   getGroupIOUS,
   getUserIOUS,
+  // user
   insertNewUserToDb,
   getUserFromDb,
   generateJwt,

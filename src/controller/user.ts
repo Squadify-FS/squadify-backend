@@ -22,6 +22,7 @@ const comparePassword = (plaintextPassword: string, hashedPassword: string) => {
   return bcrypt.compareSync(plaintextPassword, hashedPassword);
 };
 
+// creates a new user and assigns a hash number to the firstName and lastName
 const insertNewUserToDb = async ({ firstName, lastName, password, email, dob, avatarUrl }: IRegisterBody) => {
   try {
     //TODO MANAGE ADDRESS AND LOCATION INPUT WITH GOOGLE MAPS STUFF ETC
@@ -43,6 +44,7 @@ const insertNewUserToDb = async ({ firstName, lastName, password, email, dob, av
   }
 };
 
+// gets user using email OR id
 const getUserFromDb = async (email?: string, id?: string) => {
   try {
     if (id) {
@@ -57,6 +59,7 @@ const getUserFromDb = async (email?: string, id?: string) => {
   }
 };
 
+// gets the friends from the user
 const getUserFriendsFromDb = async (userId: string) => {
   try {
     const result: User[] = await getConnection()
@@ -75,6 +78,7 @@ const getUserFriendsFromDb = async (userId: string) => {
   }
 }
 
+// gets the user's sent friend requests and received friend requests
 const getUserRequestsFromDb = async (userId: string) => {
   try {
     const sentRequests: User[] = await getConnection()
@@ -102,7 +106,7 @@ const getUserRequestsFromDb = async (userId: string) => {
   }
 }
 
-
+// deletes a friend relation between to users
 const deleteFriend = async (userId: string, friendId: string) => {
   try {
 
@@ -122,6 +126,7 @@ const deleteFriend = async (userId: string, friendId: string) => {
   }
 }
 
+// creates a friends relation (one way only) where it is not accepted yet
 const sendFriendRequest = async (requesterId: string, requestedId: string) => {
   try {
 
@@ -144,6 +149,7 @@ const sendFriendRequest = async (requesterId: string, requestedId: string) => {
   }
 }
 
+// sets accepted to true for previous created relation, and creates inverse relation
 const acceptFriendRequest = async (requesterId: string, requestedId: string) => {
   try {
     const acceptedRelation: UpdateResult = await getConnection()
@@ -174,6 +180,7 @@ const acceptFriendRequest = async (requesterId: string, requestedId: string) => 
   }
 }
 
+// deletes received one way relation
 const rejectFriendRequest = async (requesterId: string, requestedId: string) => {
   try {
 
@@ -194,13 +201,20 @@ const rejectFriendRequest = async (requesterId: string, requestedId: string) => 
   }
 }
 
-const updateUser = async (userId: string, firstName?: string, lastName?: string, email?: string, password?: string, avatarUrl?: string) => {
+// updates user info. must be sent all the info that will be changed as well as the info that won't be
+// also changes hash to firstname and lastname
+const updateUser = async (userId: string, firstName: string, lastName: string, email: string, password: string, avatarUrl: string) => {
   try {
+
+    const hash = generateHashForName()
+    const hashedFirstName = `${firstName}${hash}`
+    const hashedLastName = `${lastName}${hash}`
+
     const user = await getConnection()
       .getRepository(User)
       .createQueryBuilder()
       .update(User)
-      .set({ firstName, lastName, email, password, avatarUrl })
+      .set({ firstName: hashedFirstName, lastName: hashedLastName, email, password, avatarUrl })
       .where({ id: userId })
       .returning('*')
       .execute();
@@ -211,7 +225,7 @@ const updateUser = async (userId: string, firstName?: string, lastName?: string,
   }
 }
 
-
+// puts the hashtag in the user's preferred hashtags or categories, whatever you wanna call it, in order to fetch relevant events
 const assignHashtagToUser = async (hashtagId: string, userId: string) => {
   try {
     const user = await getConnection().getRepository(User).findOne({ id: userId })
@@ -232,9 +246,10 @@ const assignHashtagToUser = async (hashtagId: string, userId: string) => {
   }
 }
 
+// gets an array of the users selected hashtags
 const getUserHashtags = async (userId: string) => {
   try {
-    const results = await getConnection()
+    const results: Hashtag[] | undefined = await getConnection()
       .getRepository(User)
       .findOne(userId, { relations: ['hashtags'] })
       .then(user => user?.hashtags)
@@ -245,6 +260,7 @@ const getUserHashtags = async (userId: string) => {
   }
 }
 
+// searches a user by email and returns an array of similar ones
 const searchUserByEmail = async (email: string) => {
   try {
     const results: User[] = await getConnection()
@@ -260,6 +276,7 @@ const searchUserByEmail = async (email: string) => {
   }
 }
 // NOT OPTIMAL SOLUTIONS FOR SEARCH, GOES THROUGH ALL THE DATABASE TO FIND. NOT SCALABLE OPTION
+// returns array of users with similar hashes
 const searchUserByHash = async (hash: string) => {
   try {
     const results: User[] = await getConnection()

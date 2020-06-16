@@ -1,6 +1,6 @@
 import { getConnection } from 'typeorm';
 
-import { IOU, User, Group } from '../models'
+import { IOU, User } from '../models'
 
 //TODO  TEST
 // creates an IOU and inserts it to the group, handling who payed what to who
@@ -47,6 +47,7 @@ const getGroupIOUS = async (groupId: string) => {
   }
 }
 
+// gets all expenses and debts for the user with no order
 const getUserIOUS = async (userId: string) => {
   try {
     const user = await getConnection()
@@ -59,6 +60,7 @@ const getUserIOUS = async (userId: string) => {
   }
 }
 
+// gets the expenses ordered by createdAt time
 const getUserExpenses = async (userId: string) => { // works
   try {
     const ious: IOU[] = await getConnection()
@@ -75,6 +77,7 @@ const getUserExpenses = async (userId: string) => { // works
   }
 }
 
+// gets the debts ordered by createdAt time
 const getUserDebts = async (userId: string) => {
   try {
     const ious: IOU[] | undefined = await getConnection()
@@ -95,8 +98,10 @@ const getUserDebts = async (userId: string) => {
   }
 }
 
-
-
-
-
-export { insertIOUToDb, getGroupIOUS, getUserIOUS }
+export {
+  insertIOUToDb,
+  getGroupIOUS,
+  getUserIOUS,
+  getUserExpenses,
+  getUserDebts
+}

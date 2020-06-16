@@ -404,6 +404,8 @@ export {
   deleteGroup,
   updateGroupInfo,
   getGroupUsers,
+  getGroupFriends,
+  getGroupFollowers,
   getGroupUserInvitations,
   getUserGroups,
   getUserGroupInvitations,

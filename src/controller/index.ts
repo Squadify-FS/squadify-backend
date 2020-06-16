@@ -16,6 +16,10 @@ import {
   fetchEventsUsingRadius,
   fetchEventsByName,
   fetchEventsByHashtags,
+  getHashtagByText,
+  getHashtagById,
+  insertHashtagToDb,
+  assignHashtagToEvent,
   getEventHashtags
 } from './event'
 
@@ -50,7 +54,11 @@ import {
 } from './group'
 
 import {
-  insertIOUToDb, getGroupIOUS, getUserIOUS
+  insertIOUToDb,
+  getGroupIOUS,
+  getUserIOUS,
+  getUserExpenses,
+  getUserDebts
 } from './iou'
 
 import {
@@ -98,6 +106,10 @@ export {
   fetchEventsUsingRadius,
   fetchEventsByName,
   fetchEventsByHashtags,
+  getHashtagByText,
+  getHashtagById,
+  insertHashtagToDb,
+  assignHashtagToEvent,
   getEventHashtags,
   // 
   // geolocation
@@ -132,6 +144,8 @@ export {
   insertIOUToDb,
   getGroupIOUS,
   getUserIOUS,
+  getUserExpenses,
+  getUserDebts,
   // 
   // user
   insertNewUserToDb,

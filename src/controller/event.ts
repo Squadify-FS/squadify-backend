@@ -250,6 +250,7 @@ const updateEvent = async (userId: string, eventId: string, name: string, descri
   }
 }
 
+// uses geolocation to draw a circle around and fetch all the events in those geolocations and return them
 const fetchEventsUsingRadius = async (geolocationId: string, radius: number, latitude?: number, longitude?: number) => {
   try {
     let location = await getConnection().getRepository(Geolocation).findOne({ id: geolocationId })
@@ -300,10 +301,11 @@ const fetchEventsUsingRadius = async (geolocationId: string, radius: number, lat
   }
 }
 
-const fetchEventsUsingNameOrTags = async (searchVal: string) => {
+// uses event's name and hashtags to fetch events based on a string search value
+const fetchEventsByName = async (searchVal: string) => {
   try {
 
-    const nameResults = await getConnection()
+    const results = await getConnection()
       .createQueryBuilder()
       .select()
       .from(Event, 'event')
@@ -312,7 +314,17 @@ const fetchEventsUsingNameOrTags = async (searchVal: string) => {
       .andWhere(`event."isPrivate" = false`)
       .getMany()
 
-    const hashtagResults = await getConnection()
+    return results
+
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+const fetchEventsByHashtags = async (searchVal: string) => {
+  try {
+
+    const results = await getConnection()
       .createQueryBuilder()
       .select()
       .from(Hashtag, 'hashtag')
@@ -325,8 +337,74 @@ const fetchEventsUsingNameOrTags = async (searchVal: string) => {
         return acc
       }, []))
 
-    return [...nameResults, hashtagResults]
+    return results
 
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+const getEventHashtags = async (eventId: string) => {
+  try {
+    const results = await getConnection()
+      .getRepository(Event)
+      .findOne(eventId, { relations: ['hashtags'] })
+      .then(event => event?.hashtags)
+
+    return results
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+
+const getHashtagByText = async (text: string) => {
+  try {
+    const hashtag = await getConnection().getRepository(Hashtag).findOne({ text })
+    return hashtag
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+const getHashtagById = async (id: string) => {
+  try {
+    const hashtag = await getConnection().getRepository(Hashtag).findOne({ id })
+    return hashtag
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+const insertHashtagToDb = async (text: string) => {
+  try {
+
+    const hashtag = new Hashtag()
+    hashtag.text = text
+    await getConnection().manager.save(hashtag)
+
+    return hashtag
+
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+const assignHashtagToEvent = async (hashtagId: string, eventId: string) => {
+  try {
+    const event = await getConnection().getRepository(Hashtag).findOne({ id: eventId })
+    const hashtag = await getConnection().getRepository(Hashtag).findOne({ id: hashtagId })
+
+    if (event && hashtag) {
+
+      await getConnection()
+        .createQueryBuilder()
+        .relation(Event, 'hashtags')
+        .of(event)
+        .add(hashtag)
+
+      return { event, hashtag }
+    }
   } catch (ex) {
     console.log(ex)
   }
@@ -343,5 +421,11 @@ export {
   getGroupEvents,
   updateEvent,
   fetchEventsUsingRadius,
-  fetchEventsUsingNameOrTags
+  fetchEventsByName,
+  fetchEventsByHashtags,
+  getHashtagByText,
+  getHashtagById,
+  insertHashtagToDb,
+  assignHashtagToEvent,
+  getEventHashtags
 }

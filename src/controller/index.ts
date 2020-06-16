@@ -14,7 +14,9 @@ import {
   getGroupEvents,
   updateEvent,
   fetchEventsUsingRadius,
-  fetchEventsUsingNameOrTags
+  fetchEventsByName,
+  fetchEventsByHashtags,
+  getEventHashtags
 } from './event'
 
 import {
@@ -58,16 +60,26 @@ import {
   sendFriendRequest,
   acceptFriendRequest,
   rejectFriendRequest,
-  updateUser
+  updateUser,
+  assignHashtagToUser,
+  getUserHashtags
 } from './user'
 //
 //
 //
+//
+// 
+// 
+// 
+//
+//
 export {
+  // 
   // chat
   addMessageToChat,
   getChatFromGroup,
   getMessagesFromChat,
+  // 
   // events
   insertEventToDb,
   assignEventToGroup,
@@ -78,7 +90,10 @@ export {
   getGroupEvents,
   updateEvent,
   fetchEventsUsingRadius,
-  fetchEventsUsingNameOrTags,
+  fetchEventsByName,
+  fetchEventsByHashtags,
+  getEventHashtags,
+  // 
   // geolocation
   insertGeolocationToDb,
   setUserGeolocationInDb,
@@ -87,6 +102,7 @@ export {
   setEventGeolocationInDb,
   updateEventGeolocationInDb,
   getEventGeolocation,
+  //
   // group
   insertNewGroupToDb,
   deleteGroup,
@@ -101,10 +117,12 @@ export {
   removeUserFromGroup,
   followPublicGroup,
   setGroupFollowersReadOnly,
+  // 
   // iou
   insertIOUToDb,
   getGroupIOUS,
   getUserIOUS,
+  // 
   // user
   insertNewUserToDb,
   getUserFromDb,
@@ -116,5 +134,7 @@ export {
   sendFriendRequest,
   acceptFriendRequest,
   rejectFriendRequest,
-  updateUser
+  updateUser,
+  assignHashtagToUser,
+  getUserHashtags
 }

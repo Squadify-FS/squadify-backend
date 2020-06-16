@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { getConnection, UpdateResult, DeleteResult } from 'typeorm';
 
-import { User, UserUser } from '../models'
+import { User, UserUser, Hashtag } from '../models'
 
 import { TokenBody } from '../common/functions'
 import { IRegisterBody } from '../routes/auth'
@@ -207,6 +207,40 @@ const updateUser = async (userId: string, firstName?: string, lastName?: string,
   }
 }
 
+
+const assignHashtagToUser = async (hashtagId: string, userId: string) => {
+  try {
+    const user = await getConnection().getRepository(User).findOne({ id: userId })
+    const hashtag = await getConnection().getRepository(Hashtag).findOne({ id: hashtagId })
+
+    if (user && hashtag) {
+
+      await getConnection()
+        .createQueryBuilder()
+        .relation(User, 'hashtags')
+        .of(user)
+        .add(hashtag)
+
+      return { user, hashtag }
+    }
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+const getUserHashtags = async (userId: string) => {
+  try {
+    const results = await getConnection()
+      .getRepository(User)
+      .findOne(userId, { relations: ['hashtags'] })
+      .then(user => user?.hashtags)
+
+    return results
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
 export {
   insertNewUserToDb,
   getUserFromDb,
@@ -218,5 +252,7 @@ export {
   sendFriendRequest,
   acceptFriendRequest,
   rejectFriendRequest,
-  updateUser
+  updateUser,
+  assignHashtagToUser,
+  getUserHashtags
 }

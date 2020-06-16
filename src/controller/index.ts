@@ -34,6 +34,8 @@ import {
   deleteGroup,
   updateGroupInfo,
   getGroupUsers,
+  getGroupFriends,
+  getGroupFollowers,
   getGroupUserInvitations,
   getUserGroups,
   getUserGroupInvitations,
@@ -42,7 +44,9 @@ import {
   rejectInviteToGroup,
   removeUserFromGroup,
   followPublicGroup,
-  setGroupFollowersReadOnly
+  setGroupFollowersReadOnly,
+  searchGroupByName,
+  searchGroupByHash
 } from './group'
 
 import {
@@ -62,7 +66,9 @@ import {
   rejectFriendRequest,
   updateUser,
   assignHashtagToUser,
-  getUserHashtags
+  getUserHashtags,
+  searchUserByEmail,
+  searchUserByHash
 } from './user'
 //
 //
@@ -108,6 +114,8 @@ export {
   deleteGroup,
   updateGroupInfo,
   getGroupUsers,
+  getGroupFriends,
+  getGroupFollowers,
   getGroupUserInvitations,
   getUserGroups,
   getUserGroupInvitations,
@@ -117,6 +125,8 @@ export {
   removeUserFromGroup,
   followPublicGroup,
   setGroupFollowersReadOnly,
+  searchGroupByName,
+  searchGroupByHash,
   // 
   // iou
   insertIOUToDb,
@@ -136,5 +146,7 @@ export {
   rejectFriendRequest,
   updateUser,
   assignHashtagToUser,
-  getUserHashtags
+  getUserHashtags,
+  searchUserByEmail,
+  searchUserByHash
 }

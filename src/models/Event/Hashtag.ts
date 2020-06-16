@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Event, User } from '..'
 
 @Entity()
@@ -14,4 +14,10 @@ export class Hashtag {
 
   @ManyToMany(() => User, user => user.hashtags)
   users: User[]
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

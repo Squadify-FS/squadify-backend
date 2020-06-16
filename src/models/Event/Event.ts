@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, ManyToMany, JoinTable, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, ManyToMany, JoinTable, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Geolocation, Group, UserEvent, Hashtag } from '..';
 
 
@@ -38,4 +38,10 @@ export class Event {
   @OneToMany(() => UserEvent, userevent => userevent.event)
   @JoinTable()
   users: UserEvent[]
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

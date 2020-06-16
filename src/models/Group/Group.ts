@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, OneToMany, ManyToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, OneToMany, ManyToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 import { Chat, UserGroup, Event } from '..';
 import { IOU } from '../IOU';
@@ -32,4 +32,10 @@ export class Group {
 
   @OneToMany(() => IOU, iou => iou.group)
   ious: IOU[]
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

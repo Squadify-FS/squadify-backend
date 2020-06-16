@@ -4,7 +4,7 @@ import { getConnection, UpdateResult, DeleteResult } from 'typeorm';
 
 import { User, UserUser, Hashtag } from '../models'
 
-import { TokenBody } from '../common/functions'
+import { TokenBody, generateHashForName } from '../common/functions'
 import { IRegisterBody } from '../routes/auth'
 
 
@@ -25,11 +25,15 @@ const comparePassword = (plaintextPassword: string, hashedPassword: string) => {
 const insertNewUserToDb = async ({ firstName, lastName, password, email, dob, avatarUrl }: IRegisterBody) => {
   try {
     //TODO MANAGE ADDRESS AND LOCATION INPUT WITH GOOGLE MAPS STUFF ETC
+    const hash = generateHashForName()
+    const hashedFirstName = `${firstName}${hash}`
+    const hashedLastName = `${lastName}${hash}`
+
     const user = await getConnection()
       .createQueryBuilder()
       .insert()
       .into(User)
-      .values({ firstName, lastName, email, dob, password: hashAndSaltPassword(password), avatarUrl })
+      .values({ firstName: hashedFirstName, lastName: hashedLastName, email, dob, password: hashAndSaltPassword(password), avatarUrl })
       .returning('*')
       .execute();
     return user;
@@ -241,6 +245,37 @@ const getUserHashtags = async (userId: string) => {
   }
 }
 
+const searchUserByEmail = async (email: string) => {
+  try {
+    const results: User[] = await getConnection()
+      .getRepository(User)
+      .createQueryBuilder('user')
+      .select()
+      .where(`LOWER(user.email) LIKE "%${email.toLowerCase()}%"`)
+      .getMany()
+
+    return results
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+// NOT OPTIMAL SOLUTIONS FOR SEARCH, GOES THROUGH ALL THE DATABASE TO FIND. NOT SCALABLE OPTION
+const searchUserByHash = async (hash: string) => {
+  try {
+    const results: User[] = await getConnection()
+      .getRepository(User)
+      .createQueryBuilder('user')
+      .select()
+      .where(`user."firstName" LIKE "%#${hash}%"`)
+      .orWhere(`user."lastName" LIKE "%#${hash}%"`)
+      .getMany()
+
+    return results
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
 export {
   insertNewUserToDb,
   getUserFromDb,
@@ -254,5 +289,7 @@ export {
   rejectFriendRequest,
   updateUser,
   assignHashtagToUser,
-  getUserHashtags
+  getUserHashtags,
+  searchUserByEmail,
+  searchUserByHash
 }

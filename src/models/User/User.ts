@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, Index, OneToMany, ManyToOne, ManyToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, Index, OneToMany, ManyToOne, ManyToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Message } from '../Group/Message';
 import { UserUser, UserGroup, Geolocation, IOU, Hashtag } from '..';
 import { UserEvent } from './UserEvent';
@@ -53,4 +53,10 @@ export class User {
 
   @ManyToMany(() => Hashtag, hashtag => hashtag.users)
   hashtags: Hashtag[]
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

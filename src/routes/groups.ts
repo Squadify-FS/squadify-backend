@@ -13,7 +13,7 @@ router.get('/:userId', isLoggedIn, async (req, res, next) => {
     try {
         res.send(await getUserGroups(userId));
     } catch (err) {
-        console.log(err);
+        next(err);
     }
 });
 
@@ -23,7 +23,7 @@ router.post('/', isLoggedIn, async (req, res, next) => {
     try {
         res.send(await insertNewGroupToDb({ name, isPrivate, creatorId, friendIds, avatarUrl }));
     } catch (err) {
-        console.log(err);
+        next(err);
     }
 });
 
@@ -34,7 +34,7 @@ router.delete('/:groupId', isLoggedIn, async (req, res, next) => {
     try {
         res.send(await deleteGroup(groupId, adminId));
     } catch (err) {
-        console.log(err);
+        next(err);
     }
 });
 
@@ -44,7 +44,7 @@ router.get('/:userId/invitations', isLoggedIn, async (req, res, next) => {
     try {
         res.send(await getUserGroupInvitations(userId));
     } catch (err) {
-        console.log(err);
+        next(err);
     }
 });
 
@@ -55,7 +55,7 @@ router.post('/:groupId/invite', isLoggedIn, async (req, res, next) => {
     try {
         res.send(await inviteUserToGroup(groupId, inviterId, inviteeId));
     } catch (err) {
-        console.log(err);
+        next(err);
     }
 });
 
@@ -66,7 +66,7 @@ router.post('/:userId/invitations/accept', isLoggedIn, async (req, res, next) =>
     try {
         res.send(await acceptInviteToGroup(userId, groupId));
     } catch (err) {
-        console.log(err);
+        next(err);
     }
 });
 
@@ -77,7 +77,7 @@ router.post('/:userId/invitations/reject', isLoggedIn, async (req, res, next) =>
     try {
         res.send(await rejectInviteToGroup(userId, groupId));
     } catch (err) {
-        console.log(err);
+        next(err);
     }
 });
 
@@ -88,7 +88,7 @@ router.delete('/:groupId/removeuser', isLoggedIn, async (req, res, next) => {
     try {
         res.send(await removeUserFromGroup(removerId, userId, groupId));
     } catch (err) {
-        console.log(err);
+        next(err);
     }
 });
 
@@ -99,6 +99,6 @@ router.post('/:groupId/follow', isLoggedIn, async (req, res, next) => {
     try {
         res.send(await followPublicGroup(userId, groupId));
     } catch (err) {
-        console.log(err);
+        next(err);
     }
 }); 

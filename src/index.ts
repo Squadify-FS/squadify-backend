@@ -8,6 +8,7 @@ import { insertNewUserToDb, sendFriendRequest, getUserFriendsFromDb, getUserRequ
 import authRouter from './routes/auth';
 import userRouter from './routes/user';
 import groupsRouter from './routes/groups';
+import eventRouter from './routes/event';
 
 import "reflect-metadata";
 
@@ -60,6 +61,7 @@ app.use((req, res, next) => {
   app.use('/auth', authRouter)
   app.use('/user', userRouter)
   app.use('/groups', groupsRouter)
+  app.use('/event', eventRouter);
 
   const PORT = process.env.PORT || 3000;
 

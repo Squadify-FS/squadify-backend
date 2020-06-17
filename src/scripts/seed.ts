@@ -53,6 +53,15 @@ import "reflect-metadata";
   const user1Friends = await getUserFriendsFromDb(user1.identifiers[0].id)
   const user1Requests = await getUserRequestsFromDb(user1.identifiers[0].id)
 
+  const adminEntity = await getUserFromDb('', admin.identifiers[0].id)
+  await deleteFriend(admin.identifiers[0].id, user2.identifiers[0].id)
+  const emailSearch = await searchUserByEmail('user')
+
+
+
+  // *********************************************************************************************************************
+  // *********************************************************************************************************************
+  // groups
   const group1 = await insertNewGroupToDb({ name: 'group1', isPrivate: false, creatorId: admin.identifiers[0].id, avatarUrl: 'https://66.media.tumblr.com/79a1ac638d6e50f1fa5d760be1d8a51a/tumblr_inline_ojk654MOr11qzet7p_250.png' })
   const group2 = await insertNewGroupToDb({ name: 'group2', isPrivate: false, creatorId: admin.identifiers[0].id, avatarUrl: 'https://66.media.tumblr.com/79a1ac638d6e50f1fa5d760be1d8a51a/tumblr_inline_ojk654MOr11qzet7p_250.png' })
   await inviteUserToGroup(group1?.group.identifiers[0].id, admin.identifiers[0].id, user1.identifiers[0].id)
@@ -60,20 +69,4 @@ import "reflect-metadata";
   await acceptInviteToGroup(user1.identifiers[0].id, group1?.group.identifiers[0].id)
   await acceptInviteToGroup(user1.identifiers[0].id, group2?.group.identifiers[0].id)
 
-  const adminEntity = await getUserFromDb('', admin.identifiers[0].id)
-  console.log('ADMIN', adminEntity)
-
-  console.log('ADMIN FRIENDS', adminFriends)
-  await deleteFriend(admin.identifiers[0].id, user2.identifiers[0].id)
-  const adminFriends2 = await getUserFriendsFromDb(admin.identifiers[0].id)
-  console.log('ADMIN FRIENDS AFTER DELETE USER2', adminFriends2)
-
-  const emailSearch = await searchUserByEmail('user')
-  console.log('EMAIL SEARCH', emailSearch)
-
-
-
-  // *********************************************************************************************************************
-  // *********************************************************************************************************************
-  // groups
 })()

@@ -44,7 +44,11 @@ const setUserGeolocationInDb = async (userId: string, localized_address?: string
       .getOne();
 
     if (existingGeolocation) {
-      existingGeolocation.users.push(user)
+      await getConnection()
+        .createQueryBuilder()
+        .relation(Geolocation, 'users')
+        .of(existingGeolocation)
+        .add(user)
       user.geolocation = existingGeolocation
       await getConnection().manager.save(user)
       await getConnection().manager.save(existingGeolocation)
@@ -62,7 +66,11 @@ const setUserGeolocationInDb = async (userId: string, localized_address?: string
       const newGeolocation: Geolocation | undefined = await geolocationRepo.findOne({ id: newGeolocationId })
       if (!newGeolocation) throw new Error('Something went wrong with new geolocation')
 
-      newGeolocation.users.push(user)
+      await getConnection()
+        .createQueryBuilder()
+        .relation(Geolocation, 'users')
+        .of(newGeolocation)
+        .add(user)
       user.geolocation = newGeolocation
       await getConnection().manager.save(user)
       await getConnection().manager.save(newGeolocation)
@@ -102,7 +110,11 @@ const updateUserGeolocationInDb = async (userId: string, localized_address?: str
 
     if (existingGeolocation) {
 
-      existingGeolocation.users.push(user)
+      await getConnection()
+        .createQueryBuilder()
+        .relation(Geolocation, 'users')
+        .of(existingGeolocation)
+        .add(user)
       user.geolocation = existingGeolocation
       await getConnection().manager.save(user)
       await getConnection().manager.save(existingGeolocation)
@@ -121,7 +133,11 @@ const updateUserGeolocationInDb = async (userId: string, localized_address?: str
       const newGeolocation: Geolocation | undefined = await geolocationRepo.findOne({ id: newGeolocationId })
       if (!newGeolocation) throw new Error('Something went wrong with new geolocation')
 
-      newGeolocation.users.push(user)
+      await getConnection()
+        .createQueryBuilder()
+        .relation(Geolocation, 'users')
+        .of(newGeolocation)
+        .add(user)
       user.geolocation = newGeolocation
       await getConnection().manager.save(user)
       await getConnection().manager.save(newGeolocation)
@@ -172,7 +188,11 @@ const setEventGeolocationInDb = async (userId: string, eventId: string, localize
 
     if (existingGeolocation) {
 
-      existingGeolocation.events.push(event)
+      await getConnection()
+        .createQueryBuilder()
+        .relation(Geolocation, 'events')
+        .of(existingGeolocation)
+        .add(event)
       event.geolocation = existingGeolocation
       await getConnection().manager.save(event)
       await getConnection().manager.save(existingGeolocation)
@@ -190,7 +210,11 @@ const setEventGeolocationInDb = async (userId: string, eventId: string, localize
       const newGeolocation: Geolocation | undefined = await geolocationRepo.findOne({ id: newGeolocationId })
       if (!newGeolocation) throw new Error('Something went wrong with new geolocation')
 
-      newGeolocation.events.push(event)
+      await getConnection()
+        .createQueryBuilder()
+        .relation(Geolocation, 'events')
+        .of(newGeolocation)
+        .add(event)
       event.geolocation = newGeolocation
       await getConnection().manager.save(event)
       await getConnection().manager.save(newGeolocation)
@@ -232,7 +256,11 @@ const updateEventGeolocationInDb = async (userId: string, eventId: string, local
 
     if (existingGeolocation) {
 
-      existingGeolocation.events.push(event)
+      await getConnection()
+        .createQueryBuilder()
+        .relation(Geolocation, 'events')
+        .of(existingGeolocation)
+        .add(event)
       event.geolocation = existingGeolocation
       await getConnection().manager.save(event)
       await getConnection().manager.save(existingGeolocation)
@@ -250,7 +278,11 @@ const updateEventGeolocationInDb = async (userId: string, eventId: string, local
       const newGeolocation: Geolocation | undefined = await geolocationRepo.findOne({ id: newGeolocationId })
       if (!newGeolocation) throw new Error('Something went wrong with new geolocation')
 
-      newGeolocation.events.push(event)
+      await getConnection()
+        .createQueryBuilder()
+        .relation(Geolocation, 'events')
+        .of(newGeolocation)
+        .add(event)
       event.geolocation = newGeolocation
       await getConnection().manager.save(event)
       await getConnection().manager.save(newGeolocation)

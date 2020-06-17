@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, OneToOne, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, OneToOne, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Group } from './Group'
 import { Message } from './Message';
 
@@ -12,4 +12,10 @@ export class Chat {
 
   @OneToMany(() => Message, message => message.chat)
   messages: Message[]
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

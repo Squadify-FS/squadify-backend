@@ -1,9 +1,33 @@
 import { Repository, getConnection } from "typeorm";
 import { User, Geolocation, UserEvent, Event } from "../models";
 
+// general purpose controller to create new geolocations
+const insertGeolocationToDb = async (latitude: number, longitude: number, address?: string, city?: string, region?: string, postalCode?: string, country?: string) => {
+  try {
+
+    let localized_address = ''
+    if (address) localized_address += `${address}, `
+    if (city) localized_address += `${city}, `
+    if (region) localized_address += `${region}, `
+    if (postalCode) localized_address += `${postalCode}, `
+    if (country) localized_address += `${country}`
+
+    const result = await getConnection()
+      .createQueryBuilder()
+      .insert()
+      .into(Geolocation)
+      .values({ latitude, longitude, localized_address, address, city, region, postalCode, country })
+      .returning('*')
+      .execute()
+
+    return result
+  } catch (ex) {
+    console.log(ex)
+  }
+}
 
 // this function will only be used when a user registers, as they will always have a set location after they register and will only have to update it
-const setUserGeolocationInDb = async (userId: string, address?: string, latitude?: number, longitude?: number) => {
+const setUserGeolocationInDb = async (userId: string, localized_address?: string, latitude?: number, longitude?: number) => {
   try {
     const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation); // get geolocation repo from db
 
@@ -13,8 +37,8 @@ const setUserGeolocationInDb = async (userId: string, address?: string, latitude
     const existingGeolocation: Geolocation | undefined = await geolocationRepo // find existing location if it exists
       .createQueryBuilder('geolocation')
       .where(
-        `geolocation.address = :address`,
-        { address }
+        `geolocation."localizedAddress" = :"localizedAddress"`,
+        { localized_address: localized_address }
       )
       .orWhere(`latitude = :latitude AND longitude = :longitude`, { latitude, longitude })
       .getOne();
@@ -32,7 +56,7 @@ const setUserGeolocationInDb = async (userId: string, address?: string, latitude
         .createQueryBuilder()
         .insert()
         .into(Geolocation)
-        .values({ address, latitude, longitude })
+        .values({ localized_address: localized_address, latitude, longitude })
         .execute()).identifiers[0].id;
 
       const newGeolocation: Geolocation | undefined = await geolocationRepo.findOne({ id: newGeolocationId })
@@ -52,7 +76,8 @@ const setUserGeolocationInDb = async (userId: string, address?: string, latitude
   }
 }
 
-const updateUserGeolocationInDb = async (userId: string, address?: string, latitude?: number, longitude?: number) => {
+//name explains its function
+const updateUserGeolocationInDb = async (userId: string, localized_address?: string, latitude?: number, longitude?: number) => {
   try {
     const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation) // get geolocation repo from db
 
@@ -69,8 +94,8 @@ const updateUserGeolocationInDb = async (userId: string, address?: string, latit
     const existingGeolocation: Geolocation | undefined = await geolocationRepo // find existing location if it exists
       .createQueryBuilder('geolocation')
       .where(
-        `geolocation.address = :address`,
-        { address }
+        `geolocation.localized_address = :localized_address`,
+        { localized_address: localized_address }
       )
       .orWhere(`latitude = :latitude AND longitude = :longitude`, { latitude, longitude })
       .getOne();
@@ -90,7 +115,7 @@ const updateUserGeolocationInDb = async (userId: string, address?: string, latit
         .createQueryBuilder()
         .insert()
         .into(Geolocation)
-        .values({ address, latitude, longitude })
+        .values({ localized_address: localized_address, latitude, longitude })
         .execute()).identifiers[0].id;
 
       const newGeolocation: Geolocation | undefined = await geolocationRepo.findOne({ id: newGeolocationId })
@@ -109,7 +134,23 @@ const updateUserGeolocationInDb = async (userId: string, address?: string, latit
   }
 }
 
-const setEventGeolocationInDb = async (userId: string, eventId: string, address?: string, latitude?: number, longitude?: number) => {
+// returns the geolocation object that user has assigned
+const getUserGeolocation = async (userId: string) => {
+  try {
+
+    const user = await getConnection()
+      .getRepository(User)
+      .findOne(userId, { relations: ['geolocation'] })
+
+    return user?.geolocation
+
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+// sets event geolocation when eent is first created
+const setEventGeolocationInDb = async (userId: string, eventId: string, localized_address?: string, latitude?: number, longitude?: number) => {
   try {
     const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation);
 
@@ -123,8 +164,8 @@ const setEventGeolocationInDb = async (userId: string, eventId: string, address?
     const existingGeolocation: Geolocation | undefined = await geolocationRepo // find existing location if it exists
       .createQueryBuilder('geolocation')
       .where(
-        `geolocation.address = :address`,
-        { address }
+        `geolocation.localized_address = :localized_address`,
+        { localized_address: localized_address }
       )
       .orWhere(`latitude = :latitude AND longitude = :longitude`, { latitude, longitude })
       .getOne();
@@ -143,7 +184,7 @@ const setEventGeolocationInDb = async (userId: string, eventId: string, address?
         .createQueryBuilder()
         .insert()
         .into(Geolocation)
-        .values({ address, latitude, longitude })
+        .values({ localized_address: localized_address, latitude, longitude })
         .execute()).identifiers[0].id;
 
       const newGeolocation: Geolocation | undefined = await geolocationRepo.findOne({ id: newGeolocationId })
@@ -162,7 +203,8 @@ const setEventGeolocationInDb = async (userId: string, eventId: string, address?
   }
 }
 
-const updateEventGeolocationInDb = async (userId: string, eventId: string, address?: string, latitude?: number, longitude?: number) => {
+// same as update user geolocation but with event
+const updateEventGeolocationInDb = async (userId: string, eventId: string, localized_address?: string, latitude?: number, longitude?: number) => {
   try {
     const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation);
 
@@ -182,8 +224,8 @@ const updateEventGeolocationInDb = async (userId: string, eventId: string, addre
     const existingGeolocation: Geolocation | undefined = await geolocationRepo // find existing location if it exists
       .createQueryBuilder('geolocation')
       .where(
-        `geolocation.address = :address`,
-        { address }
+        `geolocation.localized_address = :localized_address`,
+        { localized_address: localized_address }
       )
       .orWhere(`latitude = :latitude AND longitude = :longitude`, { latitude, longitude })
       .getOne();
@@ -202,7 +244,7 @@ const updateEventGeolocationInDb = async (userId: string, eventId: string, addre
         .createQueryBuilder()
         .insert()
         .into(Geolocation)
-        .values({ address, latitude, longitude })
+        .values({ localized_address: localized_address, latitude, longitude })
         .execute()).identifiers[0].id;
 
       const newGeolocation: Geolocation | undefined = await geolocationRepo.findOne({ id: newGeolocationId })
@@ -221,13 +263,29 @@ const updateEventGeolocationInDb = async (userId: string, eventId: string, addre
   }
 }
 
-//get geolocation for user and event
-// fetch events based on geolocation (radius)
+// gets geolocation corresponding to this event
+const getEventGeolocation = async (eventId: string) => {
+  try {
+
+    const event = await getConnection()
+      .getRepository(Event)
+      .findOne(eventId, { relations: ['geolocation'] })
+
+    return event?.geolocation
+
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
 // STRETCH: fetch group activity based on geolocation through user's activity if the group is public
 
 export {
+  insertGeolocationToDb,
   setUserGeolocationInDb,
   updateUserGeolocationInDb,
+  getUserGeolocation,
   setEventGeolocationInDb,
-  updateEventGeolocationInDb
+  updateEventGeolocationInDb,
+  getEventGeolocation
 }

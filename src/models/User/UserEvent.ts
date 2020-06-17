@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, ManyToOne, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { User, Event } from '..';
 import { EventPermissionLevelEnum } from '../../common/types';
 
@@ -18,4 +18,10 @@ export class UserEvent {
 
   @Column('int')
   permissionLevel: EventPermissionLevelEnum;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

@@ -251,7 +251,7 @@ const updateEvent = async (userId: string, eventId: string, name: string, descri
 }
 
 // uses geolocation to draw a circle around and fetch all the events in those geolocations and return them
-const fetchEventsUsingRadius = async (geolocationId: string, radius: number, latitude?: number, longitude?: number) => {
+const searchEventsUsingRadius = async (geolocationId: string, radius: number, latitude?: number, longitude?: number) => {
   try {
     let location = await getConnection().getRepository(Geolocation).findOne({ id: geolocationId })
 
@@ -302,7 +302,7 @@ const fetchEventsUsingRadius = async (geolocationId: string, radius: number, lat
 }
 
 // uses event's name and hashtags to fetch events based on a string search value
-const fetchEventsByName = async (searchVal: string) => {
+const searchEventsByName = async (searchVal: string) => {
   try {
 
     const results = await getConnection()
@@ -321,7 +321,7 @@ const fetchEventsByName = async (searchVal: string) => {
   }
 }
 
-const fetchEventsByHashtags = async (searchVal: string) => {
+const searchEventsByHashtags = async (searchVal: string) => {
   try {
 
     const results = await getConnection()
@@ -420,9 +420,9 @@ export {
   getUserEvents,
   getGroupEvents,
   updateEvent,
-  fetchEventsUsingRadius,
-  fetchEventsByName,
-  fetchEventsByHashtags,
+  searchEventsUsingRadius,
+  searchEventsByName,
+  searchEventsByHashtags,
   getHashtagByText,
   getHashtagById,
   insertHashtagToDb,

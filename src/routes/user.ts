@@ -1,5 +1,5 @@
 import express from 'express';
-import { getUserFromDb, getUserFriendsFromDb, sendFriendRequest, getUserRequestsFromDb, deleteFriend, acceptFriendRequest, rejectFriendRequest, updateUser } from '../controller/user';
+import { getUserFromDb, getUserFriendsFromDb, sendFriendRequest, getUserRequestsFromDb, deleteFriend, acceptFriendRequest, rejectFriendRequest, updateUser } from '../controller';
 import { isLoggedIn } from '../common/middleware';
 const router = express.Router()
 
@@ -18,7 +18,7 @@ router.get('/:email', isLoggedIn, async (req, res, next) => {
     const { email } = req.params;
     try {
         res.send(await getUserFromDb(email))
-    } catch(err) {
+    } catch (err) {
         next(err);
     }
 });
@@ -28,8 +28,8 @@ router.put('/:yourId/updateProfile', isLoggedIn, async (req, res, next) => {
     const { yourId } = req.params;
     const { firstName, lastName, email, password, avatarUrl } = req.body
     try {
-        res.send(await updateUser(yourId, firstName, lastName, email, password, avatarUrl ));
-    } catch(err) {
+        res.send(await updateUser(yourId, firstName, lastName, email, password, avatarUrl));
+    } catch (err) {
         next(err);
     }
 });
@@ -43,7 +43,7 @@ router.get('/:yourId/friendrequests', isLoggedIn, async (req, res, next) => {
     const { yourId } = req.params;
     try {
         res.send(await getUserRequestsFromDb(yourId));
-    } catch(err) {
+    } catch (err) {
         next(err);
     }
 });
@@ -55,7 +55,7 @@ router.post('/:yourId/addfriend', isLoggedIn, async (req, res, next) => {
     const { otherUserId }: IOtherUserId = req.body;
     try {
         res.send(await sendFriendRequest(yourId, otherUserId));
-    } catch(err) {
+    } catch (err) {
         next(err);
     }
 });
@@ -66,7 +66,7 @@ router.post('/:yourId/acceptfriend', isLoggedIn, async (req, res, next) => {
     const { otherUserId }: IOtherUserId = req.body;
     try {
         res.send(await acceptFriendRequest(yourId, otherUserId));
-    } catch(err) {
+    } catch (err) {
         next(err);
     }
 });
@@ -77,7 +77,7 @@ router.post('/:yourId/rejectfriend', isLoggedIn, async (req, res, next) => {
     const { otherUserId }: IOtherUserId = req.body;
     try {
         res.send(await rejectFriendRequest(yourId, otherUserId));
-    } catch(err) {
+    } catch (err) {
         next(err);
     }
 });
@@ -91,7 +91,7 @@ router.get('/:yourId/friends', isLoggedIn, async (req, res, next) => {
     const { yourId } = req.params;
     try {
         res.send(await getUserFriendsFromDb(yourId));
-    } catch(err) {
+    } catch (err) {
         next(err);
     }
 });
@@ -102,7 +102,7 @@ router.delete('/:yourId/friends', isLoggedIn, async (req, res, next) => {
     const { otherUserId }: IOtherUserId = req.body;
     try {
         res.send(await deleteFriend(yourId, otherUserId));
-    } catch(err) {
+    } catch (err) {
         next(err);
     }
 });

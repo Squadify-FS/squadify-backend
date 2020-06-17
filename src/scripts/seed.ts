@@ -3,6 +3,7 @@ import { createConnection, getConnection } from "typeorm";
 import { User, Group, Message, Event, Chat, UserUser, UserGroup, Geolocation, UserEvent, IOU, Hashtag } from "../models";
 
 import { insertNewUserToDb, sendFriendRequest, getUserFriendsFromDb, getUserRequestsFromDb, acceptFriendRequest, getUserFromDb, deleteFriend, searchUserByEmail } from '../controller/user'
+
 import { insertNewGroupToDb, inviteUserToGroup, acceptInviteToGroup, getGroupUsers, deleteGroup, getUserGroups } from '../controller/group'
 
 import "reflect-metadata";
@@ -57,14 +58,16 @@ import "reflect-metadata";
   await deleteFriend(admin.identifiers[0].id, user2.identifiers[0].id)
   const emailSearch = await searchUserByEmail('user')
 
-
-
   // *********************************************************************************************************************
   // *********************************************************************************************************************
   // groups
   const group1 = await insertNewGroupToDb({ name: 'group1', isPrivate: false, creatorId: admin.identifiers[0].id, avatarUrl: 'https://66.media.tumblr.com/79a1ac638d6e50f1fa5d760be1d8a51a/tumblr_inline_ojk654MOr11qzet7p_250.png' })
 
   const group2 = await insertNewGroupToDb({ name: 'group2', isPrivate: false, creatorId: admin.identifiers[0].id, avatarUrl: 'https://66.media.tumblr.com/79a1ac638d6e50f1fa5d760be1d8a51a/tumblr_inline_ojk654MOr11qzet7p_250.png' })
+
+  const adminEntity = await getUserFromDb('', admin.identifiers[0].id)
+  await deleteFriend(admin.identifiers[0].id, user2.identifiers[0].id)
+  const emailSearch = await searchUserByEmail('user')
 
   const peopleInGroup1 = await getGroupUsers(group1?.group.identifiers[0].id,)
 
@@ -77,4 +80,13 @@ import "reflect-metadata";
    * deleteGroup 1
    * 
    */
+  // *********************************************************************************************************************
+  // *********************************************************************************************************************
+  // groups
+  const group1 = await insertNewGroupToDb({ name: 'group1', isPrivate: false, creatorId: admin.identifiers[0].id, avatarUrl: 'https://66.media.tumblr.com/79a1ac638d6e50f1fa5d760be1d8a51a/tumblr_inline_ojk654MOr11qzet7p_250.png' })
+  const group2 = await insertNewGroupToDb({ name: 'group2', isPrivate: false, creatorId: admin.identifiers[0].id, avatarUrl: 'https://66.media.tumblr.com/79a1ac638d6e50f1fa5d760be1d8a51a/tumblr_inline_ojk654MOr11qzet7p_250.png' })
+  await inviteUserToGroup(group1?.group.identifiers[0].id, admin.identifiers[0].id, user1.identifiers[0].id)
+  await inviteUserToGroup(group2?.group.identifiers[0].id, admin.identifiers[0].id, user1.identifiers[0].id)
+  await acceptInviteToGroup(user1.identifiers[0].id, group1?.group.identifiers[0].id)
+  await acceptInviteToGroup(user1.identifiers[0].id, group2?.group.identifiers[0].id)
 })()

@@ -1,5 +1,5 @@
 import { getConnection, InsertResult } from 'typeorm';
-
+import { generateHashForName } from "../common/functions";
 import { Group, UserGroup, Chat, User } from '../models'
 
 interface IGroupInterface {
@@ -7,7 +7,9 @@ interface IGroupInterface {
   isPrivate: boolean;
   creatorId: string;
   friendIds?: string[];
+  avatarUrl: string;
 }
+
 
 /*
 FUNCTION WILL:
@@ -17,14 +19,20 @@ FUNCTION WILL:
   send invitations to users admin invited when creating group in frontend form by creating relation in UserGroup join table
   return newly created group and chat
 */
-const insertNewGroupToDb = async ({ name, isPrivate, creatorId, friendIds }: IGroupInterface) => {
+const insertNewGroupToDb = async ({ name, isPrivate, creatorId, friendIds, avatarUrl }: IGroupInterface) => {
   try {
+
+    let hashedName = `${name}${generateHashForName()}`
+    const alreadyExists = await getConnection().getRepository(Group).findOne({ name: hashedName }) // might not event need this due to possibilities of the hash (62 ^ 6 = 56 billion) TODO
+    if (alreadyExists) {
+      hashedName = `${name}${generateHashForName()}`
+    }
 
     const group: InsertResult = await getConnection() //create group and get id
       .createQueryBuilder()
       .insert()
       .into(Group)
-      .values({ name, isPrivate })
+      .values({ name: hashedName, isPrivate, avatarUrl })
       .returning('*')
       .execute()
     const groupId: string = group.identifiers[0].id;
@@ -73,7 +81,8 @@ const insertNewGroupToDb = async ({ name, isPrivate, creatorId, friendIds }: IGr
   }
 }
 
-const updateGroupInfo = async (groupId: string, name?: string, isPrivate?: boolean, avatarUrl?: string) => {
+// must be sent the info that is going to be changed aswell as the info that won't be changed
+const updateGroupInfo = async (groupId: string, name: string, isPrivate: boolean, avatarUrl: string) => {
   try {
     const result = await getConnection()
       .createQueryBuilder()
@@ -89,6 +98,7 @@ const updateGroupInfo = async (groupId: string, name?: string, isPrivate?: boole
   }
 }
 
+// change the status of the group so that followers cant write in the chat
 const setGroupFollowersReadOnly = async (groupId: string, followersReadOnly: boolean) => {
   try {
     const result = await getConnection()
@@ -105,14 +115,15 @@ const setGroupFollowersReadOnly = async (groupId: string, followersReadOnly: boo
   }
 }
 
+// deletes the group and all its relations. Only admins can delete it.
 const deleteGroup = async (groupId: string, adminId: string) => {
   try {
     const adminRelation = await getConnection()
       .getRepository(UserGroup)
       .findOne({ user: { id: adminId }, group: { id: groupId } });
-    if (adminRelation && adminRelation.permissionLevel < 1) throw new Error("You don't have admin permission in this group")
+    if (adminRelation && adminRelation.permissionLevel < 2) throw new Error("You don't have admin permission in this group")
 
-    const deletedRelations = await getConnection()
+    const deletedUserRelations = await getConnection()
       .createQueryBuilder()
       .delete()
       .from(UserGroup)
@@ -126,13 +137,81 @@ const deleteGroup = async (groupId: string, adminId: string) => {
       .where({ id: groupId })
       .execute()
 
-    return { deletedGroup, deletedRelations }
+    return { deletedGroup, deletedUserRelations }
 
   } catch (ex) {
     console.log(ex)
   }
 }
 
+// gets all the users that are in the group
+const getGroupUsers = async (groupId: string) => {
+  try {
+    const users: User[] = await getConnection()
+      .getRepository(UserGroup)
+      .createQueryBuilder('relation')
+      .leftJoinAndSelect('relation.user', 'group')
+      .where(`relation."groupId" = :groupId AND relation.accepted = true`, { groupId })
+      .getMany()
+      .then(relations => relations.map(relation => relation.user))
+
+    return users
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+// returns only the users that have more permission than followers
+const getGroupFriends = async (groupId: string) => {
+  try {
+    const users: User[] = await getConnection()
+      .getRepository(UserGroup)
+      .createQueryBuilder('relation')
+      .leftJoinAndSelect('relation.user', 'group')
+      .where(`relation."groupId" = :groupId AND relation.accepted = true AND relation."permissionLevel" > 0`, { groupId })
+      .getMany()
+      .then(relations => relations.map(relation => relation.user))
+
+    return users
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+// returns the users that have only follower permission to the group
+const getGroupFollowers = async (groupId: string) => {
+  try {
+    const users: User[] = await getConnection()
+      .getRepository(UserGroup)
+      .createQueryBuilder('relation')
+      .leftJoinAndSelect('relation.user', 'group')
+      .where(`relation."groupId" = :groupId AND relation.accepted = true AND relation."permissionLevel" = 0`, { groupId })
+      .getMany()
+      .then(relations => relations.map(relation => relation.user))
+
+    return users
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+// returns the users that have been invited to the group
+const getGroupUserInvitations = async (groupId: string) => {
+  try {
+    const users: User[] = await getConnection()
+      .getRepository(UserGroup)
+      .createQueryBuilder('relation')
+      .leftJoinAndSelect('relation.user', 'group')
+      .where(`relation."groupId" = :groupId AND relation.accepted = false`, { groupId })
+      .getMany()
+      .then(relations => relations.map(relation => relation.user))
+
+    return users
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+// returns a user's groups, whatever the permission level
 const getUserGroups = async (userId: string) => {
   try {
     const groups: Group[] = await getConnection()
@@ -150,6 +229,7 @@ const getUserGroups = async (userId: string) => {
   }
 }
 
+// returns the invitations to groups that the user has sent AND the ones he has received
 const getUserGroupInvitations = async (userId: string) => {
   try {
     const sentInvitations: User[] = await getConnection()
@@ -181,6 +261,7 @@ const getUserGroupInvitations = async (userId: string) => {
   }
 }
 
+// creates a relation where accepted = false (meaning it's an invitation) and handles permission levels for the inviter
 const inviteUserToGroup = async (groupId: string, inviterId: string, inviteeId: string) => {
   try {
     const group = await getConnection().getRepository(Group).findOne({ id: groupId })
@@ -208,6 +289,7 @@ const inviteUserToGroup = async (groupId: string, inviterId: string, inviteeId: 
   }
 }
 
+// sets the relation to accepted
 const acceptInviteToGroup = async (userId: string, groupId: string) => {
   try {
     const relation = await getConnection()
@@ -223,6 +305,7 @@ const acceptInviteToGroup = async (userId: string, groupId: string) => {
   }
 }
 
+// rejects the invite and completely deletes the relation
 const rejectInviteToGroup = async (userId: string, groupId: string) => {
   try {
     const deletedRelation = await getConnection()
@@ -238,6 +321,8 @@ const rejectInviteToGroup = async (userId: string, groupId: string) => {
   }
 }
 
+// removes a user from a group. handles permission level if the user is not the one LEAVING the group, but rather being KICKED OUT
+// can also be used for unfollowing a group
 const removeUserFromGroup = async (removerId: string, userId: string, groupId: string) => {
   try {
     if (removerId !== userId) { // used to manage if user is leaving group or admin is removing them
@@ -260,6 +345,7 @@ const removeUserFromGroup = async (removerId: string, userId: string, groupId: s
   }
 }
 
+// creates a relation with permissionLevel 0 to a group
 const followPublicGroup = async (userId: string, groupId: string) => {
   try {
     const group = await getConnection().getRepository(Group).findOne({ id: groupId })
@@ -271,7 +357,7 @@ const followPublicGroup = async (userId: string, groupId: string) => {
       .createQueryBuilder()
       .insert()
       .into(UserGroup)
-      .values({ user: { id: userId }, group: { id: groupId }, permissionLevel: 0, accepted: false })
+      .values({ user: { id: userId }, group: { id: groupId }, permissionLevel: 0, accepted: true })
       .returning('*')
       .execute();
 
@@ -281,10 +367,46 @@ const followPublicGroup = async (userId: string, groupId: string) => {
   }
 }
 
+// uses the group name to return an array of groups 
+const searchGroupByName = async (name: string) => {
+  try {
+    const results: Group[] = await getConnection()
+      .getRepository(Group)
+      .createQueryBuilder('group')
+      .select()
+      .where(`LOWER(group.name) LIKE "%${name.toLowerCase()}%"`)
+      .getMany()
+
+    return results
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+// NOT OPTIMAL SOLUTIONS FOR SEARCH, GOES THROUGH ALL THE DATABASE TO FIND. NOT SCALABLE OPTION
+const searchGroupByHash = async (hash: string) => {
+  try {
+    const results: Group[] = await getConnection()
+      .getRepository(Group)
+      .createQueryBuilder('group')
+      .select()
+      .where(`group.name LIKE "%#${hash}%"`)
+      .getMany()
+
+    return results
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+
 export {
   insertNewGroupToDb,
   deleteGroup,
   updateGroupInfo,
+  getGroupUsers,
+  getGroupFriends,
+  getGroupFollowers,
+  getGroupUserInvitations,
   getUserGroups,
   getUserGroupInvitations,
   inviteUserToGroup,
@@ -292,5 +414,7 @@ export {
   rejectInviteToGroup,
   removeUserFromGroup,
   followPublicGroup,
-  setGroupFollowersReadOnly
+  setGroupFollowersReadOnly,
+  searchGroupByName,
+  searchGroupByHash
 }

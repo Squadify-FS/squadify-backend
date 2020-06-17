@@ -1,6 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, Index, OneToMany, ManyToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, Index, OneToMany, ManyToOne, ManyToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Message } from '../Group/Message';
-import { UserUser, UserGroup, Geolocation, } from '..';
+import { UserUser, UserGroup, Geolocation, IOU, Hashtag } from '..';
 import { UserEvent } from './UserEvent';
 
 @Entity()
@@ -44,5 +44,19 @@ export class User {
 
   @OneToMany(() => Message, message => message.user)
   sentMessages: Message[]
-}
 
+  @OneToMany(() => IOU, iou => iou.payer)
+  expenses: IOU[];
+
+  @ManyToOne(() => IOU, iou => iou.payees)
+  debts: IOU[];
+
+  @ManyToMany(() => Hashtag, hashtag => hashtag.users)
+  hashtags: Hashtag[]
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+}

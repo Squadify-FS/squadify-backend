@@ -13,3 +13,4 @@ export enum EventPermissionLevelEnum {
   'Host' = 1,
   'Admin' = 2
 }
+

@@ -2,11 +2,11 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { getConnection, UpdateResult, DeleteResult } from 'typeorm';
 
-import { User } from '../models'
+import { User, UserUser, Hashtag } from '../models'
 
-import { TokenBody } from '../common/functions'
+import { TokenBody, generateHashForName } from '../common/functions'
 import { IRegisterBody } from '../routes/auth'
-import { UserUser } from '../models';
+
 
 const generateJwt = ({ id, email, firstName, lastName }: TokenBody) => {
   return jwt.sign({ id, email, firstName, lastName }, process.env.JWT_SECRET || 'SHHHHHH', {
@@ -22,14 +22,19 @@ const comparePassword = (plaintextPassword: string, hashedPassword: string) => {
   return bcrypt.compareSync(plaintextPassword, hashedPassword);
 };
 
-const insertNewUserToDb = async ({ firstName, lastName, password, email, dob }: IRegisterBody) => {
+// creates a new user and assigns a hash number to the firstName and lastName
+const insertNewUserToDb = async ({ firstName, lastName, password, email, dob, avatarUrl }: IRegisterBody) => {
   try {
     //TODO MANAGE ADDRESS AND LOCATION INPUT WITH GOOGLE MAPS STUFF ETC
+    const hash = generateHashForName()
+    const hashedFirstName = `${firstName}${hash}`
+    const hashedLastName = `${lastName}${hash}`
+
     const user = await getConnection()
       .createQueryBuilder()
       .insert()
       .into(User)
-      .values({ firstName, lastName, email, dob, password: hashAndSaltPassword(password) })
+      .values({ firstName: hashedFirstName, lastName: hashedLastName, email, dob, password: hashAndSaltPassword(password), avatarUrl })
       .returning('*')
       .execute();
     return user;
@@ -39,6 +44,7 @@ const insertNewUserToDb = async ({ firstName, lastName, password, email, dob }: 
   }
 };
 
+// gets user using email OR id
 const getUserFromDb = async (email?: string, id?: string) => {
   try {
     if (id) {
@@ -53,9 +59,10 @@ const getUserFromDb = async (email?: string, id?: string) => {
   }
 };
 
+// gets the friends from the user
 const getUserFriendsFromDb = async (userId: string) => {
   try {
-    const result = await getConnection()
+    const result: User[] = await getConnection()
       .getRepository(UserUser)
       .createQueryBuilder('relation')
       .leftJoinAndSelect('relation.friend', 'friend')
@@ -71,6 +78,7 @@ const getUserFriendsFromDb = async (userId: string) => {
   }
 }
 
+// gets the user's sent friend requests and received friend requests
 const getUserRequestsFromDb = async (userId: string) => {
   try {
     const sentRequests: User[] = await getConnection()
@@ -85,7 +93,7 @@ const getUserRequestsFromDb = async (userId: string) => {
     const incomingRequests: User[] = await getConnection()
       .getRepository(UserUser)
       .createQueryBuilder('relation')
-      .leftJoinAndSelect('relation.friend', 'friend')
+      .leftJoinAndSelect('relation.user', 'user')
       .where(`relation."friendId" = :userId`, { userId })
       .andWhere(`relation."accepted" = false`)
       .getMany()
@@ -98,7 +106,7 @@ const getUserRequestsFromDb = async (userId: string) => {
   }
 }
 
-
+// deletes a friend relation between to users
 const deleteFriend = async (userId: string, friendId: string) => {
   try {
 
@@ -118,6 +126,7 @@ const deleteFriend = async (userId: string, friendId: string) => {
   }
 }
 
+// creates a friends relation (one way only) where it is not accepted yet
 const sendFriendRequest = async (requesterId: string, requestedId: string) => {
   try {
 
@@ -140,6 +149,7 @@ const sendFriendRequest = async (requesterId: string, requestedId: string) => {
   }
 }
 
+// sets accepted to true for previous created relation, and creates inverse relation
 const acceptFriendRequest = async (requesterId: string, requestedId: string) => {
   try {
     const acceptedRelation: UpdateResult = await getConnection()
@@ -169,6 +179,7 @@ const acceptFriendRequest = async (requesterId: string, requestedId: string) => 
   }
 }
 
+// deletes received one way relation
 const rejectFriendRequest = async (requesterId: string, requestedId: string) => {
   try {
 
@@ -188,22 +199,97 @@ const rejectFriendRequest = async (requesterId: string, requestedId: string) => 
   }
 }
 
-const updateUser = async (userId: string, firstName?: string, lastName?: string, email?: string, password?: string, avatarUrl?: string) => {
+// updates user info. must be sent all the info that will be changed as well as the info that won't be
+// also changes hash to firstname and lastname
+const updateUser = async (userId: string, firstName: string, lastName: string, email: string, password: string, avatarUrl: string) => {
   try {
-      const user = await getConnection()
+
+    const hash = generateHashForName()
+    const hashedFirstName = `${firstName}${hash}`
+    const hashedLastName = `${lastName}${hash}`
+
+    const user = await getConnection()
       .getRepository(User)
       .createQueryBuilder()
       .update(User)
-      .set({ firstName, lastName, email, password, avatarUrl })
+      .set({ firstName: hashedFirstName, lastName: hashedLastName, email, password, avatarUrl })
       .where({ id: userId })
       .returning('*')
       .execute();
-      return user;
-    } catch (ex) {
-      console.log(ex)
-      throw ex
-    }
+    return user;
+  } catch (ex) {
+    console.log(ex)
+    throw ex
   }
+}
+
+// puts the hashtag in the user's preferred hashtags or categories, whatever you wanna call it, in order to fetch relevant events
+const assignHashtagToUser = async (hashtagId: string, userId: string) => {
+  try {
+    const user = await getConnection().getRepository(User).findOne({ id: userId })
+    const hashtag = await getConnection().getRepository(Hashtag).findOne({ id: hashtagId })
+
+    if (user && hashtag) {
+
+      await getConnection()
+        .createQueryBuilder()
+        .relation(User, 'hashtags')
+        .of(user)
+        .add(hashtag)
+
+      return { user, hashtag }
+    }
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+// gets an array of the users selected hashtags
+const getUserHashtags = async (userId: string) => {
+  try {
+    const results: Hashtag[] | undefined = await getConnection()
+      .getRepository(User)
+      .findOne(userId, { relations: ['hashtags'] })
+      .then(user => user?.hashtags)
+
+    return results
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+// searches a user by email and returns an array of similar ones
+const searchUserByEmail = async (email: string) => {
+  try {
+    const results: User[] = await getConnection()
+      .getRepository(User)
+      .createQueryBuilder('user')
+      .select()
+      .where(`LOWER(user.email) LIKE '%${email.toLowerCase()}%'`)
+      .getMany()
+
+    return results
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+// NOT OPTIMAL SOLUTIONS FOR SEARCH, GOES THROUGH ALL THE DATABASE TO FIND. NOT SCALABLE OPTION
+// returns array of users with similar hashes
+const searchUserByHash = async (hash: string) => {
+  try {
+    const results: User[] = await getConnection()
+      .getRepository(User)
+      .createQueryBuilder('user')
+      .select()
+      .where(`user."firstName" LIKE '%${hash}%'`)
+      .orWhere(`user."lastName" LIKE '%${hash}%'`)
+      .getMany()
+
+    return results
+  } catch (ex) {
+    console.log(ex)
+  }
+}
 
 export {
   insertNewUserToDb,
@@ -216,5 +302,9 @@ export {
   sendFriendRequest,
   acceptFriendRequest,
   rejectFriendRequest,
-  updateUser
+  updateUser,
+  assignHashtagToUser,
+  getUserHashtags,
+  searchUserByEmail,
+  searchUserByHash
 }

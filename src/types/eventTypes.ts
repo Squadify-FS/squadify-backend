@@ -1,4 +1,4 @@
-interface INewEventDetails {
+export interface INewEventDetails {
   userId: string;
   name: string;
   description: string;
@@ -7,34 +7,34 @@ interface INewEventDetails {
   isPrivate: boolean;
 }
 
-interface IUpdateEventDetails {
+export interface IUpdateEventDetails {
   userId: string;
   eventId: string;
   name: string;
   description: string;
   startTime: Date;
   endTime?: Date;
-  isPrivate: boolean;
+  isPrivate?: boolean;
 }
 
-interface IUserEvent {
+export interface IUserEvent {
   userId: string;
   eventId: string;
 }
 
-interface IUserEventGroup {
+export interface IUserEventGroup {
   userId: string;
   eventId: string;
   groupId: string;
 }
 
-interface IUserEventInviter {
+export interface IUserEventInviter {
   userId: string;
   eventId: string;
   inviterId?: string;
 }
 
-interface IEventHashtag {
+export interface IEventHashtag {
   hashtagId: string;
   eventId: string;
 }

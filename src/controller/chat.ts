@@ -1,6 +1,7 @@
 import { getConnection, InsertResult } from 'typeorm';
 
 import { Message, UserGroup, Group, Chat } from '../models'
+import { INewMessageInterface } from '../types/groupTypes';
 
 
 // adds message to chat (kinda like sendMessage). Handles the permission levels and if the user is permitted to write messages in the chat. 

@@ -1,7 +1,17 @@
-import { getConnection, InsertResult, DeleteQueryBuilder, DeleteResult, UpdateResult } from 'typeorm';
+import { getConnection, InsertResult, DeleteResult, UpdateResult } from 'typeorm';
 
 import { Event, Group, User, UserGroup, UserEvent, Geolocation, Hashtag } from '../models'
 import { insertGeolocationToDb } from './geolocation';
+import { INewEventDetails, IUserEventGroup, IUserEventInviter, IUserEvent, IUpdateEventDetails, IEventHashtag } from '../types/eventTypes';
+
+const getUserEventRelation = async (userId: string, groupId: string): Promise<UserEvent | undefined> => {
+  const relation = await getConnection()
+    .getRepository(UserEvent)
+    .findOne({ user: { id: userId }, event: { id: groupId } })
+
+  if (relation) return relation
+}
+
 
 // simple create event function. returns (ids, raw, generatedmaps) for both event and the relation between the user and the event.
 // user is the creator of the event, and has admin permission by default
@@ -239,7 +249,7 @@ const updateEvent = async ({ userId, eventId, name, description, startTime, endT
     const userRelation = await getConnection()
       .getRepository(UserEvent)
       .findOne({ user: { id: userId }, event: { id: eventId } })
-    if (!userRelation || userRelation.permissionLevel < 1) throw new Error('No relation or permission level error')
+    if (!userRelation || userRelation.permissionLevel < 1) throw new Error('No relation or permission level insufficient')
 
     if ((isPrivate === true || isPrivate === false)) {
       if (userRelation.permissionLevel < 2) throw new Error('No permission to set privacy')
@@ -454,6 +464,7 @@ export {
   insertEventToDb,
   assignEventToGroup,
   unassignEventFromGroup,
+  getUserEventRelation,
   assignEventToUser,
   unassignEventFromUser,
   getUserEvents,

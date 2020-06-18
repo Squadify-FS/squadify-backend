@@ -1,28 +1,14 @@
 import { getConnection, InsertResult, getRepository, UpdateResult, DeleteResult } from 'typeorm';
 import { generateHashForName } from "../common/functions";
 import { Group, UserGroup, Chat, User } from '../models'
+import { INewGroupInterface, IUserGroupIds } from '../types/groupTypes';
 
-interface INewGroupInterface {
-  name: string;
-  isPrivate: boolean;
-  creatorId: string;
-  friendIds?: string[];
-  followersReadOnly?: boolean;
-  avatarUrl: string;
-}
-
-interface IUserGroupIds {
-  userId: string;
-  groupId: string;
-}
-
-const getUserGroupRelation = async (userId: string, groupId: string): Promise<false | UserGroup> => {
+const getUserGroupRelation = async (userId: string, groupId: string): Promise<UserGroup | undefined> => {
   const relation = await getConnection()
     .getRepository(UserGroup)
     .findOne({ user: { id: userId }, group: { id: groupId } })
 
   if (relation) return relation
-  return false
 }
 
 
@@ -487,6 +473,7 @@ export {
   getGroupFromDb,
   deleteGroup,
   updateGroupInfo,
+  getUserGroupRelation,
   getGroupUsers,
   getGroupFriends,
   getGroupFollowers,

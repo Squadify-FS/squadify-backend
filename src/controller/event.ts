@@ -1,4 +1,4 @@
-import { getConnection } from 'typeorm';
+import { getConnection, InsertResult, DeleteQueryBuilder, DeleteResult, UpdateResult } from 'typeorm';
 
 import { Event, Group, User, UserGroup, UserEvent, Geolocation, Hashtag } from '../models'
 import { insertGeolocationToDb } from './geolocation';
@@ -6,7 +6,11 @@ import { insertGeolocationToDb } from './geolocation';
 // simple create event function. returns (ids, raw, generatedmaps) for both event and the relation between the user and the event.
 // user is the creator of the event, and has admin permission by default
 // setting geolocation for event should be handled in the route using ***setEventGeolocationInDb (./geolocation)***
-const insertEventToDb = async ({ userId, name, description, startTime, endTime, isPrivate }: INewEventDetails) => {
+const insertEventToDb = async ({ userId, name, description, startTime, endTime, isPrivate }: INewEventDetails):
+  Promise<{
+    event: InsertResult;
+    relation: InsertResult;
+  } | undefined> => {
   try {
     if (new Date(startTime) < new Date()) throw new Error('Cannot create an event for the past!')
 
@@ -47,7 +51,12 @@ const insertEventToDb = async ({ userId, name, description, startTime, endTime, 
 // also handles what kind of permission the user had with the event in the first place. Only hosts and admins can assign private events to groups.
 // if the user has no relation to a public event, it creates it when running this function, therefore ssuming they assign it because they're going. 
 // Might change that last thing in the future
-const assignEventToGroup = async ({ userId, eventId, groupId }: IUserEventGroup) => {
+const assignEventToGroup = async ({ userId, eventId, groupId }: IUserEventGroup):
+  Promise<{
+    group: Group;
+    event: Event;
+    user: User;
+  } | undefined> => {
   try {
     const group = await getConnection().getRepository(Group).findOne({ id: groupId })
     const event = await getConnection().getRepository(Event).findOne({ id: eventId })
@@ -97,7 +106,12 @@ const assignEventToGroup = async ({ userId, eventId, groupId }: IUserEventGroup)
 
 // does what it says. handles user group relation and permission level.
 // MAYBE should unassign event from everybody who assigned it to their personal calendar?
-const unassignEventFromGroup = async ({ userId, eventId, groupId }: IUserEventGroup) => {
+const unassignEventFromGroup = async ({ userId, eventId, groupId }: IUserEventGroup):
+  Promise<{
+    group: Group;
+    event: Event;
+    user: User;
+  } | undefined> => {
   try {
     const group = await getConnection().getRepository(Group).findOne({ id: groupId })
     const event = await getConnection().getRepository(Event).findOne({ id: eventId })
@@ -133,7 +147,11 @@ const unassignEventFromGroup = async ({ userId, eventId, groupId }: IUserEventGr
 // creates user event relation. handles if the event is private and if the user was invited to the event 
 // in that case, handles the permission level for both.
 // TODO maybe add an inviteUserToEvent controller?
-const assignEventToUser = async ({ userId, eventId, inviterId }: IUserEventInviter) => {
+const assignEventToUser = async ({ userId, eventId, inviterId }: IUserEventInviter):
+  Promise<{
+    event: Event | undefined;
+    relation: InsertResult;
+  } | undefined> => {
   try {
     const event = await getConnection().getRepository(Event).findOne({ id: eventId })
     if (event && event.isPrivate) {
@@ -166,7 +184,7 @@ const assignEventToUser = async ({ userId, eventId, inviterId }: IUserEventInvit
 }
 
 // deletes relation between user and event. (remove from my personal calendar)
-const unassignEventFromUser = async ({ userId, eventId }: IUserEvent) => {
+const unassignEventFromUser = async ({ userId, eventId }: IUserEvent): Promise<DeleteResult | undefined> => {
   try {
 
     const deletedRelation = await getConnection()
@@ -174,6 +192,7 @@ const unassignEventFromUser = async ({ userId, eventId }: IUserEvent) => {
       .delete()
       .from(UserEvent)
       .where({ user: { id: userId }, event: { id: eventId } })
+      .execute()
 
     return deletedRelation
   } catch (ex) {
@@ -182,7 +201,7 @@ const unassignEventFromUser = async ({ userId, eventId }: IUserEvent) => {
 }
 
 // gets all the events in my calendar
-const getUserEvents = async (userId: string) => {
+const getUserEvents = async (userId: string): Promise<Event[] | undefined> => {
   try {
     const events: Event[] = await getConnection()
       .getRepository(UserEvent)
@@ -199,7 +218,7 @@ const getUserEvents = async (userId: string) => {
 }
 
 // finds group with the events in it and returns the events
-const getGroupEvents = async (groupId: string) => {
+const getGroupEvents = async (groupId: string): Promise<Event[] | undefined> => {
   try {
     const results: Event[] | undefined = await getConnection()
       .getRepository(Group)
@@ -215,7 +234,7 @@ const getGroupEvents = async (groupId: string) => {
 }
 
 // updates event info and privacy setting. handles user permission to perform this action
-const updateEvent = async ({ userId, eventId, name, description, startTime, endTime, isPrivate }: IUpdateEventDetails) => {
+const updateEvent = async ({ userId, eventId, name, description, startTime, endTime, isPrivate }: IUpdateEventDetails): Promise<UpdateResult | undefined> => {
   try {
     const userRelation = await getConnection()
       .getRepository(UserEvent)
@@ -249,7 +268,7 @@ const updateEvent = async ({ userId, eventId, name, description, startTime, endT
 }
 
 // uses geolocation to draw a circle around and fetch all the events in those geolocations and return them
-const searchEventsUsingRadius = async (geolocationId: string, radius: number, latitude?: number, longitude?: number) => {
+const searchEventsUsingRadius = async (geolocationId: string, radius: number, latitude?: number, longitude?: number): Promise<Event[] | undefined> => {
   try {
     let location = await getConnection().getRepository(Geolocation).findOne({ id: geolocationId })
 
@@ -299,7 +318,7 @@ const searchEventsUsingRadius = async (geolocationId: string, radius: number, la
   }
 }
 
-const insertHashtagToDb = async (text: string) => {
+const insertHashtagToDb = async (text: string): Promise<Hashtag | undefined> => {
   try {
 
     const hashtag = new Hashtag()
@@ -313,7 +332,11 @@ const insertHashtagToDb = async (text: string) => {
   }
 }
 
-const assignHashtagToEvent = async ({ hashtagId, eventId }: IEventHashtag) => {
+const assignHashtagToEvent = async ({ hashtagId, eventId }: IEventHashtag):
+  Promise<{
+    event: Hashtag;
+    hashtag: Hashtag;
+  } | undefined> => {
   try {
     const event = await getConnection().getRepository(Hashtag).findOne({ id: eventId })
     const hashtag = await getConnection().getRepository(Hashtag).findOne({ id: hashtagId })
@@ -334,7 +357,7 @@ const assignHashtagToEvent = async ({ hashtagId, eventId }: IEventHashtag) => {
 }
 
 
-const getHashtagByText = async (text: string) => {
+const getHashtagByText = async (text: string): Promise<Hashtag | undefined> => {
   try {
     const hashtag = await getConnection().getRepository(Hashtag).findOne({ text })
     return hashtag
@@ -343,7 +366,7 @@ const getHashtagByText = async (text: string) => {
   }
 }
 
-const getEventHashtags = async (eventId: string) => {
+const getEventHashtags = async (eventId: string): Promise<Hashtag[] | undefined> => {
   try {
     const results = await getConnection()
       .getRepository(Event)
@@ -356,7 +379,7 @@ const getEventHashtags = async (eventId: string) => {
   }
 }
 
-const getHashtagById = async (id: string) => {
+const getHashtagById = async (id: string): Promise<Hashtag | undefined> => {
   try {
     const hashtag = await getConnection().getRepository(Hashtag).findOne({ id })
     return hashtag
@@ -365,7 +388,7 @@ const getHashtagById = async (id: string) => {
   }
 }
 
-const searchHashtags = async (searchVal: string) => {
+const searchHashtags = async (searchVal: string): Promise<Hashtag[] | undefined> => {
   try {
 
     const results = await getConnection()
@@ -383,7 +406,7 @@ const searchHashtags = async (searchVal: string) => {
 }
 
 // uses event's name and hashtags to fetch events based on a string search value
-const searchEventsByName = async (searchVal: string) => {
+const searchEventsByName = async (searchVal: string): Promise<Event[] | undefined> => {
   try {
 
     const results = await getConnection()
@@ -402,7 +425,7 @@ const searchEventsByName = async (searchVal: string) => {
   }
 }
 
-const searchEventsByHashtags = async (searchVal: string) => {
+const searchEventsByHashtags = async (searchVal: string): Promise<Event[] | undefined> => {
   try {
 
     const results = await getConnection()

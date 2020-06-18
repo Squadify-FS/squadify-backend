@@ -1,4 +1,4 @@
-import { getConnection } from 'typeorm';
+import { getConnection, InsertResult } from 'typeorm';
 
 import { Message, UserGroup, Group, Chat } from '../models'
 
@@ -6,7 +6,7 @@ import { Message, UserGroup, Group, Chat } from '../models'
 // adds message to chat (kinda like sendMessage). Handles the permission levels and if the user is permitted to write messages in the chat. 
 // also has an imageUrl option in case the message contains an image, which could be handled with an S3 imageUrl that then is displayed in the frontend.
 // returns the message object (identifiers, raw and generatedmaps)
-const addMessageToChat = async ({ userId, chatId, groupId, text, imageUrl }: INewMessageInterface) => {
+const addMessageToChat = async ({ userId, chatId, groupId, text, imageUrl }: INewMessageInterface): Promise<InsertResult> => {
   try {
     const group = await getConnection().getRepository(Group).findOne({ id: groupId })
 
@@ -35,7 +35,7 @@ const addMessageToChat = async ({ userId, chatId, groupId, text, imageUrl }: INe
 }
 
 // gets the group's assigned chat entity
-const getChatFromGroup = async (groupId: string) => {
+const getChatFromGroup = async (groupId: string): Promise<Chat | undefined> => {
   try {
     const group = await getConnection()
       .getRepository(Group)
@@ -48,7 +48,7 @@ const getChatFromGroup = async (groupId: string) => {
 }
 
 // gets the chat's messages. Should be modified later for pagination.
-const getMessagesFromChat = async (chatId: string) => {
+const getMessagesFromChat = async (chatId: string): Promise<Message[] | undefined> => {
   try {
     const chat = await getConnection()
       .getRepository(Chat)

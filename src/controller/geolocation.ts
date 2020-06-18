@@ -27,7 +27,11 @@ const insertGeolocationToDb = async (latitude: number, longitude: number, addres
 }
 
 // this function will only be used when a user registers, as they will always have a set location after they register and will only have to update it
-const setUserGeolocationInDb = async (userId: string, localized_address?: string, latitude?: number, longitude?: number) => {
+const setUserGeolocationInDb = async (userId: string, localized_address?: string, latitude?: number, longitude?: number):
+  Promise<{
+    user: User;
+    geolocation: Geolocation;
+  }> => {
   try {
     const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation); // get geolocation repo from db
 
@@ -85,7 +89,11 @@ const setUserGeolocationInDb = async (userId: string, localized_address?: string
 }
 
 //name explains its function
-const updateUserGeolocationInDb = async (userId: string, localized_address?: string, latitude?: number, longitude?: number) => {
+const updateUserGeolocationInDb = async (userId: string, localized_address?: string, latitude?: number, longitude?: number):
+  Promise<{
+    user: User;
+    geolocation: Geolocation;
+  }> => {
   try {
     const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation) // get geolocation repo from db
 
@@ -151,7 +159,7 @@ const updateUserGeolocationInDb = async (userId: string, localized_address?: str
 }
 
 // returns the geolocation object that user has assigned
-const getUserGeolocation = async (userId: string) => {
+const getUserGeolocation = async (userId: string): Promise<Geolocation | undefined> => {
   try {
 
     const user = await getConnection()
@@ -166,7 +174,11 @@ const getUserGeolocation = async (userId: string) => {
 }
 
 // sets event geolocation when eent is first created
-const setEventGeolocationInDb = async (userId: string, eventId: string, localized_address?: string, latitude?: number, longitude?: number) => {
+const setEventGeolocationInDb = async (userId: string, eventId: string, localized_address?: string, latitude?: number, longitude?: number):
+  Promise<{
+    event: Event;
+    geolocation: Geolocation;
+  } | undefined> => {
   try {
     const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation);
 
@@ -228,7 +240,11 @@ const setEventGeolocationInDb = async (userId: string, eventId: string, localize
 }
 
 // same as update user geolocation but with event
-const updateEventGeolocationInDb = async (userId: string, eventId: string, localized_address?: string, latitude?: number, longitude?: number) => {
+const updateEventGeolocationInDb = async (userId: string, eventId: string, localized_address?: string, latitude?: number, longitude?: number):
+  Promise<{
+    event: Event;
+    geolocation: Geolocation;
+  } | undefined> => {
   try {
     const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation);
 
@@ -296,7 +312,7 @@ const updateEventGeolocationInDb = async (userId: string, eventId: string, local
 }
 
 // gets geolocation corresponding to this event
-const getEventGeolocation = async (eventId: string) => {
+const getEventGeolocation = async (eventId: string): Promise<Geolocation | undefined> => {
   try {
 
     const event = await getConnection()

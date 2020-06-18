@@ -3,23 +3,24 @@ import { getConnection } from 'typeorm';
 import { Event, Group, User, UserGroup, UserEvent, Geolocation, Hashtag } from '../models'
 import { insertGeolocationToDb } from './geolocation';
 
-// interface NewEventDetails {
-//   name: string;
-//   description: string;
-//   dateAndTime: Date;
-//   isPrivate: boolean;
-// }
-
 // simple create event function. returns (ids, raw, generatedmaps) for both event and the relation between the user and the event.
 // user is the creator of the event, and has admin permission by default
 // setting geolocation for event should be handled in the route using ***setEventGeolocationInDb (./geolocation)***
-const insertEventToDb = async (userId: string, name: string, description: string, isPrivate: boolean, startTime: Date, endTime?: Date) => {
+const insertEventToDb = async ({ userId, name, description, startTime, endTime, isPrivate }: INewEventDetails) => {
   try {
+    if (new Date(startTime) < new Date()) throw new Error('Cannot create an event for the past!')
+
     const event = await getConnection()
       .createQueryBuilder()
       .insert()
       .into(Event)
-      .values({ name, description, startTime, endTime, isPrivate })
+      .values({
+        name,
+        description,
+        startTime: new Date(startTime),
+        endTime: endTime ? new Date(endTime) : undefined,
+        isPrivate
+      })
       .returning('*')
       .execute();
 
@@ -46,7 +47,7 @@ const insertEventToDb = async (userId: string, name: string, description: string
 // also handles what kind of permission the user had with the event in the first place. Only hosts and admins can assign private events to groups.
 // if the user has no relation to a public event, it creates it when running this function, therefore ssuming they assign it because they're going. 
 // Might change that last thing in the future
-const assignEventToGroup = async (userId: string, eventId: string, groupId: string) => {
+const assignEventToGroup = async ({ userId, eventId, groupId }: IUserEventGroup) => {
   try {
     const group = await getConnection().getRepository(Group).findOne({ id: groupId })
     const event = await getConnection().getRepository(Event).findOne({ id: eventId })
@@ -65,9 +66,9 @@ const assignEventToGroup = async (userId: string, eventId: string, groupId: stri
       .findOne({ user: { id: userId }, event: { id: eventId } })
 
     if (event.isPrivate) {
-      if (!userEventRelation || userEventRelation.permissionLevel < 1) throw new Error("User cannot assign private event if there's no relation")
+      if (userEventRelation && userEventRelation.permissionLevel < 1) throw new Error("User doesn't have enough permission")
     } else {
-      if (!userEventRelation) {
+      if (!userEventRelation) { // assign the event to the user automatically if he doesnt already have it assigned
         await getConnection()
           .createQueryBuilder()
           .insert()
@@ -87,12 +88,6 @@ const assignEventToGroup = async (userId: string, eventId: string, groupId: stri
       .of(event)
       .add(group);
 
-    await getConnection()
-      .createQueryBuilder()
-      .relation(Group, 'events')
-      .of(group)
-      .add(event);
-
     return { group, event, user }
 
   } catch (ex) {
@@ -102,7 +97,7 @@ const assignEventToGroup = async (userId: string, eventId: string, groupId: stri
 
 // does what it says. handles user group relation and permission level.
 // MAYBE should unassign event from everybody who assigned it to their personal calendar?
-const unassignEventFromGroup = async (userId: string, eventId: string, groupId: string) => {
+const unassignEventFromGroup = async ({ userId, eventId, groupId }: IUserEventGroup) => {
   try {
     const group = await getConnection().getRepository(Group).findOne({ id: groupId })
     const event = await getConnection().getRepository(Event).findOne({ id: eventId })
@@ -137,16 +132,18 @@ const unassignEventFromGroup = async (userId: string, eventId: string, groupId: 
 
 // creates user event relation. handles if the event is private and if the user was invited to the event 
 // in that case, handles the permission level for both.
-const assignEventToUser = async (userId: string, eventId: string, inviterId?: string) => {
+// TODO maybe add an inviteUserToEvent controller?
+const assignEventToUser = async ({ userId, eventId, inviterId }: IUserEventInviter) => {
   try {
     const event = await getConnection().getRepository(Event).findOne({ id: eventId })
-    if (inviterId) {
+    if (event && event.isPrivate) {
+      if (!inviterId) throw new Error('Inviter has no permission')
+
       const inviterRelationToEvent = await getConnection()
         .getRepository(UserEvent)
         .findOne({ user: { id: inviterId }, event: { id: eventId } })
-      if (event && event.isPrivate) {
-        if (!inviterRelationToEvent || inviterRelationToEvent.permissionLevel < 1) throw new Error('User is not related or not enough permission')
-      }
+
+      if (!inviterRelationToEvent || inviterRelationToEvent.permissionLevel < 1) throw new Error('User is not related or not enough permission')
     }
 
     const relation = await getConnection()
@@ -156,6 +153,7 @@ const assignEventToUser = async (userId: string, eventId: string, inviterId?: st
       .values({
         inviter: { id: inviterId || undefined },
         user: { id: userId },
+        event: { id: eventId },
         permissionLevel: inviterId ? 1 : 0
       })
       .returning('*')
@@ -168,7 +166,7 @@ const assignEventToUser = async (userId: string, eventId: string, inviterId?: st
 }
 
 // deletes relation between user and event. (remove from my personal calendar)
-const unassignEventFromUser = async (userId: string, eventId: string) => {
+const unassignEventFromUser = async ({ userId, eventId }: IUserEvent) => {
   try {
 
     const deletedRelation = await getConnection()
@@ -217,7 +215,7 @@ const getGroupEvents = async (groupId: string) => {
 }
 
 // updates event info and privacy setting. handles user permission to perform this action
-const updateEvent = async (userId: string, eventId: string, name: string, description: string, startTime: Date, endTime: Date, isPrivate?: boolean) => {
+const updateEvent = async ({ userId, eventId, name, description, startTime, endTime, isPrivate }: IUpdateEventDetails) => {
   try {
     const userRelation = await getConnection()
       .getRepository(UserEvent)
@@ -301,6 +299,89 @@ const searchEventsUsingRadius = async (geolocationId: string, radius: number, la
   }
 }
 
+const insertHashtagToDb = async (text: string) => {
+  try {
+
+    const hashtag = new Hashtag()
+    hashtag.text = text
+    await getConnection().manager.save(hashtag)
+
+    return hashtag
+
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+const assignHashtagToEvent = async ({ hashtagId, eventId }: IEventHashtag) => {
+  try {
+    const event = await getConnection().getRepository(Hashtag).findOne({ id: eventId })
+    const hashtag = await getConnection().getRepository(Hashtag).findOne({ id: hashtagId })
+
+    if (event && hashtag) {
+
+      await getConnection()
+        .createQueryBuilder()
+        .relation(Event, 'hashtags')
+        .of(event)
+        .add(hashtag)
+
+      return { event, hashtag }
+    }
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+
+const getHashtagByText = async (text: string) => {
+  try {
+    const hashtag = await getConnection().getRepository(Hashtag).findOne({ text })
+    return hashtag
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+const getEventHashtags = async (eventId: string) => {
+  try {
+    const results = await getConnection()
+      .getRepository(Event)
+      .findOne(eventId, { relations: ['hashtags'] })
+      .then(event => event?.hashtags)
+
+    return results
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+const getHashtagById = async (id: string) => {
+  try {
+    const hashtag = await getConnection().getRepository(Hashtag).findOne({ id })
+    return hashtag
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+const searchHashtags = async (searchVal: string) => {
+  try {
+
+    const results = await getConnection()
+      .createQueryBuilder()
+      .select()
+      .from(Hashtag, 'hashtag')
+      .where(`hashtag.text LIKE "%${searchVal}%"`)
+      .getMany()
+
+    return results
+
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
 // uses event's name and hashtags to fetch events based on a string search value
 const searchEventsByName = async (searchVal: string) => {
   try {
@@ -344,71 +425,6 @@ const searchEventsByHashtags = async (searchVal: string) => {
   }
 }
 
-const getEventHashtags = async (eventId: string) => {
-  try {
-    const results = await getConnection()
-      .getRepository(Event)
-      .findOne(eventId, { relations: ['hashtags'] })
-      .then(event => event?.hashtags)
-
-    return results
-  } catch (ex) {
-    console.log(ex)
-  }
-}
-
-
-const getHashtagByText = async (text: string) => {
-  try {
-    const hashtag = await getConnection().getRepository(Hashtag).findOne({ text })
-    return hashtag
-  } catch (ex) {
-    console.log(ex)
-  }
-}
-
-const getHashtagById = async (id: string) => {
-  try {
-    const hashtag = await getConnection().getRepository(Hashtag).findOne({ id })
-    return hashtag
-  } catch (ex) {
-    console.log(ex)
-  }
-}
-
-const insertHashtagToDb = async (text: string) => {
-  try {
-
-    const hashtag = new Hashtag()
-    hashtag.text = text
-    await getConnection().manager.save(hashtag)
-
-    return hashtag
-
-  } catch (ex) {
-    console.log(ex)
-  }
-}
-
-const assignHashtagToEvent = async (hashtagId: string, eventId: string) => {
-  try {
-    const event = await getConnection().getRepository(Hashtag).findOne({ id: eventId })
-    const hashtag = await getConnection().getRepository(Hashtag).findOne({ id: hashtagId })
-
-    if (event && hashtag) {
-
-      await getConnection()
-        .createQueryBuilder()
-        .relation(Event, 'hashtags')
-        .of(event)
-        .add(hashtag)
-
-      return { event, hashtag }
-    }
-  } catch (ex) {
-    console.log(ex)
-  }
-}
 
 
 export {
@@ -420,6 +436,7 @@ export {
   getUserEvents,
   getGroupEvents,
   updateEvent,
+  searchHashtags,
   searchEventsUsingRadius,
   searchEventsByName,
   searchEventsByHashtags,

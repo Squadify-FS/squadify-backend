@@ -13,6 +13,7 @@ import {
   getUserEvents,
   getGroupEvents,
   updateEvent,
+  searchHashtags,
   searchEventsUsingRadius,
   searchEventsByName,
   searchEventsByHashtags,
@@ -35,6 +36,7 @@ import {
 
 import {
   insertNewGroupToDb,
+  getGroupFromDb,
   deleteGroup,
   updateGroupInfo,
   getGroupUsers,
@@ -48,6 +50,7 @@ import {
   rejectInviteToGroup,
   removeUserFromGroup,
   followPublicGroup,
+  setGroupIsPrivate,
   setGroupFollowersReadOnly,
   searchGroupByName,
   searchGroupByHash
@@ -103,6 +106,7 @@ export {
   getUserEvents,
   getGroupEvents,
   updateEvent,
+  searchHashtags,
   searchEventsUsingRadius,
   searchEventsByName,
   searchEventsByHashtags,
@@ -123,6 +127,7 @@ export {
   //
   // group
   insertNewGroupToDb,
+  getGroupFromDb,
   deleteGroup,
   updateGroupInfo,
   getGroupUsers,
@@ -136,6 +141,7 @@ export {
   rejectInviteToGroup,
   removeUserFromGroup,
   followPublicGroup,
+  setGroupIsPrivate,
   setGroupFollowersReadOnly,
   searchGroupByName,
   searchGroupByHash,

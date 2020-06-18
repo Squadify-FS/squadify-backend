@@ -32,7 +32,7 @@ router.delete('/:groupId', isLoggedIn, async (req, res, next) => {
     const { groupId } = req.params;
     const { adminId } = req.body;
     try {
-        res.send(await deleteGroup(groupId, adminId));
+        res.send(await deleteGroup({ groupId, userId: adminId }));
     } catch (err) {
         next(err);
     }
@@ -64,7 +64,7 @@ router.post('/:userId/invitations/accept', isLoggedIn, async (req, res, next) =>
     const { userId } = req.params;
     const { groupId } = req.body;
     try {
-        res.send(await acceptInviteToGroup(userId, groupId));
+        res.send(await acceptInviteToGroup({ userId, groupId }));
     } catch (err) {
         next(err);
     }
@@ -75,7 +75,7 @@ router.post('/:userId/invitations/reject', isLoggedIn, async (req, res, next) =>
     const { userId } = req.params;
     const { groupId } = req.body;
     try {
-        res.send(await rejectInviteToGroup(userId, groupId));
+        res.send(await rejectInviteToGroup({ userId, groupId }));
     } catch (err) {
         next(err);
     }
@@ -86,7 +86,7 @@ router.delete('/:groupId/removeuser', isLoggedIn, async (req, res, next) => {
     const { groupId } = req.params;
     const { removerId, userId } = req.body;
     try {
-        res.send(await removeUserFromGroup(removerId, userId, groupId));
+        res.send(await removeUserFromGroup(removerId, { userId, groupId }));
     } catch (err) {
         next(err);
     }
@@ -97,7 +97,7 @@ router.post('/:groupId/follow', isLoggedIn, async (req, res, next) => {
     const { groupId } = req.params;
     const { userId } = req.body;
     try {
-        res.send(await followPublicGroup(userId, groupId));
+        res.send(await followPublicGroup({ userId, groupId }));
     } catch (err) {
         next(err);
     }

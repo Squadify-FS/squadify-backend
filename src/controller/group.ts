@@ -1,13 +1,28 @@
-import { getConnection, InsertResult } from 'typeorm';
+import { getConnection, InsertResult, getRepository } from 'typeorm';
 import { generateHashForName } from "../common/functions";
 import { Group, UserGroup, Chat, User } from '../models'
 
-interface IGroupInterface {
+interface INewGroupInterface {
   name: string;
   isPrivate: boolean;
   creatorId: string;
   friendIds?: string[];
+  followersReadOnly?: boolean;
   avatarUrl: string;
+}
+
+interface IUserGroupIds {
+  userId: string;
+  groupId: string;
+}
+
+const getUserGroupRelation = async (userId: string, groupId: string) => {
+  const relation = await getConnection()
+    .getRepository(UserGroup)
+    .findOne({ user: { id: userId }, group: { id: groupId } })
+
+  if (relation) return relation
+  return false
 }
 
 
@@ -19,7 +34,7 @@ FUNCTION WILL:
   send invitations to users admin invited when creating group in frontend form by creating relation in UserGroup join table
   return newly created group and chat
 */
-const insertNewGroupToDb = async ({ name, isPrivate, creatorId, friendIds, avatarUrl }: IGroupInterface) => {
+const insertNewGroupToDb = async ({ name, isPrivate, creatorId, friendIds, followersReadOnly, avatarUrl }: INewGroupInterface) => {
   try {
 
     let hashedName = `${name}${generateHashForName()}`
@@ -32,7 +47,7 @@ const insertNewGroupToDb = async ({ name, isPrivate, creatorId, friendIds, avata
       .createQueryBuilder()
       .insert()
       .into(Group)
-      .values({ name: hashedName, isPrivate, avatarUrl })
+      .values({ name: hashedName, isPrivate, avatarUrl, followersReadOnly })
       .returning('*')
       .execute()
     const groupId: string = group.identifiers[0].id;
@@ -81,13 +96,50 @@ const insertNewGroupToDb = async ({ name, isPrivate, creatorId, friendIds, avata
   }
 }
 
-// must be sent the info that is going to be changed aswell as the info that won't be changed
-const updateGroupInfo = async (groupId: string, name: string, isPrivate: boolean, avatarUrl: string) => {
+// returns the group entity
+const getGroupFromDb = async (groupId: string) => {
   try {
+    const group = await getConnection().getRepository(Group).findOne({ id: groupId });
+    if (group) {
+      return group;
+    }
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+// must be sent the info that is going to be changed aswell as the info that won't be changed
+const updateGroupInfo = async (groupId: string, name: string, avatarUrl: string) => {
+  try {
+    let hashedName = `${name}${generateHashForName()}`
+    const alreadyExists = await getConnection().getRepository(Group).findOne({ name: hashedName }) // might not event need this due to possibilities of the hash (62 ^ 6 = 56 billion) TODO
+    if (alreadyExists) {
+      hashedName = `${name}${generateHashForName()}`
+    }
+
     const result = await getConnection()
       .createQueryBuilder()
       .update(Group)
-      .set({ name, isPrivate, avatarUrl })
+      .set({ name: hashedName, avatarUrl })
+      .where({ id: groupId })
+      .returning('*')
+      .execute();
+
+    return result
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+const setGroupIsPrivate = async ({ userId, groupId }: IUserGroupIds, isPrivate: boolean) => {
+  try {
+    const adminRelation = await getUserGroupRelation(userId, groupId)
+    if (adminRelation && adminRelation.permissionLevel < 2) throw new Error("You don't have admin permission in this group")
+
+    const result = await getConnection()
+      .createQueryBuilder()
+      .update(Group)
+      .set({ isPrivate })
       .where({ id: groupId })
       .returning('*')
       .execute();
@@ -99,8 +151,14 @@ const updateGroupInfo = async (groupId: string, name: string, isPrivate: boolean
 }
 
 // change the status of the group so that followers cant write in the chat
-const setGroupFollowersReadOnly = async (groupId: string, followersReadOnly: boolean) => {
+const setGroupFollowersReadOnly = async ({ userId, groupId }: IUserGroupIds, followersReadOnly: boolean) => {
   try {
+    const adminRelation = await getUserGroupRelation(userId, groupId)
+    if (adminRelation && adminRelation.permissionLevel < 2) throw new Error("You don't have admin permission in this group")
+
+    const group = await getRepository(Group).findOne({ id: groupId })
+    if (group && group.isPrivate) throw new Error('Read only is always true as default for private group')
+
     const result = await getConnection()
       .createQueryBuilder()
       .update(Group)
@@ -116,11 +174,9 @@ const setGroupFollowersReadOnly = async (groupId: string, followersReadOnly: boo
 }
 
 // deletes the group and all its relations. Only admins can delete it.
-const deleteGroup = async (groupId: string, adminId: string) => {
+const deleteGroup = async ({ userId, groupId }: IUserGroupIds, ) => {
   try {
-    const adminRelation = await getConnection()
-      .getRepository(UserGroup)
-      .findOne({ user: { id: adminId }, group: { id: groupId } });
+    const adminRelation = await getUserGroupRelation(userId, groupId)
     if (adminRelation && adminRelation.permissionLevel < 2) throw new Error("You don't have admin permission in this group")
 
     const deletedUserRelations = await getConnection()
@@ -183,8 +239,8 @@ const getGroupFollowers = async (groupId: string) => {
     const users: User[] = await getConnection()
       .getRepository(UserGroup)
       .createQueryBuilder('relation')
-      .leftJoinAndSelect('relation.user', 'group')
-      .where(`relation."groupId" = :groupId AND relation.accepted = true AND relation."permissionLevel" = 0`, { groupId })
+      .leftJoinAndSelect('relation.user', 'user')
+      .where(`relation."groupId" = :groupId AND relation.accepted = true AND relation."permissionLevel" < 1`, { groupId })
       .getMany()
       .then(relations => relations.map(relation => relation.user))
 
@@ -197,15 +253,15 @@ const getGroupFollowers = async (groupId: string) => {
 // returns the users that have been invited to the group
 const getGroupUserInvitations = async (groupId: string) => {
   try {
-    const users: User[] = await getConnection()
+    const invitations: { inviter: User; user: User; group: Group; }[] = await getConnection()
       .getRepository(UserGroup)
       .createQueryBuilder('relation')
       .leftJoinAndSelect('relation.user', 'group')
       .where(`relation."groupId" = :groupId AND relation.accepted = false`, { groupId })
       .getMany()
-      .then(relations => relations.map(relation => relation.user))
+      .then(relations => relations.map(relation => ({ inviter: relation.inviter, user: relation.user, group: relation.group })))
 
-    return users
+    return invitations
   } catch (ex) {
     console.log(ex)
   }
@@ -232,17 +288,22 @@ const getUserGroups = async (userId: string) => {
 // returns the invitations to groups that the user has sent AND the ones he has received
 const getUserGroupInvitations = async (userId: string) => {
   try {
-    const sentInvitations: User[] = await getConnection()
+    const sentInvitations: {
+      inviter: User;
+      user: User;
+      group: Group;
+    }[] = await getConnection()
       .getRepository(UserGroup)
       .createQueryBuilder('relation')
       .leftJoinAndSelect('relation.user', 'user')
       .leftJoinAndSelect('relation.group', 'group')
       .where(`relation."inviterId" = :userId AND relation.accepted = false`, { userId })
       .getMany()
-      .then(relations => relations.map(relation => relation.user))
+      .then(relations => relations.map(relation => ({ inviter: relation.inviter, user: relation.user, group: relation.group })))
 
     const receivedInvitations: {
       inviter: User;
+      user: User;
       group: Group;
     }[] = await getConnection()
       .getRepository(UserGroup)
@@ -251,7 +312,7 @@ const getUserGroupInvitations = async (userId: string) => {
       .leftJoinAndSelect('relation.group', 'group')
       .where(`relation."userId" = :userId AND relation.accepted = false`, { userId })
       .getMany()
-      .then(relations => relations.map(relation => ({ inviter: relation.inviter, group: relation.group })))
+      .then(relations => relations.map(relation => ({ inviter: relation.inviter, user: relation.user, group: relation.group })))
 
     return { sentInvitations, receivedInvitations }
 
@@ -267,9 +328,7 @@ const inviteUserToGroup = async (groupId: string, inviterId: string, inviteeId: 
     const group = await getConnection().getRepository(Group).findOne({ id: groupId })
     if (!group) throw new Error('Something went wrong in querying group')
 
-    const inviterRelationWithGroup = await getConnection()
-      .getRepository(UserGroup)
-      .findOne({ user: { id: inviterId }, group: { id: groupId } });
+    const inviterRelationWithGroup = await getUserGroupRelation(inviterId, groupId)
     if (!inviterRelationWithGroup) throw new Error('User is not part of this group!!')
     if (group.isPrivate && inviterRelationWithGroup.permissionLevel < 1) throw new Error("You don't have permission to perform this action")
 
@@ -290,7 +349,7 @@ const inviteUserToGroup = async (groupId: string, inviterId: string, inviteeId: 
 }
 
 // sets the relation to accepted
-const acceptInviteToGroup = async (userId: string, groupId: string) => {
+const acceptInviteToGroup = async ({ userId, groupId }: IUserGroupIds, ) => {
   try {
     const relation = await getConnection()
       .createQueryBuilder()
@@ -306,7 +365,7 @@ const acceptInviteToGroup = async (userId: string, groupId: string) => {
 }
 
 // rejects the invite and completely deletes the relation
-const rejectInviteToGroup = async (userId: string, groupId: string) => {
+const rejectInviteToGroup = async ({ userId, groupId }: IUserGroupIds) => {
   try {
     const deletedRelation = await getConnection()
       .createQueryBuilder()
@@ -323,12 +382,10 @@ const rejectInviteToGroup = async (userId: string, groupId: string) => {
 
 // removes a user from a group. handles permission level if the user is not the one LEAVING the group, but rather being KICKED OUT
 // can also be used for unfollowing a group
-const removeUserFromGroup = async (removerId: string, userId: string, groupId: string) => {
+const removeUserFromGroup = async (removerId: string, { userId, groupId }: IUserGroupIds) => {
   try {
     if (removerId !== userId) { // used to manage if user is leaving group or admin is removing them
-      const removerRelationToGroup = await getConnection()
-        .getRepository(UserGroup)
-        .findOne({ user: { id: removerId }, group: { id: groupId } });
+      const removerRelationToGroup = await getUserGroupRelation(removerId, groupId)
       if (!removerRelationToGroup || removerRelationToGroup.permissionLevel < 2) throw new Error("You don't have permission to perform this action")
     }
 
@@ -346,7 +403,7 @@ const removeUserFromGroup = async (removerId: string, userId: string, groupId: s
 }
 
 // creates a relation with permissionLevel 0 to a group
-const followPublicGroup = async (userId: string, groupId: string) => {
+const followPublicGroup = async ({ userId, groupId }: IUserGroupIds, ) => {
   try {
     const group = await getConnection().getRepository(Group).findOne({ id: groupId })
     if (!group) throw new Error('Something went wrong finding group')
@@ -374,7 +431,7 @@ const searchGroupByName = async (name: string) => {
       .getRepository(Group)
       .createQueryBuilder('group')
       .select()
-      .where(`LOWER(group.name) LIKE "%${name.toLowerCase()}%"`)
+      .where(`LOWER(group.name) LIKE '%${name.toLowerCase()}%'`)
       .getMany()
 
     return results
@@ -389,7 +446,7 @@ const searchGroupByHash = async (hash: string) => {
       .getRepository(Group)
       .createQueryBuilder('group')
       .select()
-      .where(`group.name LIKE "%#${hash}%"`)
+      .where(`group.name LIKE '%#${hash}%'`)
       .getMany()
 
     return results
@@ -401,6 +458,7 @@ const searchGroupByHash = async (hash: string) => {
 
 export {
   insertNewGroupToDb,
+  getGroupFromDb,
   deleteGroup,
   updateGroupInfo,
   getGroupUsers,
@@ -414,6 +472,7 @@ export {
   rejectInviteToGroup,
   removeUserFromGroup,
   followPublicGroup,
+  setGroupIsPrivate,
   setGroupFollowersReadOnly,
   searchGroupByName,
   searchGroupByHash

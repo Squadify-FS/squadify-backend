@@ -2,6 +2,7 @@ import { getConnection, InsertResult, getRepository, UpdateResult, DeleteResult 
 import { generateHashForName } from "../common/functions";
 import { Group, UserGroup, Chat, User } from '../models'
 import { INewGroupInterface, IUserGroupIds } from '../types/groupTypes';
+import { insertEventToDb } from './event';
 
 const getUserGroupRelation = async (userId: string, groupId: string): Promise<UserGroup | undefined> => {
   const relation = await getConnection()
@@ -218,7 +219,7 @@ const getGroupFriends = async (groupId: string): Promise<User[] | undefined> => 
     const users: User[] = await getConnection()
       .getRepository(UserGroup)
       .createQueryBuilder('relation')
-      .leftJoinAndSelect('relation.user', 'group')
+      .leftJoinAndSelect('relation.user', 'user')
       .where(`relation."groupId" = :groupId AND relation.accepted = true AND relation."permissionLevel" > 0`, { groupId })
       .getMany()
       .then(relations => relations.map(relation => relation.user))
@@ -257,7 +258,9 @@ const getGroupUserInvitations = async (groupId: string):
     const invitations: { inviter: User; user: User; group: Group; }[] = await getConnection()
       .getRepository(UserGroup)
       .createQueryBuilder('relation')
-      .leftJoinAndSelect('relation.user', 'group')
+      .leftJoinAndSelect('relation.inviter', 'inviter')
+      .leftJoinAndSelect('relation.user', 'user')
+      .leftJoinAndSelect('relation.group', 'group')
       .where(`relation."groupId" = :groupId AND relation.accepted = false`, { groupId })
       .getMany()
       .then(relations => relations.map(relation => ({ inviter: relation.inviter, user: relation.user, group: relation.group })))
@@ -307,6 +310,7 @@ const getUserGroupInvitations = async (userId: string): Promise<{
     }[] = await getConnection()
       .getRepository(UserGroup)
       .createQueryBuilder('relation')
+      .leftJoinAndSelect('relation.inviter', 'inviter')
       .leftJoinAndSelect('relation.user', 'user')
       .leftJoinAndSelect('relation.group', 'group')
       .where(`relation."inviterId" = :userId AND relation.accepted = false`, { userId })
@@ -321,6 +325,7 @@ const getUserGroupInvitations = async (userId: string): Promise<{
       .getRepository(UserGroup)
       .createQueryBuilder('relation')
       .leftJoinAndSelect('relation.inviter', 'inviter')
+      .leftJoinAndSelect('relation.user', 'user')
       .leftJoinAndSelect('relation.group', 'group')
       .where(`relation."userId" = :userId AND relation.accepted = false`, { userId })
       .getMany()

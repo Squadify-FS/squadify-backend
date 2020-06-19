@@ -1,4 +1,4 @@
-import { getConnection, InsertResult, DeleteResult, UpdateResult } from 'typeorm';
+import { getConnection, InsertResult, DeleteResult, UpdateResult, Like } from 'typeorm';
 
 import { Event, Group, User, UserGroup, UserEvent, Geolocation, Hashtag } from '../models'
 import { insertGeolocationToDb } from './geolocation';
@@ -300,7 +300,7 @@ const searchEventsUsingRadius = async (geolocationId: string, radius: number, la
         .createQueryBuilder()
         .select()
         .from(Geolocation, 'location')
-        .leftJoinAndSelect('location.events', 'location')
+        .leftJoinAndSelect('location.events', 'events')
         .where(`location."latitude" BETWEEN (location."latitude" - ${latitudeTolerance}) AND (location."latitude" + ${latitudeTolerance})`)
         .andWhere(`location."longitude" BETWEEN (location."longitude" - ${longitudeTolerance}) AND (location."longitude" + ${longitudeTolerance})`)
         .limit(50) //TODO
@@ -332,7 +332,7 @@ const insertHashtagToDb = async (text: string): Promise<Hashtag | undefined> => 
   try {
 
     const hashtag = new Hashtag()
-    hashtag.text = text
+    hashtag.text = `#${text}`
     await getConnection().manager.save(hashtag)
 
     return hashtag
@@ -344,11 +344,11 @@ const insertHashtagToDb = async (text: string): Promise<Hashtag | undefined> => 
 
 const assignHashtagToEvent = async ({ hashtagId, eventId }: IEventHashtag):
   Promise<{
-    event: Hashtag;
+    event: Event;
     hashtag: Hashtag;
   } | undefined> => {
   try {
-    const event = await getConnection().getRepository(Hashtag).findOne({ id: eventId })
+    const event = await getConnection().getRepository(Event).findOne({ id: eventId })
     const hashtag = await getConnection().getRepository(Hashtag).findOne({ id: hashtagId })
 
     if (event && hashtag) {
@@ -369,7 +369,7 @@ const assignHashtagToEvent = async ({ hashtagId, eventId }: IEventHashtag):
 
 const getHashtagByText = async (text: string): Promise<Hashtag | undefined> => {
   try {
-    const hashtag = await getConnection().getRepository(Hashtag).findOne({ text })
+    const hashtag = await getConnection().getRepository(Hashtag).findOne({ text: `#${text}` })
     return hashtag
   } catch (ex) {
     console.log(ex)
@@ -402,11 +402,13 @@ const searchHashtags = async (searchVal: string): Promise<Hashtag[] | undefined>
   try {
 
     const results = await getConnection()
-      .createQueryBuilder()
-      .select()
-      .from(Hashtag, 'hashtag')
-      .where(`hashtag.text LIKE "%${searchVal}%"`)
-      .getMany()
+      .getRepository(Hashtag)
+      .find({ text: Like(`%${searchVal}%`) })
+    // .createQueryBuilder()
+    // .select()
+    // .from(Hashtag, 'hashtag')
+    // .where(`hashtag."text" ILIKE '%${searchVal}%'`)
+    // .getMany()
 
     return results
 
@@ -420,13 +422,14 @@ const searchEventsByName = async (searchVal: string): Promise<Event[] | undefine
   try {
 
     const results = await getConnection()
-      .createQueryBuilder()
-      .select()
-      .from(Event, 'event')
-      .leftJoin('event.hashtags', 'hashtag')
-      .where(`event.name LIKE "%${searchVal}%"`)
-      .andWhere(`event."isPrivate" = false`)
-      .getMany()
+      .getRepository(Event)
+      .find({ name: Like(`%${searchVal}%`) }) // TODO CASE INSENSITIVE
+    // .createQueryBuilder()
+    // .select()
+    // .from(Event, 'event')
+    // .where(`event."name" ILIKE '%${searchVal}%'`)
+    // .andWhere(`event."isPrivate" = false`)
+    // .getMany()
 
     return results
 
@@ -439,15 +442,17 @@ const searchEventsByHashtags = async (searchVal: string): Promise<Event[] | unde
   try {
 
     const results = await getConnection()
-      .createQueryBuilder()
-      .select()
-      .from(Hashtag, 'hashtag')
-      .leftJoinAndSelect('hashtag.events', 'events')
-      .where(`hashtag.text LIKE "%${searchVal}%"`)
-      .getMany()
+      .getRepository(Hashtag)
+      .find({ relations: ['events'], where: { text: Like(`%${searchVal}%`) } })
+      // .createQueryBuilder()
+      // .select()
+      // .from(Hashtag, 'hashtag')
+      // .leftJoinAndSelect('hashtag.events', 'events')
+      // .where(`hashtag."text" ILIKE '%${searchVal}%'`)
+      // .getMany()
       .then(hashtags => hashtags.reduce((acc: Event[], curr) => {
         curr.events = curr.events.filter(event => !event.isPrivate) //TODO
-        acc.concat(curr.events)
+        curr.events.forEach(event => acc.push(event))
         return acc
       }, []))
 

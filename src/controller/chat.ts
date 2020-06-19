@@ -48,7 +48,7 @@ const getChatFromGroup = async (groupId: string): Promise<Chat | undefined> => {
   }
 }
 
-// gets the chat's messages. Should be modified later for pagination.
+// gets the chat's messages. Should be modified later for pagination. Also add orderBy. TODO
 const getMessagesFromChat = async (chatId: string): Promise<Message[] | undefined> => {
   try {
     const chat = await getConnection()

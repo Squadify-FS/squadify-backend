@@ -2,7 +2,7 @@
 import { createConnection, getConnection } from "typeorm";
 import { User, Group, Message, Event, Chat, UserUser, UserGroup, Geolocation, UserEvent, IOU, Hashtag } from "../models";
 
-import { insertNewUserToDb, sendFriendRequest, getUserFriendsFromDb, getUserRequestsFromDb, acceptFriendRequest, getUserFromDb, deleteFriend, searchUserByEmail, getChatFromGroup, addMessageToChat, getMessagesFromChat, insertEventToDb, assignEventToGroup, getUserEvents, getGroupEvents, assignEventToUser } from '../controller'
+import { insertNewUserToDb, sendFriendRequest, getUserFriendsFromDb, getUserRequestsFromDb, acceptFriendRequest, getUserFromDb, deleteFriend, searchUserByEmail, getChatFromGroup, addMessageToChat, getMessagesFromChat, insertEventToDb, assignEventToGroup, getUserEvents, getGroupEvents, assignEventToUser, insertHashtagToDb, assignHashtagToEvent, getHashtagByText, getEventHashtags, searchHashtags, searchEventsByName, searchEventsByHashtags } from '../controller'
 import { insertNewGroupToDb, inviteUserToGroup, acceptInviteToGroup, getGroupUsers, deleteGroup, getUserGroups, getGroupFromDb, followPublicGroup, setGroupFollowersReadOnly, updateGroupInfo, setGroupIsPrivate, getGroupFriends, getGroupFollowers, getGroupUserInvitations, rejectInviteToGroup, removeUserFromGroup, getUserGroupInvitations, searchGroupByName } from '../controller'
 
 import "reflect-metadata";
@@ -29,7 +29,7 @@ import "reflect-metadata";
       Hashtag
     ], // DB models go here, have to be imported on top of this file
     synchronize: true,
-    logging: false,
+    logging: true,
   })
 
   // *********************************************************************************************************************
@@ -103,7 +103,7 @@ import "reflect-metadata";
 
   console.log('**********GROUP2 FOLLOWERS: SHOULD BE USER1**********\n', await getGroupFollowers(group2?.group.identifiers[0].id))
   console.log('**********UPDATE GROUP2 INFO: RETURN UPDATE RESULT**********\n', await updateGroupInfo(group2?.group.identifiers[0].id, 'group2 new name', 'https://66.media.tumblr.com/79a1ac638d6e50f1fa5d760be1d8a51a/tumblr_inline_ojk654MOr11qzet7p_250.png'))
-  console.log('**********SET READ ONLY GROUP2: RETURN UPDATE RESULT (READONLY = TRUE)**********\n', await setGroupFollowersReadOnly({ userId: admin.identifiers[0].id, groupId: group2?.group.identifiers[0].id }, true))
+  console.log('**********SET READ ONLY GROUP2: RETURN UPDATE RESULT (READONLY = TRUE)**********\n', await setGroupFollowersReadOnly({ userId: admin.identifiers[0].id, groupId: group2?.group.identifiers[0].id }, false))
   await removeUserFromGroup(admin.identifiers[0].id, { userId: user1.identifiers[0].id, groupId: group2?.group.identifiers[0].id })
   console.log('**********GROUP2 FOLLOWERS AFTER REMOVAL BY ADMIN: SHOULD BE NONE**********\n', await getGroupFollowers(group2?.group.identifiers[0].id))
 
@@ -131,7 +131,7 @@ import "reflect-metadata";
   // events
 
   const event1 = await insertEventToDb({ userId: admin.identifiers[0].id, name: 'Event 1', description: 'Description for event 1', startTime: new Date('2020-10-10 19:10:25-07'), isPrivate: false })
-  const event2 = await insertEventToDb({ userId: admin.identifiers[0].id, name: 'Event 2', description: 'Description for event 2', startTime: new Date('2020-11-11 12:00:00-00'), isPrivate: true })
+  const event2 = await insertEventToDb({ userId: admin.identifiers[0].id, name: 'Event 2', description: 'Description for event 2', startTime: new Date('2020-11-11 12:00:00-00'), isPrivate: false })
 
   console.log('EVENT 1', event1)
   console.log('EVENT 2', event2)
@@ -144,4 +144,26 @@ import "reflect-metadata";
   console.log("**********GROUP1'S EVENTS: EXPECT EVENT 1 AND 2**********\n", await getGroupEvents(group1?.group.identifiers[0].id))
   console.log("**********USER1'S EVENTS: EXPECT ONLY EVENT 1**********\n", await getUserEvents(user1.identifiers[0].id))
 
+  const hashtag1 = await insertHashtagToDb('hashtag1')
+  const hashtag2 = await insertHashtagToDb('hashtag2')
+
+  console.log('HASHTAG 1 && 2', [hashtag1, hashtag2])
+  if (!event1 || !event2 || !hashtag1 || !hashtag2) throw new Error('Not found')
+
+  console.log('TEST', await assignHashtagToEvent({ hashtagId: hashtag1.id, eventId: event1?.event.identifiers[0].id }))
+  console.log('TEST', await assignHashtagToEvent({ hashtagId: hashtag1.id, eventId: event2?.event.identifiers[0].id }))
+
+  console.log('TEST', await assignHashtagToEvent({ hashtagId: hashtag2.id, eventId: event1?.event.identifiers[0].id }))
+  console.log('TEST', await assignHashtagToEvent({ hashtagId: hashtag2.id, eventId: event1?.event.identifiers[0].id }))
+
+  console.log('GET HASHTAG1 BY TEXT', await getHashtagByText('hashtag1'))
+
+  console.log('EVENT1 HASHTAGS: H1 AND H2', await getEventHashtags(event1?.event.identifiers[0].id))
+  console.log('EVENT2 HASHTAGS: H1', await getEventHashtags(event2?.event.identifiers[0].id))
+
+  console.log('SEARCH HASHTAGS', await searchHashtags('hashtag'))
+
+  console.log('SEARCH EVENTS', await searchEventsByName('vent'))
+
+  console.log('SEARCH EVENTS BY HASHTAGS', await searchEventsByHashtags('hashtag'))
 })()

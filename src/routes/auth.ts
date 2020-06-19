@@ -11,7 +11,7 @@ export interface IRegisterBody {
   email: string;
   password: string;
   dob: Date | string;
-  avatarUrl: string;
+  avatarUrl?: string;
 }
 
 
@@ -62,7 +62,7 @@ router.post('/register', async (req, res, next) => {
       email: user.email,
     });
 
-    res.json({ message: 'success', token });
+    res.json({ message: 'Registered successfully', token });
 
   } catch (ex) {
     console.log(ex)

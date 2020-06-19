@@ -29,7 +29,7 @@ import "reflect-metadata";
       Hashtag
     ], // DB models go here, have to be imported on top of this file
     synchronize: true,
-    logging: true,
+    logging: false,
   })
 
   // *********************************************************************************************************************
@@ -170,8 +170,8 @@ import "reflect-metadata";
   console.log('EVENT2 HASHTAGS: H1', await getEventHashtags(event2?.event.identifiers[0].id))
 
   console.log('SEARCH HASHTAGS', await searchHashtags('hashtag'))
-
   console.log('SEARCH EVENTS', await searchEventsByName('vent'))
-
   console.log('SEARCH EVENTS BY HASHTAGS', await searchEventsByHashtags('hashtag'))
+
+
 })()

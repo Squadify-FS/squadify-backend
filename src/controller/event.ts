@@ -301,8 +301,8 @@ const searchEventsUsingRadius = async (radius: number, latitude: number, longitu
         .select()
         .from(Geolocation, 'location')
         .leftJoinAndSelect('location.events', 'events')
-        .where(`location."latitude" BETWEEN (location."latitude" - ${latitudeTolerance}) AND (location."latitude" + ${latitudeTolerance})`)
-        .andWhere(`location."longitude" BETWEEN (location."longitude" - ${longitudeTolerance}) AND (location."longitude" + ${longitudeTolerance})`)
+        .where(`location."latitude" > (location."latitude" - ${latitudeTolerance}) AND location."latitude" < (location."latitude" + ${latitudeTolerance})`)
+        .andWhere(`location."longitude" > (location."longitude" - ${longitudeTolerance}) AND location."longitude" < (location."longitude" + ${longitudeTolerance})`)
         .limit(50) //TODO
         .getMany()
         .then(geolocations => geolocations.reduce((acc: Event[], curr: Geolocation) => {
@@ -452,7 +452,7 @@ const searchEventsByHashtags = async (searchVal: string): Promise<Event[] | unde
       // .getMany()
       .then(hashtags => hashtags.reduce((acc: Event[], curr) => {
         curr.events = curr.events.filter(event => !event.isPrivate) //TODO
-        curr.events.forEach(event => acc.push(event))
+        curr.events.filter(event => !acc.find(e => e.id === event.id)).forEach(event => acc.push(event))// TODOOOOOOOO
         return acc
       }, []))
 

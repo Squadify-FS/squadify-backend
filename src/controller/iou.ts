@@ -1,10 +1,14 @@
-import { getConnection } from 'typeorm';
+import { getConnection, InsertResult } from 'typeorm';
 
 import { IOU, User } from '../models'
 
 //TODO  TEST
 // creates an IOU and inserts it to the group, handling who payed what to who
-const insertIOUToDb = async (amount: number, groupId: string, payerId: string, payeeIds: string[], description?: string) => {
+const insertIOUToDb = async (amount: number, groupId: string, payerId: string, payeeIds: string[], description?: string):
+  Promise<{
+    iou: InsertResult;
+    splitAmount: string;
+  } | undefined> => {
   try {
     // maybe should add functionality to verify relations to group
     const iou = await getConnection()
@@ -48,7 +52,11 @@ const getGroupIOUS = async (groupId: string) => {
 }
 
 // gets all expenses and debts for the user with no order
-const getUserIOUS = async (userId: string) => {
+const getUserIOUS = async (userId: string):
+  Promise<{
+    expenses: IOU[] | undefined;
+    debts: IOU[] | undefined;
+  } | undefined> => {
   try {
     const user = await getConnection()
       .getRepository(User)
@@ -61,7 +69,7 @@ const getUserIOUS = async (userId: string) => {
 }
 
 // gets the expenses ordered by createdAt time
-const getUserExpenses = async (userId: string) => { // works
+const getUserExpenses = async (userId: string): Promise<IOU[] | undefined> => { // works
   try {
     const ious: IOU[] = await getConnection()
       .getRepository(IOU)
@@ -78,7 +86,7 @@ const getUserExpenses = async (userId: string) => { // works
 }
 
 // gets the debts ordered by createdAt time
-const getUserDebts = async (userId: string) => {
+const getUserDebts = async (userId: string): Promise<IOU[] | undefined> => {
   try {
     const ious: IOU[] | undefined = await getConnection()
       .getRepository(User)

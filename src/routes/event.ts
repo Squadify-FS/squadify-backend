@@ -7,27 +7,27 @@ const router = express.Router()
 
 export default router;
 
-router.get('/:groupId', isLoggedIn, async(req, res, next) => {
+router.get('/:groupId', isLoggedIn, async (req, res, next) => {
     const { groupId } = req.params;
     try {
         res.send(await getGroupEvents(groupId));
-    } catch(err) {
+    } catch (err) {
         next(err);
     }
 });
 
 
 //(userId: string, eventId: string, groupId: string)
-router.post('/:groupId', isLoggedIn, async(req, res, next) => {
+router.post('/:groupId', isLoggedIn, async (req, res, next) => {
     const { groupId } = req.params;
     const { userId, name, description, isPrivate, startTime, endTime, addressOfEvent, coordsOfEvent } = req.body;
     try {
-        const createdEvent = await insertEventToDb(userId, name, description, isPrivate, startTime, endTime);
+        const createdEvent = await insertEventToDb({ userId, name, description, isPrivate, startTime, endTime });
         const eventId = createdEvent?.event.identifiers[0].id;
-        const eventToGroup = await assignEventToGroup(userId, eventId, groupId);
+        const eventToGroup = await assignEventToGroup({ userId, eventId, groupId });
         const geolocation = await setEventGeolocationInDb(userId, eventId, addressOfEvent, coordsOfEvent.latitude, coordsOfEvent.longitude);
         console.log(createdEvent, eventToGroup, geolocation);
-    } catch(err) {
+    } catch (err) {
         next(err);
     }
 });

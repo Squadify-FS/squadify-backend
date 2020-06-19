@@ -25,6 +25,7 @@ export class Event {
   isPrivate: boolean;
 
   @ManyToMany(() => Hashtag, hashtag => hashtag.events)
+  @JoinTable()
   hashtags: Hashtag[]
 
   @ManyToOne(() => Geolocation, geolocation => geolocation.events)

@@ -1,5 +1,5 @@
 import express from 'express';
-import { insertEventToDb, getGroupEvents, setEventGeolocationInDb, assignEventToGroup } from '../controller';
+import { insertEventToDb, getGroupEvents, setEventGeolocationInDb, assignEventToGroup, getEventGeolocation, searchEventsUsingRadius } from '../controller';
 import { isLoggedIn } from '../common/middleware';
 const router = express.Router()
 
@@ -16,7 +16,6 @@ router.get('/:groupId', isLoggedIn, async (req, res, next) => {
     }
 });
 
-
 //(userId: string, eventId: string, groupId: string)
 router.post('/:groupId', isLoggedIn, async (req, res, next) => {
     const { groupId } = req.params;
@@ -26,8 +25,27 @@ router.post('/:groupId', isLoggedIn, async (req, res, next) => {
         const eventId = createdEvent?.event.identifiers[0].id;
         const eventToGroup = await assignEventToGroup({ userId, eventId, groupId });
         const geolocation = await setEventGeolocationInDb(userId, eventId, addressOfEvent, coordsOfEvent.latitude, coordsOfEvent.longitude);
-        console.log(createdEvent, eventToGroup, geolocation);
-    } catch (err) {
+        res.send(geolocation);
+    } catch(err) {
+        next(err);
+    }
+});
+
+router.get('/:eventId/geolocation', isLoggedIn, async(req, res, next) => {
+    const { eventId } = req.params;
+    try {
+        res.send(await getEventGeolocation(eventId));
+    } catch(err) {
+        next(err);
+    }
+}); 
+
+// const searchEventsUsingRadius = async (radius: number, latitude: number, longitude: number, geolocationId?: string) => {
+router.get('/searcharea/:radius/:latitude/:longitude', isLoggedIn, async(req, res, next) => {
+    const { radius, latitude, longitude } = req.params;
+    try {
+        console.log(await searchEventsUsingRadius(Number(radius), Number(latitude), Number(longitude)));
+    } catch(err) {
         next(err);
     }
 });

@@ -278,7 +278,7 @@ const updateEvent = async ({ userId, eventId, name, description, startTime, endT
 }
 
 // uses geolocation to draw a circle around and fetch all the events in those geolocations and return them
-const searchEventsUsingRadius = async (geolocationId: string, radius: number, latitude?: number, longitude?: number): Promise<Event[] | undefined> => {
+const searchEventsUsingRadius = async (radius: number, latitude: number, longitude: number, geolocationId?: string): Promise<Event[] | undefined> => {
   try {
     let location = await getConnection().getRepository(Geolocation).findOne({ id: geolocationId })
 
@@ -294,7 +294,7 @@ const searchEventsUsingRadius = async (geolocationId: string, radius: number, la
     if (location) {
       const radiusInKM = radius * 0.621371
       const latitudeTolerance = (1 / 110.54) * radiusInKM
-      const longitudeTolerance = (1 / (111.320 * Math.cos(Number(location.latitude.toFixed(4))))) * radiusInKM
+      const longitudeTolerance = (1 / (111.320 * Math.cos(Number(location.latitude)))) * radiusInKM
 
       const results: Event[] = await getConnection()
         .createQueryBuilder()

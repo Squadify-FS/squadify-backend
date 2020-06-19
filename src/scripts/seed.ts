@@ -49,8 +49,8 @@ import "reflect-metadata";
   console.log('GROUP1', group1?.group.identifiers[0], group1?.chat.identifiers[0])
   await inviteUserToGroup(group1?.group.identifiers[0].id, admin.identifiers[0].id, user1.identifiers[0].id)
   await inviteUserToGroup(group2?.group.identifiers[0].id, admin.identifiers[0].id, user1.identifiers[0].id)
-  await acceptInviteToGroup(user1.identifiers[0].id, group1?.group.identifiers[0].id)
-  await acceptInviteToGroup(user1.identifiers[0].id, group2?.group.identifiers[0].id)
+  await acceptInviteToGroup({ userId: user1.identifiers[0].id, groupId: group1?.group.identifiers[0].id })
+  await acceptInviteToGroup({ userId: user1.identifiers[0].id, groupId: group2?.group.identifiers[0].id })
 
   const relation1 = await sendFriendRequest(admin.identifiers[0].id, user1.identifiers[0].id)
   const relation2 = await sendFriendRequest(admin.identifiers[0].id, user2.identifiers[0].id)
@@ -83,8 +83,6 @@ import "reflect-metadata";
    * deleteGroup 2
    * 
    */
-  const group1 = await insertNewGroupToDb({ name: 'group1', isPrivate: true, creatorId: admin.identifiers[0].id, avatarUrl: 'https://66.media.tumblr.com/79a1ac638d6e50f1fa5d760be1d8a51a/tumblr_inline_ojk654MOr11qzet7p_250.png' })
-  const group2 = await insertNewGroupToDb({ name: 'group2', isPrivate: false, creatorId: admin.identifiers[0].id, avatarUrl: 'https://66.media.tumblr.com/79a1ac638d6e50f1fa5d760be1d8a51a/tumblr_inline_ojk654MOr11qzet7p_250.png' })
 
   await inviteUserToGroup(group1?.group.identifiers[0].id, admin.identifiers[0].id, user1.identifiers[0].id)
   await inviteUserToGroup(group1?.group.identifiers[0].id, admin.identifiers[0].id, user2.identifiers[0].id)

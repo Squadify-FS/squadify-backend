@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken'
 import { Request, Response, NextFunction } from 'express'
-import { getUserGroupRelation, getUserEventRelation } from '../controller'
-
+import { getUserGroupRelation, getUserEventRelation, getGroupFromDb } from '../controller'
+import { getConnection } from 'typeorm'
+import { Event } from '../models'
 
 const isLoggedIn = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -110,6 +111,33 @@ const isEventAdmin = async (req: Request, res: Response, next: NextFunction) => 
   }
 }
 
+const isPrivateGroup = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { groupId } = req.body || req.params
+    const group = await getGroupFromDb(groupId)
+
+    req.params.isPrivate = group?.isPrivate ? 'true' : ''
+
+    next()
+  } catch (ex) {
+    next(ex)
+  }
+}
+
+const isPrivateEvent = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { eventId } = req.body || req.params
+    const event = await getConnection().getRepository(Event).findOne(eventId)
+
+    req.params.isPrivate = event?.isPrivate ? 'true' : ''
+
+    next()
+  } catch (ex) {
+    next(ex)
+  }
+}
+
+
 export {
   isLoggedIn,
   isGroupUser,
@@ -117,5 +145,7 @@ export {
   isGroupAdmin,
   isEventUser,
   isEventHost,
-  isEventAdmin
+  isEventAdmin,
+  isPrivateGroup,
+  isPrivateEvent
 }

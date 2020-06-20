@@ -448,7 +448,7 @@ const followPublicGroup = async ({ userId, groupId }: IUserGroupIds): Promise<In
 }
 
 // uses the group name to return an array of groups 
-const searchGroupByName = async (name: string): Promise<Group[] | undefined> => {
+const searchGroupsByName = async (name: string): Promise<Group[] | undefined> => {
   try {
     const results: Group[] = await getConnection()
       .getRepository(Group)
@@ -462,7 +462,7 @@ const searchGroupByName = async (name: string): Promise<Group[] | undefined> => 
   }
 }
 // NOT OPTIMAL SOLUTIONS FOR SEARCH, GOES THROUGH ALL THE DATABASE TO FIND. NOT SCALABLE OPTION
-const searchGroupByHash = async (hash: string): Promise<Group[] | undefined> => {
+const searchGroupsByHash = async (hash: string): Promise<Group[] | undefined> => {
   try {
     const results: Group[] = await getConnection()
       .getRepository(Group)
@@ -497,6 +497,6 @@ export {
   followPublicGroup,
   setGroupIsPrivate,
   setGroupFollowersReadOnly,
-  searchGroupByName,
-  searchGroupByHash
+  searchGroupsByName,
+  searchGroupsByHash
 }

@@ -2,8 +2,8 @@
 import { createConnection, getConnection } from "typeorm";
 import { User, Group, Message, Event, Chat, UserUser, UserGroup, Geolocation, UserEvent, IOU, Hashtag } from "../models";
 
-import { insertNewUserToDb, sendFriendRequest, getUserFriendsFromDb, getUserRequestsFromDb, acceptFriendRequest, getUserFromDb, deleteFriend, searchUserByEmail, getChatFromGroup, addMessageToChat, getMessagesFromChat, insertEventToDb, assignEventToGroup, getUserEvents, getGroupEvents, assignEventToUser, insertHashtagToDb, assignHashtagToEvent, getHashtagByText, getEventHashtags, searchHashtags, searchEventsByName, searchEventsByHashtags } from '../controller'
-import { insertNewGroupToDb, inviteUserToGroup, acceptInviteToGroup, getGroupUsers, deleteGroup, getUserGroups, getGroupFromDb, followPublicGroup, setGroupFollowersReadOnly, updateGroupInfo, setGroupIsPrivate, getGroupFriends, getGroupFollowers, getGroupUserInvitations, rejectInviteToGroup, removeUserFromGroup, getUserGroupInvitations, searchGroupByName } from '../controller'
+import { insertNewUserToDb, sendFriendRequest, getUserFriendsFromDb, getUserRequestsFromDb, acceptFriendRequest, getUserFromDb, deleteFriend, searchUsersByEmail, getChatFromGroup, addMessageToChat, getMessagesFromChat, insertEventToDb, assignEventToGroup, getUserEvents, getGroupEvents, assignEventToUser, insertHashtagToDb, assignHashtagToEvent, getHashtagByText, getEventHashtags, searchHashtags, searchEventsByName, searchEventsByHashtags } from '../controller'
+import { insertNewGroupToDb, inviteUserToGroup, acceptInviteToGroup, getGroupUsers, deleteGroup, getUserGroups, getGroupFromDb, followPublicGroup, setGroupFollowersReadOnly, updateGroupInfo, setGroupIsPrivate, getGroupFriends, getGroupFollowers, getGroupUserInvitations, rejectInviteToGroup, removeUserFromGroup, getUserGroupInvitations, searchGroupsByName } from '../controller'
 
 import "reflect-metadata";
 
@@ -66,7 +66,7 @@ import "reflect-metadata";
   const adminRequests = await getUserRequestsFromDb(admin.identifiers[0].id)
   const user1Friends = await getUserFriendsFromDb(user1.identifiers[0].id)
   const user1Requests = await getUserRequestsFromDb(user1.identifiers[0].id)
-  const emailSearch = await searchUserByEmail('user')
+  const emailSearch = await searchUsersByEmail('user')
   const adminEntity = await getUserFromDb('', admin.identifiers[0].id)
   await deleteFriend(admin.identifiers[0].id, user2.identifiers[0].id)
   // *********************************************************************************************************************
@@ -117,7 +117,7 @@ import "reflect-metadata";
 
   console.log('**********DELETE GROUP 2**********\n', await deleteGroup({ groupId: group2?.group.identifiers[0].id, userId: admin.identifiers[0].id }))
 
-  console.log('**********SEARCH GROUPS BY NAME: SHOULD RETURN ARRAY WITH GROUP1 (GROUP2 IS DELETED)**********\n', await searchGroupByName('group'))
+  console.log('**********SEARCH GROUPS BY NAME: SHOULD RETURN ARRAY WITH GROUP1 (GROUP2 IS DELETED)**********\n', await searchGroupsByName('group'))
 
   // *********************************************************************************************************************
   // *********************************************************************************************************************

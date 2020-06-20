@@ -7,27 +7,7 @@ const router = express.Router()
 
 export default router;
 
-// gets group's events
-router.get('/group_events/:groupId', isLoggedIn, isGroupUser, async (req, res, next) => {
-    try {
-        const { groupId } = req.params;
-
-        res.send(await getGroupEvents(groupId));
-    } catch (err) {
-        next(err);
-    }
-});
-
-// get logged in user's events
-router.get('/me', isLoggedIn, async (req, res, next) => {
-    try {
-        const userId = req.body.user.id
-
-        res.send(await getUserEvents(userId));
-    } catch (err) {
-        next(err);
-    }
-})
+//************************ create update and delete methods
 
 // simple create new event route
 router.post('/create', isLoggedIn, async (req, res, next) => {
@@ -44,6 +24,7 @@ router.post('/create', isLoggedIn, async (req, res, next) => {
     }
 });
 
+
 // updates event info
 router.post('/update/:eventId', isLoggedIn, isEventHost, async (req, res, next) => {
     try {
@@ -57,6 +38,22 @@ router.post('/update/:eventId', isLoggedIn, isEventHost, async (req, res, next) 
         next(err);
     }
 })
+
+//************************ end of create update and delete methods
+
+//************************ relations to groups and user's methods
+
+
+// gets group's events
+router.get('/group_events/:groupId', isLoggedIn, isGroupUser, async (req, res, next) => {
+    try {
+        const { groupId } = req.params;
+
+        res.send(await getGroupEvents(groupId));
+    } catch (err) {
+        next(err);
+    }
+});
 
 // assign event to group, only friends and admins can
 router.post('/assign_group/:groupId', isLoggedIn, isGroupFriend, async (req, res, next) => {
@@ -84,6 +81,17 @@ router.delete('/unassign_group/:eventId/:groupId', isLoggedIn, isGroupFriend, as
         next(err);
     }
 });
+
+// get logged in user's events
+router.get('/my_events', isLoggedIn, async (req, res, next) => {
+    try {
+        const userId = req.body.user.id
+
+        res.send(await getUserEvents(userId));
+    } catch (err) {
+        next(err);
+    }
+})
 
 // assign event to user. Private events must have inviterId.
 router.post('/assign_user', isLoggedIn, async (req, res, next) => {
@@ -122,6 +130,10 @@ router.delete('/kick_user/:eventId/:userId', isLoggedIn, isEventHost, async (req
     }
 })
 
+//************************ end of relations to groups and user's methods
+
+//************************ geolocation methods
+
 // gets the event's geolocation
 router.get('/:eventId/geolocation', isLoggedIn, async (req, res, next) => {
     try {
@@ -133,19 +145,12 @@ router.get('/:eventId/geolocation', isLoggedIn, async (req, res, next) => {
     }
 });
 
-// const searchEventsUsingRadius = async (radius: number, latitude: number, longitude: number, geolocationId?: string) => {
-router.get('/searcharea/:radius/:latitude/:longitude', isLoggedIn, async (req, res, next) => {
-    try {
-        const { radius, latitude, longitude } = req.params;
+//************************ end of geolocation methods
 
-        console.log(await searchEventsUsingRadius(Number(radius), Number(latitude), Number(longitude)));
-    } catch (err) {
-        next(err);
-    }
-});
+//************************ hashtag methods
 
 // creates a new hashtag and inserts to database, and returns it
-router.post('/hashtag/create', isLoggedIn, async (req, res, next) => {
+router.post('/hashtags/create', isLoggedIn, async (req, res, next) => {
     try {
         const { text } = req.body
 
@@ -208,6 +213,21 @@ router.get('/search_hashtags/:text', isLoggedIn, async (req, res, next) => {
     }
 })
 
+//************************ end of hashtag methods
+
+//************************ search methods
+
+// const searchEventsUsingRadius = async (radius: number, latitude: number, longitude: number, geolocationId?: string) => {
+router.get('/searcharea/:radius/:latitude/:longitude', isLoggedIn, async (req, res, next) => {
+    try {
+        const { radius, latitude, longitude } = req.params;
+
+        console.log(await searchEventsUsingRadius(Number(radius), Number(latitude), Number(longitude)));
+    } catch (err) {
+        next(err);
+    }
+});
+
 // searches events either by their name or their hashtags. type param is either 'name' or 'hashtag'.
 router.get('/search/:type/:text', isLoggedIn, async (req, res, next) => {
     try {
@@ -224,3 +244,6 @@ router.get('/search/:type/:text', isLoggedIn, async (req, res, next) => {
         next(err)
     }
 })
+
+
+//************************ end of search methods

@@ -1,11 +1,13 @@
 import express from 'express';
-import { insertNewGroupToDb, deleteGroup, inviteUserToGroup, acceptInviteToGroup, rejectInviteToGroup, removeUserFromGroup, followPublicGroup, updateGroupInfo, setGroupIsPrivate, setGroupFollowersReadOnly, getGroupUsers, getGroupUserInvitations, searchGroupByHash, searchGroupByName } from '../controller';
+import { insertNewGroupToDb, deleteGroup, inviteUserToGroup, acceptInviteToGroup, rejectInviteToGroup, removeUserFromGroup, followPublicGroup, updateGroupInfo, setGroupIsPrivate, setGroupFollowersReadOnly, getGroupUsers, getGroupUserInvitations, searchGroupsByHash, searchGroupsByName } from '../controller';
 import { isLoggedIn, isGroupAdmin, isGroupFriend } from '../common/middleware';
 const router = express.Router()
 
 //base route is /groups
 
 export default router;
+
+//************************ group create update and delete methods
 
 // make a new group  and invite the friends specified in the form
 router.post('/create', isLoggedIn, async (req, res, next) => {
@@ -30,6 +32,51 @@ router.delete('/:groupId', isLoggedIn, isGroupAdmin, async (req, res, next) => {
         next(err);
     }
 });
+
+// update group's name or avatarUrl. must send both from frontend even if there's no change.
+router.put('/:groupId/update/info', isLoggedIn, isGroupAdmin, async (req, res, next) => {
+    try {
+        const { groupId } = req.params
+        const { name, avatarUrl } = req.body
+
+        const updatedGroup = await updateGroupInfo(groupId, name, avatarUrl)
+        res.send(updatedGroup)
+    } catch (err) {
+        next(err)
+    }
+})
+
+// updates the group private status
+router.put('/:groupId/update/privacy', isLoggedIn, isGroupAdmin, async (req, res, next) => {
+    try {
+        const { groupId } = req.params
+        const userId = req.body.user.id
+        const { isPrivate } = req.body
+
+        const updatedGroup = await setGroupIsPrivate({ userId, groupId }, isPrivate)
+        res.send(updatedGroup)
+    } catch (err) {
+        next(err)
+    }
+})
+
+// updates the group followers can't write messages to chat status
+router.put('/:groupId/update/read_only', isLoggedIn, isGroupAdmin, async (req, res, next) => {
+    try {
+        const { groupId } = req.params
+        const userId = req.body.user.id
+        const { followersReadOnly } = req.body
+
+        const updatedGroup = await setGroupFollowersReadOnly({ userId, groupId }, followersReadOnly)
+        res.send(updatedGroup)
+    } catch (err) {
+        next(err)
+    }
+})
+
+//************************ end of create update and delete methods
+
+//************************ invitations and user relations methods
 
 // invites a person to the group
 router.post('/invititations/:groupId/send', isLoggedIn, isGroupFriend, async (req, res, next) => {
@@ -104,46 +151,6 @@ router.post('/follow/:groupId', isLoggedIn, async (req, res, next) => {
     }
 });
 
-// update group's name or avatarUrl. must send both from frontend even if there's no change.
-router.put('/:groupId/update/info', isLoggedIn, isGroupAdmin, async (req, res, next) => {
-    try {
-        const { groupId } = req.params
-        const { name, avatarUrl } = req.body
-
-        const updatedGroup = await updateGroupInfo(groupId, name, avatarUrl)
-        res.send(updatedGroup)
-    } catch (err) {
-        next(err)
-    }
-})
-
-// updates the group private status
-router.put('/:groupId/update/privacy', isLoggedIn, isGroupAdmin, async (req, res, next) => {
-    try {
-        const { groupId } = req.params
-        const userId = req.body.user.id
-        const { isPrivate } = req.body
-
-        const updatedGroup = await setGroupIsPrivate({ userId, groupId }, isPrivate)
-        res.send(updatedGroup)
-    } catch (err) {
-        next(err)
-    }
-})
-
-// updates the group followers can't write messages to chat status
-router.put('/:groupId/update/read_only', isLoggedIn, isGroupAdmin, async (req, res, next) => {
-    try {
-        const { groupId } = req.params
-        const userId = req.body.user.id
-        const { followersReadOnly } = req.body
-
-        const updatedGroup = await setGroupFollowersReadOnly({ userId, groupId }, followersReadOnly)
-        res.send(updatedGroup)
-    } catch (err) {
-        next(err)
-    }
-})
 
 // gets the users in a group. controller handles the user's permission if the group is private
 router.get('/:groupId/users', isLoggedIn, async (req, res, next) => {
@@ -158,19 +165,25 @@ router.get('/:groupId/users', isLoggedIn, async (req, res, next) => {
     }
 })
 
+//************************ end of invitations and group relations methods
+
+//************************ search methods
+
 // searches an array of groups by name or hash, depending on "type" parameter
 router.get('/search/:type/:text', async (req, res, next) => {
     try {
         const { type, text } = req.params
 
         if (type === 'hash') {
-            const groups = await searchGroupByHash(text)
+            const groups = await searchGroupsByHash(text)
             res.send(groups)
         } else if (type === 'name') {
-            const groups = await searchGroupByName(text)
+            const groups = await searchGroupsByName(text)
             res.send(groups)
         }
     } catch (err) {
         next(err)
     }
 })
+
+//************************ end of search methods

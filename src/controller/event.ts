@@ -363,6 +363,25 @@ const assignHashtagToEvent = async ({ hashtagId, eventId }: IEventHashtag):
   }
 }
 
+const unassignHashtagFromEvent = async ({ hashtagId, eventId }: IEventHashtag) => {
+  try {
+    const event = await getConnection().getRepository(Event).findOne({ id: eventId })
+    const hashtag = await getConnection().getRepository(Hashtag).findOne({ id: hashtagId })
+
+    if (event && hashtag) {
+
+      await getConnection()
+        .createQueryBuilder()
+        .relation(Event, 'hashtags')
+        .of(event)
+        .remove(hashtag)
+
+      return { event, hashtag }
+    }
+  } catch (ex) {
+    console.log(ex)
+  }
+}
 
 const getHashtagByText = async (text: string): Promise<Hashtag | undefined> => {
   try {
@@ -471,5 +490,6 @@ export {
   getHashtagById,
   insertHashtagToDb,
   assignHashtagToEvent,
+  unassignHashtagFromEvent,
   getEventHashtags
 }

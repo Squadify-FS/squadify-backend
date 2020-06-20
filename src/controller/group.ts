@@ -198,8 +198,15 @@ const deleteGroup = async ({ userId, groupId }: IUserGroupIds):
 }
 
 // gets all the users that are in the group
-const getGroupUsers = async (groupId: string): Promise<User[] | undefined> => {
+const getGroupUsers = async ({ userId, groupId }: IUserGroupIds): Promise<User[] | undefined> => {
   try {
+    const relation = await getConnection().getRepository(UserGroup).findOne({ user: { id: userId }, group: { id: groupId } })
+    const group = await getConnection().getRepository(Group).findOne(groupId)
+
+    if (group && group.isPrivate) {
+      if (!relation || relation.permissionLevel < 1) throw new Error("Can't look at user from privat group if not in it")
+    }
+
     const users: User[] = await getConnection()
       .getRepository(UserGroup)
       .createQueryBuilder('relation')
@@ -447,8 +454,7 @@ const searchGroupByName = async (name: string): Promise<Group[] | undefined> => 
     const results: Group[] = await getConnection()
       .getRepository(Group)
       .createQueryBuilder('group')
-      .select()
-      .where(`LOWER(group.name) LIKE '%${name.toLowerCase()}%'`)
+      .where(`group.name ILIKE '%${name}%'`)
       .getMany()
 
     return results

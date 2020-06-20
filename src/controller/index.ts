@@ -22,6 +22,7 @@ import {
   getHashtagById,
   insertHashtagToDb,
   assignHashtagToEvent,
+  unassignHashtagFromEvent,
   getEventHashtags
 } from './event'
 
@@ -117,6 +118,7 @@ export {
   getHashtagById,
   insertHashtagToDb,
   assignHashtagToEvent,
+  unassignHashtagFromEvent,
   getEventHashtags,
   // 
   // geolocation

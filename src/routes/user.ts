@@ -1,5 +1,5 @@
 import express from 'express';
-import { getUserFromDb, getUserFriendsFromDb, sendFriendRequest, getUserRequestsFromDb, deleteFriend, acceptFriendRequest, rejectFriendRequest, updateUser } from '../controller';
+import { getUserFromDb, getUserFriendsFromDb, sendFriendRequest, getUserRequestsFromDb, deleteFriend, acceptFriendRequest, rejectFriendRequest, updateUser, getUserGroupInvitations, getUserGroups } from '../controller';
 import { isLoggedIn } from '../common/middleware';
 const router = express.Router()
 
@@ -66,7 +66,7 @@ router.post('/:yourId/acceptfriend', isLoggedIn, async (req, res, next) => {
     const { otherUserId }: IOtherUserId = req.body;
     try {
         res.send(await acceptFriendRequest(otherUserId, yourId));
-    } catch(err) {
+    } catch (err) {
         next(err);
     }
 });
@@ -77,7 +77,7 @@ router.post('/:yourId/rejectfriend', isLoggedIn, async (req, res, next) => {
     const { otherUserId }: IOtherUserId = req.body;
     try {
         res.send(await rejectFriendRequest(otherUserId, yourId));
-    } catch(err) {
+    } catch (err) {
         next(err);
     }
 });
@@ -108,6 +108,29 @@ router.delete('/:yourId/friends', isLoggedIn, async (req, res, next) => {
 });
 
 //************************ end of methods on current friends 
+
+// get all of the groups that a user is currently in
+router.get('/groups', isLoggedIn, async (req, res, next) => {
+    try {
+        const userId = req.body.user.id
+
+        res.send(await getUserGroups(userId));
+    } catch (err) {
+        next(err);
+    }
+});
+
+// gets a user's invitations to groups
+router.get('/invitations', isLoggedIn, async (req, res, next) => {
+    try {
+        const userId = req.body.user.id
+
+        res.send(await getUserGroupInvitations(userId));
+    } catch (err) {
+        next(err);
+    }
+});
+
 
 
 // admin id: 9e3eeb19-c1d2-4e53-be78-5a4c8ea6cdff

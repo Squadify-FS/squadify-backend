@@ -22,7 +22,7 @@ const insertEventToDb = async ({ userId, name, description, startTime, endTime, 
     relation: InsertResult;
   } | undefined> => {
   try {
-    if (new Date(startTime) < new Date()) throw new Error('Cannot create an event for the past!')
+    // if (new Date(startTime) < new Date()) throw new Error('Cannot create an event for the past!')
 
     const event = await getConnection()
       .createQueryBuilder()
@@ -297,9 +297,8 @@ const searchEventsUsingRadius = async (radius: number, latitude: number, longitu
       const longitudeTolerance = (1 / (111.320 * Math.cos(Number(location.latitude)))) * radiusInKM
 
       const results: Event[] = await getConnection()
-        .createQueryBuilder()
-        .select()
-        .from(Geolocation, 'location')
+        .getRepository(Geolocation)
+        .createQueryBuilder('location')
         .leftJoinAndSelect('location.events', 'events')
         .where(`location."latitude" BETWEEN (location."latitude" - ${latitudeTolerance}) AND (location."latitude" + ${latitudeTolerance})`)
         .andWhere(`location."longitude" BETWEEN (location."longitude" - ${longitudeTolerance}) AND (location."longitude" + ${longitudeTolerance})`)
@@ -307,7 +306,7 @@ const searchEventsUsingRadius = async (radius: number, latitude: number, longitu
         .getMany()
         .then(geolocations => geolocations.reduce((acc: Event[], curr: Geolocation) => {
           curr.events = curr.events.filter(event => !event.isPrivate)
-          acc.concat(curr.events)
+          curr.events.forEach(event => acc.push(event));
           return acc
         }, [])) //TODO
 

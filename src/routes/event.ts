@@ -23,8 +23,8 @@ router.post('/:groupId', isLoggedIn, async (req, res, next) => {
     try {
         const createdEvent = await insertEventToDb({ userId, name, description, isPrivate, startTime, endTime });
         const eventId = createdEvent?.event.identifiers[0].id;
-        const eventToGroup = await assignEventToGroup({ userId, eventId, groupId });
         const geolocation = await setEventGeolocationInDb(userId, eventId, addressOfEvent, coordsOfEvent.latitude, coordsOfEvent.longitude);
+        await assignEventToGroup({ userId, eventId, groupId });
         res.send(geolocation);
     } catch(err) {
         next(err);
@@ -44,7 +44,7 @@ router.get('/:eventId/geolocation', isLoggedIn, async(req, res, next) => {
 router.get('/searcharea/:radius/:latitude/:longitude', isLoggedIn, async(req, res, next) => {
     const { radius, latitude, longitude } = req.params;
     try {
-        console.log(await searchEventsUsingRadius(Number(radius), Number(latitude), Number(longitude)));
+        res.send(await searchEventsUsingRadius(Number(radius), Number(latitude), Number(longitude)));
     } catch(err) {
         next(err);
     }

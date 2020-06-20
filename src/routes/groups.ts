@@ -1,5 +1,5 @@
 import express from 'express';
-import { insertNewGroupToDb, deleteGroup, getUserGroupInvitations, inviteUserToGroup, acceptInviteToGroup, rejectInviteToGroup, removeUserFromGroup, followPublicGroup, updateGroupInfo, setGroupIsPrivate, setGroupFollowersReadOnly, getGroupUsers, getGroupUserInvitations, searchGroupByHash, searchGroupByName } from '../controller';
+import { insertNewGroupToDb, deleteGroup, inviteUserToGroup, acceptInviteToGroup, rejectInviteToGroup, removeUserFromGroup, followPublicGroup, updateGroupInfo, setGroupIsPrivate, setGroupFollowersReadOnly, getGroupUsers, getGroupUserInvitations, searchGroupByHash, searchGroupByName } from '../controller';
 import { isLoggedIn, isGroupAdmin, isGroupFriend } from '../common/middleware';
 const router = express.Router()
 

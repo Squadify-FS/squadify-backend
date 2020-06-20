@@ -2,7 +2,6 @@ import { getConnection, InsertResult, getRepository, UpdateResult, DeleteResult 
 import { generateHashForName } from "../common/functions";
 import { Group, UserGroup, Chat, User } from '../models'
 import { INewGroupInterface, IUserGroupIds } from '../types/groupTypes';
-import { insertEventToDb } from './event';
 
 const getUserGroupRelation = async (userId: string, groupId: string): Promise<UserGroup | undefined> => {
   const relation = await getConnection()

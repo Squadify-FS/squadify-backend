@@ -4,10 +4,10 @@ import { Event, Group, User, UserGroup, UserEvent, Geolocation, Hashtag } from '
 import { insertGeolocationToDb } from './geolocation';
 import { INewEventDetails, IUserEventGroup, IUserEventInviter, IUserEvent, IUpdateEventDetails, IEventHashtag } from '../types/eventTypes';
 
-const getUserEventRelation = async (userId: string, groupId: string): Promise<UserEvent | undefined> => {
+const getUserEventRelation = async (userId: string, eventId: string): Promise<UserEvent | undefined> => {
   const relation = await getConnection()
     .getRepository(UserEvent)
-    .findOne({ user: { id: userId }, event: { id: groupId } })
+    .findOne({ user: { id: userId }, event: { id: eventId } })
 
   if (relation) return relation
 }
@@ -246,9 +246,7 @@ const getGroupEvents = async (groupId: string): Promise<Event[] | undefined> => 
 // updates event info and privacy setting. handles user permission to perform this action
 const updateEvent = async ({ userId, eventId, name, description, startTime, endTime, isPrivate }: IUpdateEventDetails): Promise<UpdateResult | undefined> => {
   try {
-    const userRelation = await getConnection()
-      .getRepository(UserEvent)
-      .findOne({ user: { id: userId }, event: { id: eventId } })
+    const userRelation = await getUserEventRelation(userId, eventId)
     if (!userRelation || userRelation.permissionLevel < 1) throw new Error('No relation or permission level insufficient')
 
     if ((isPrivate === true || isPrivate === false)) {
@@ -297,9 +295,8 @@ const searchEventsUsingRadius = async (radius: number, latitude: number, longitu
       const longitudeTolerance = (1 / (111.320 * Math.cos(Number(location.latitude)))) * radiusInKM
 
       const results: Event[] = await getConnection()
-        .createQueryBuilder()
-        .select()
-        .from(Geolocation, 'location')
+        .getRepository(Geolocation)
+        .createQueryBuilder('location')
         .leftJoinAndSelect('location.events', 'events')
         .where(`location."latitude" > (location."latitude" - ${latitudeTolerance}) AND location."latitude" < (location."latitude" + ${latitudeTolerance})`)
         .andWhere(`location."longitude" > (location."longitude" - ${longitudeTolerance}) AND location."longitude" < (location."longitude" + ${longitudeTolerance})`)
@@ -403,12 +400,9 @@ const searchHashtags = async (searchVal: string): Promise<Hashtag[] | undefined>
 
     const results = await getConnection()
       .getRepository(Hashtag)
-      .find({ text: Like(`%${searchVal}%`) })
-    // .createQueryBuilder()
-    // .select()
-    // .from(Hashtag, 'hashtag')
-    // .where(`hashtag."text" ILIKE '%${searchVal}%'`)
-    // .getMany()
+      .createQueryBuilder('hashtag')
+      .where(`hashtag."text" ILIKE '%${searchVal}%'`)
+      .getMany()
 
     return results
 
@@ -423,13 +417,10 @@ const searchEventsByName = async (searchVal: string): Promise<Event[] | undefine
 
     const results = await getConnection()
       .getRepository(Event)
-      .find({ name: Like(`%${searchVal}%`) }) // TODO CASE INSENSITIVE
-    // .createQueryBuilder()
-    // .select()
-    // .from(Event, 'event')
-    // .where(`event."name" ILIKE '%${searchVal}%'`)
-    // .andWhere(`event."isPrivate" = false`)
-    // .getMany()
+      .createQueryBuilder('event')
+      .where(`event."name" ILIKE '%${searchVal}%'`)
+      .andWhere(`event."isPrivate" = false`)
+      .getMany()
 
     return results
 
@@ -443,13 +434,10 @@ const searchEventsByHashtags = async (searchVal: string): Promise<Event[] | unde
 
     const results = await getConnection()
       .getRepository(Hashtag)
-      .find({ relations: ['events'], where: { text: Like(`%${searchVal}%`) } })
-      // .createQueryBuilder()
-      // .select()
-      // .from(Hashtag, 'hashtag')
-      // .leftJoinAndSelect('hashtag.events', 'events')
-      // .where(`hashtag."text" ILIKE '%${searchVal}%'`)
-      // .getMany()
+      .createQueryBuilder('hashtag')
+      .leftJoinAndSelect('hashtag.events', 'events')
+      .where(`hashtag."text" ILIKE '%${searchVal}%'`)
+      .getMany()
       .then(hashtags => hashtags.reduce((acc: Event[], curr) => {
         curr.events = curr.events.filter(event => !event.isPrivate) //TODO
         curr.events.filter(event => !acc.find(e => e.id === event.id)).forEach(event => acc.push(event))// TODOOOOOOOO

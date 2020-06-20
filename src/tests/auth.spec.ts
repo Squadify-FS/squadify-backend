@@ -10,8 +10,8 @@ beforeAll(async () => {
   });
 });
 
-// MUST DROP DATABASE AND CREATE DATABASE AFTER EACH TEST :(
-describe('Register and login', () => {
+
+xdescribe('Register and login', () => {
 
   xtest('Create test user', async () => {
     const testuser = await supertest(app).post(`/auth/register`).send({
@@ -49,7 +49,10 @@ describe('Register and login', () => {
 
     const res = await supertest(app).get(`/auth/me`).set({ 'Authorization': `Bearer ${token}` })
 
+    expect(res.body).toHaveProperty('id')
     expect(res.body).toHaveProperty('firstName')
+    expect(res.body).toHaveProperty('lastName')
+    expect(res.body).toHaveProperty('email')
 
   })
 })

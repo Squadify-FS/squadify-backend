@@ -124,6 +124,19 @@ const isPrivateGroup = async (req: Request, res: Response, next: NextFunction) =
   }
 }
 
+const isReadOnlyGroup = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { groupId } = req.body || req.params
+    const group = await getGroupFromDb(groupId)
+
+    req.params.isReadOnly = group?.followersReadOnly ? 'true' : ''
+
+    next()
+  } catch (ex) {
+    next(ex)
+  }
+}
+
 const isPrivateEvent = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { eventId } = req.body || req.params
@@ -146,6 +159,7 @@ export {
   isEventUser,
   isEventHost,
   isEventAdmin,
+  isReadOnlyGroup,
   isPrivateGroup,
   isPrivateEvent
 }

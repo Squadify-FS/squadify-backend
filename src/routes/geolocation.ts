@@ -1,12 +1,13 @@
 import express from 'express';
-import { isLoggedIn, isEventHost } from '../common/middleware';
-import { insertGeolocationToDb, setUserGeolocationInDb, getUserGeolocation, setEventGeolocationInDb, getEventGeolocation } from '../controller';
+import { isLoggedIn, isEventHost, isPrivateEvent } from '../common/middleware';
+import { insertGeolocationToDb, setUserGeolocationInDb, getUserGeolocation, setEventGeolocationInDb, getEventGeolocation, getUserEventRelation } from '../controller';
 const router = express.Router()
 
 // base route is /geolocation
 
 export default router;
 
+// create a new geolocation instance in db
 router.post('/create', isLoggedIn, async (req, res, next) => {
   const { latitude, longitude, address, city, region, postalCode, country } = req.body
   try {
@@ -17,6 +18,7 @@ router.post('/create', isLoggedIn, async (req, res, next) => {
   }
 })
 
+// gets user current geolocation in db
 router.get('/user', isLoggedIn, async (req, res, next) => {
   const userId = req.body.user.id
   try {
@@ -27,6 +29,7 @@ router.get('/user', isLoggedIn, async (req, res, next) => {
   }
 })
 
+// sets the user's geolocation
 router.post('/user', isLoggedIn, async (req, res, next) => {
   const userId = req.body.user.id
   const { latitude, longitude, localized_address } = req.body
@@ -38,10 +41,16 @@ router.post('/user', isLoggedIn, async (req, res, next) => {
   }
 })
 
-router.get('/event/:eventId', isLoggedIn, async (req, res, next) => {
+// gets the event's geolocation
+router.get('/event/:eventId', isLoggedIn, isPrivateEvent, async (req, res, next) => {
   const userId = req.body.user.id
   const { eventId } = req.params
   try {
+    if (req.params.isPrivate) {
+      const relation = await getUserEventRelation(userId, eventId)
+      if (!relation || relation.permissionLevel < 1) next()
+    }
+
     const result = await getEventGeolocation(eventId, userId)
     res.send(result)
   } catch (err) {
@@ -49,6 +58,7 @@ router.get('/event/:eventId', isLoggedIn, async (req, res, next) => {
   }
 })
 
+// sets the event's geolocation in db
 router.post('/event/:eventId', isLoggedIn, isEventHost, async (req, res, next) => {
   const userId = req.body.user.id
   const { eventId } = req.params

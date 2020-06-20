@@ -7,7 +7,7 @@ const router = express.Router()
 
 export default router;
 
-//************************ create update and delete methods
+//************************ create update and delete routes
 
 // simple create new event route
 router.post('/create', isLoggedIn, async (req, res, next) => {
@@ -39,9 +39,9 @@ router.post('/update/:eventId', isLoggedIn, isEventHost, async (req, res, next) 
     }
 })
 
-//************************ end of create update and delete methods
+//************************ end of create update and delete routes
 
-//************************ relations to groups and user's methods
+//************************ relations to groups and user's routes
 
 
 // gets group's events
@@ -130,9 +130,9 @@ router.delete('/kick_user/:eventId/:userId', isLoggedIn, isEventHost, async (req
     }
 })
 
-//************************ end of relations to groups and user's methods
+//************************ end of relations to groups and user's routes
 
-//************************ geolocation methods
+//************************ geolocation routes
 
 // gets the event's geolocation
 router.get('/:eventId/geolocation', isLoggedIn, async (req, res, next) => {
@@ -145,9 +145,9 @@ router.get('/:eventId/geolocation', isLoggedIn, async (req, res, next) => {
     }
 });
 
-//************************ end of geolocation methods
+//************************ end of geolocation routes
 
-//************************ hashtag methods
+//************************ hashtag routes
 
 // creates a new hashtag and inserts to database, and returns it
 router.post('/hashtags/create', isLoggedIn, async (req, res, next) => {
@@ -213,9 +213,9 @@ router.get('/search_hashtags/:text', isLoggedIn, async (req, res, next) => {
     }
 })
 
-//************************ end of hashtag methods
+//************************ end of hashtag routes
 
-//************************ search methods
+//************************ search routes
 
 // const searchEventsUsingRadius = async (radius: number, latitude: number, longitude: number, geolocationId?: string) => {
 router.get('/searcharea/:radius/:latitude/:longitude', isLoggedIn, async (req, res, next) => {
@@ -246,4 +246,4 @@ router.get('/search/:type/:text', isLoggedIn, async (req, res, next) => {
 })
 
 
-//************************ end of search methods
+//************************ end of search routes

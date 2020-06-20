@@ -1,13 +1,13 @@
 import express from 'express';
-import { insertNewGroupToDb, deleteGroup, inviteUserToGroup, acceptInviteToGroup, rejectInviteToGroup, removeUserFromGroup, followPublicGroup, updateGroupInfo, setGroupIsPrivate, setGroupFollowersReadOnly, getGroupUsers, getGroupUserInvitations, searchGroupsByHash, searchGroupsByName } from '../controller';
-import { isLoggedIn, isGroupAdmin, isGroupFriend } from '../common/middleware';
+import { insertNewGroupToDb, deleteGroup, inviteUserToGroup, acceptInviteToGroup, rejectInviteToGroup, removeUserFromGroup, followPublicGroup, updateGroupInfo, setGroupIsPrivate, setGroupFollowersReadOnly, getGroupUsers, getGroupUserInvitations, searchGroupsByHash, searchGroupsByName, getUserGroupRelation, addMessageToChat, getChatFromGroup, getMessagesFromChat } from '../controller';
+import { isLoggedIn, isGroupAdmin, isGroupFriend, isReadOnlyGroup, isGroupUser, isPrivateGroup } from '../common/middleware';
 const router = express.Router()
 
 //base route is /groups
 
 export default router;
 
-//************************ group create update and delete methods
+//************************ group create update and delete routes
 
 // make a new group  and invite the friends specified in the form
 router.post('/create', isLoggedIn, async (req, res, next) => {
@@ -74,9 +74,9 @@ router.put('/:groupId/update/read_only', isLoggedIn, isGroupAdmin, async (req, r
     }
 })
 
-//************************ end of create update and delete methods
+//************************ end of create update and delete routes
 
-//************************ invitations and user relations methods
+//************************ invitations and user relations routes
 
 // invites a person to the group
 router.post('/invititations/:groupId/send', isLoggedIn, isGroupFriend, async (req, res, next) => {
@@ -165,9 +165,9 @@ router.get('/:groupId/users', isLoggedIn, async (req, res, next) => {
     }
 })
 
-//************************ end of invitations and group relations methods
+//************************ end of invitations and group relations routes
 
-//************************ search methods
+//************************ search routes
 
 // searches an array of groups by name or hash, depending on "type" parameter
 router.get('/search/:type/:text', async (req, res, next) => {
@@ -186,4 +186,65 @@ router.get('/search/:type/:text', async (req, res, next) => {
     }
 })
 
-//************************ end of search methods
+//************************ end of search routes
+
+//************************ chat routes
+
+// send a message to a chat. handles permissions and readonly status of group
+router.post('/chat/:groupId', isLoggedIn, isGroupUser, isPrivateGroup, isReadOnlyGroup, async (req, res, next) => {
+    const userId = req.body.user.id
+    const { groupId, isPrivate, isReadOnly } = req.params
+    const { text, imageUrl } = req.body
+    try {
+        if (isReadOnly || isPrivate) {
+            const relation = await getUserGroupRelation(userId, groupId)
+            if (!relation || relation.permissionLevel < 1) res.status(403).json({ message: 'Chat is read only for followers' })
+        }
+
+        const chat = await getChatFromGroup(groupId)
+        if (chat) {
+            const message = await addMessageToChat({ userId, groupId, chatId: chat.id, text, imageUrl })
+            res.send(message)
+        }
+    } catch (err) {
+        next(err)
+    }
+})
+
+// gets the group's chat object. might be a useless route but whatever lmao
+router.get('/chat/:groupId', isLoggedIn, isGroupUser, isPrivateGroup, async (req, res, next) => {
+    const userId = req.body.user.id
+    const { groupId, isPrivate } = req.params
+    try {
+        if (isPrivate) {
+            const relation = await getUserGroupRelation(userId, groupId)
+            if (!relation || relation.permissionLevel < 1) res.status(403).json({ message: 'Chat is read only for followers' })
+        }
+
+        const chat = await getChatFromGroup(groupId)
+        res.send(chat)
+    } catch (err) {
+        next(err)
+    }
+})
+
+// gets messages for certain chat. must add pagination later //TODO
+router.get('/chat/:groupId/messages', isLoggedIn, isGroupUser, isPrivateGroup, async (req, res, next) => {
+    const userId = req.body.user.id
+    const { groupId, isPrivate } = req.params
+    try {
+        if (isPrivate) {
+            const relation = await getUserGroupRelation(userId, groupId)
+            if (!relation || relation.permissionLevel < 1) res.status(403).json({ message: 'Chat is read only for followers' })
+        }
+
+        const chat = await getChatFromGroup(groupId)
+        if (chat) {
+            const messages = await getMessagesFromChat(chat.id)
+            res.send(messages)
+        }
+    } catch (err) {
+        next(err)
+    }
+})
+

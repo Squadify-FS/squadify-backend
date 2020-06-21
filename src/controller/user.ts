@@ -272,7 +272,7 @@ const getUserHashtags = async (userId: string): Promise<Hashtag[] | undefined> =
 }
 
 // searches a user by email and returns an array of similar ones
-const searchUsersByEmail = async (email: string): Promise<User[] | undefined> => {
+const searchUserByEmail = async (email: string): Promise<User[] | undefined> => {
   try {
     const results: User[] = await getConnection()
       .getRepository(User)
@@ -288,7 +288,7 @@ const searchUsersByEmail = async (email: string): Promise<User[] | undefined> =>
 }
 // NOT OPTIMAL SOLUTIONS FOR SEARCH, GOES THROUGH ALL THE DATABASE TO FIND. NOT SCALABLE OPTION
 // returns array of users with similar hashes
-const searchUsersByHash = async (hash: string): Promise<User[] | undefined> => {
+const searchUserByHash = async (hash: string): Promise<User[] | undefined> => {
   try {
     const results: User[] = await getConnection()
       .getRepository(User)
@@ -318,6 +318,6 @@ export {
   updateUser,
   assignHashtagToUser,
   getUserHashtags,
-  searchUsersByEmail,
-  searchUsersByHash
+  searchUserByEmail,
+  searchUserByHash
 }

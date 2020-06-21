@@ -2,6 +2,7 @@ import { getConnection, InsertResult, getRepository, UpdateResult, DeleteResult 
 import { generateHashForName } from "../common/functions";
 import { Group, UserGroup, Chat, User } from '../models'
 import { INewGroupInterface, IUserGroupIds } from '../types/groupTypes';
+import { insertEventToDb } from './event';
 
 const getUserGroupRelation = async (userId: string, groupId: string): Promise<UserGroup | undefined> => {
   const relation = await getConnection()
@@ -197,15 +198,8 @@ const deleteGroup = async ({ userId, groupId }: IUserGroupIds):
 }
 
 // gets all the users that are in the group
-const getGroupUsers = async ({ userId, groupId }: IUserGroupIds): Promise<User[] | undefined> => {
+const getGroupUsers = async (groupId: string): Promise<User[] | undefined> => {
   try {
-    const relation = await getConnection().getRepository(UserGroup).findOne({ user: { id: userId }, group: { id: groupId } })
-    const group = await getConnection().getRepository(Group).findOne(groupId)
-
-    if (group && group.isPrivate) {
-      if (!relation || relation.permissionLevel < 1) throw new Error("Can't look at user from privat group if not in it")
-    }
-
     const users: User[] = await getConnection()
       .getRepository(UserGroup)
       .createQueryBuilder('relation')
@@ -448,12 +442,13 @@ const followPublicGroup = async ({ userId, groupId }: IUserGroupIds): Promise<In
 }
 
 // uses the group name to return an array of groups 
-const searchGroupsByName = async (name: string): Promise<Group[] | undefined> => {
+const searchGroupByName = async (name: string): Promise<Group[] | undefined> => {
   try {
     const results: Group[] = await getConnection()
       .getRepository(Group)
       .createQueryBuilder('group')
-      .where(`group.name ILIKE '%${name}%'`)
+      .select()
+      .where(`LOWER(group.name) LIKE '%${name.toLowerCase()}%'`)
       .getMany()
 
     return results
@@ -462,7 +457,7 @@ const searchGroupsByName = async (name: string): Promise<Group[] | undefined> =>
   }
 }
 // NOT OPTIMAL SOLUTIONS FOR SEARCH, GOES THROUGH ALL THE DATABASE TO FIND. NOT SCALABLE OPTION
-const searchGroupsByHash = async (hash: string): Promise<Group[] | undefined> => {
+const searchGroupByHash = async (hash: string): Promise<Group[] | undefined> => {
   try {
     const results: Group[] = await getConnection()
       .getRepository(Group)
@@ -497,6 +492,6 @@ export {
   followPublicGroup,
   setGroupIsPrivate,
   setGroupFollowersReadOnly,
-  searchGroupsByName,
-  searchGroupsByHash
+  searchGroupByName,
+  searchGroupByHash
 }

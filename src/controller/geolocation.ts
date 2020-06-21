@@ -1,6 +1,5 @@
 import { Repository, getConnection } from "typeorm";
 import { User, Geolocation, UserEvent, Event } from "../models";
-import { getUserEventRelation } from "./event";
 
 // general purpose controller to create new geolocations
 const insertGeolocationToDb = async (latitude: number, longitude: number, address?: string, city?: string, region?: string, postalCode?: string, country?: string) => {
@@ -27,8 +26,70 @@ const insertGeolocationToDb = async (latitude: number, longitude: number, addres
   }
 }
 
-//name explains its function
+// this function will only be used when a user registers, as they will always have a set location after they register and will only have to update it
 const setUserGeolocationInDb = async (userId: string, localized_address?: string, latitude?: number, longitude?: number):
+  Promise<{
+    user: User;
+    geolocation: Geolocation;
+  }> => {
+  try {
+    const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation); // get geolocation repo from db
+
+    const user = await getConnection().getRepository(User).findOne({ id: userId })
+    if (!user) throw new Error('User not found')
+
+    const existingGeolocation: Geolocation | undefined = await geolocationRepo // find existing location if it exists
+      .createQueryBuilder('geolocation')
+      .where(
+        `geolocation."localizedAddress" = :"localizedAddress"`,
+        { localized_address: localized_address }
+      )
+      .orWhere(`latitude = :latitude AND longitude = :longitude`, { latitude, longitude })
+      .getOne();
+
+    if (existingGeolocation) {
+      await getConnection()
+        .createQueryBuilder()
+        .relation(Geolocation, 'users')
+        .of(existingGeolocation)
+        .add(user)
+      user.geolocation = existingGeolocation
+      await getConnection().manager.save(user)
+      await getConnection().manager.save(existingGeolocation)
+      return { user, geolocation: existingGeolocation }
+
+    } else {
+
+      const newGeolocationId: string = (await getConnection()
+        .createQueryBuilder()
+        .insert()
+        .into(Geolocation)
+        .values({ localized_address: localized_address, latitude, longitude })
+        .execute()).identifiers[0].id;
+
+      const newGeolocation: Geolocation | undefined = await geolocationRepo.findOne({ id: newGeolocationId })
+      if (!newGeolocation) throw new Error('Something went wrong with new geolocation')
+
+      await getConnection()
+        .createQueryBuilder()
+        .relation(Geolocation, 'users')
+        .of(newGeolocation)
+        .add(user)
+      user.geolocation = newGeolocation
+      await getConnection().manager.save(user)
+      await getConnection().manager.save(newGeolocation)
+
+      return { user, geolocation: newGeolocation }
+    }
+
+  } catch (ex) {
+    console.log(ex)
+    throw ex
+  }
+}
+
+//name explains its function
+const updateUserGeolocationInDb = async (userId: string, localized_address?: string, latitude?: number, longitude?: number):
   Promise<{
     user: User;
     geolocation: Geolocation;
@@ -180,14 +241,13 @@ const setEventGeolocationInDb = async (userId: string, eventId: string, localize
 }
 
 // same as update user geolocation but with event
-const setEventGeolocationInDb = async (userId: string, eventId: string, localized_address?: string, latitude?: number, longitude?: number):
+const updateEventGeolocationInDb = async (userId: string, eventId: string, localized_address?: string, latitude?: number, longitude?: number):
   Promise<{
     event: Event;
     geolocation: Geolocation;
   } | undefined> => {
   try {
     const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation);
-    console.log(eventId, 'geolocation');
 
     const event = await getConnection().getRepository(Event).findOne({ id: eventId })
     if (!event) throw new Error('Cannot find event')
@@ -195,6 +255,12 @@ const setEventGeolocationInDb = async (userId: string, eventId: string, localize
     const userRelationToEvent = await getConnection().getRepository(UserEvent).findOne({ user: { id: userId }, event: { id: eventId } })
     if (!userRelationToEvent) throw new Error('User not related to event')
     if (userRelationToEvent.permissionLevel < 1) throw new Error('No permission to perform this action')
+
+    const oldGeolocation = await geolocationRepo.findOne({ id: event.geolocation.id })
+    if (oldGeolocation) {
+      oldGeolocation.events = oldGeolocation.events.filter((event: Event) => event.id !== eventId)
+      await getConnection().manager.save(oldGeolocation);
+    }
 
     const existingGeolocation: Geolocation | undefined = await geolocationRepo // find existing location if it exists
       .createQueryBuilder('geolocation')
@@ -247,16 +313,12 @@ const setEventGeolocationInDb = async (userId: string, eventId: string, localize
 }
 
 // gets geolocation corresponding to this event
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const getEventGeolocation = async (eventId: string, userId?: any): Promise<Geolocation | undefined> => {
+const getEventGeolocation = async (eventId: string): Promise<Geolocation | undefined> => {
   try {
+
     const event = await getConnection()
       .getRepository(Event)
       .findOne(eventId, { relations: ['geolocation'] })
-    if (event && event.isPrivate) {
-      const userRelationToEvent = await getUserEventRelation(userId, eventId)
-      if (!userRelationToEvent || userRelationToEvent.permissionLevel < 1) throw new Error('No permission for this event')
-    }
 
     return event?.geolocation
 
@@ -270,7 +332,9 @@ const getEventGeolocation = async (eventId: string, userId?: any): Promise<Geolo
 export {
   insertGeolocationToDb,
   setUserGeolocationInDb,
+  updateUserGeolocationInDb,
   getUserGeolocation,
   setEventGeolocationInDb,
+  updateEventGeolocationInDb,
   getEventGeolocation
 }

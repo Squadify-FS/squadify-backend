@@ -1,5 +1,5 @@
 import express from 'express';
-import { getUserFromDb, getUserFriendsFromDb, sendFriendRequest, getUserRequestsFromDb, deleteFriend, acceptFriendRequest, rejectFriendRequest, updateUser, getUserGroupInvitations, getUserGroups, assignHashtagToUser, getUserHashtags, searchUsersByEmail, searchUsersByHash } from '../controller';
+import { getUserFromDb, getUserFriendsFromDb, sendFriendRequest, getUserRequestsFromDb, deleteFriend, acceptFriendRequest, rejectFriendRequest, updateUser } from '../controller';
 import { isLoggedIn } from '../common/middleware';
 const router = express.Router()
 
@@ -7,10 +7,14 @@ const router = express.Router()
 
 export default router;
 
-//***************** user methods
+export interface IOtherUserId {
+    otherUserId: string;
+}
 
-// get user object
-router.get('/findfriend/:email', isLoggedIn, async (req, res, next) => {
+//***************** user 
+
+//get user object
+router.get('/:email', isLoggedIn, async (req, res, next) => {
     const { email } = req.params;
     try {
         res.send(await getUserFromDb(email))
@@ -20,8 +24,8 @@ router.get('/findfriend/:email', isLoggedIn, async (req, res, next) => {
 });
 
 // updates user info
-router.put('/updateProfile', isLoggedIn, async (req, res, next) => {
-    const yourId = req.body.user.id
+router.put('/:yourId/updateProfile', isLoggedIn, async (req, res, next) => {
+    const { yourId } = req.params;
     const { firstName, lastName, email, password, avatarUrl } = req.body
     try {
         res.send(await updateUser(yourId, firstName, lastName, email, password, avatarUrl));
@@ -30,13 +34,13 @@ router.put('/updateProfile', isLoggedIn, async (req, res, next) => {
     }
 });
 
-//************** end of user methods
+//************** end of user 
 
 //************************* friend requests 
 
 //get a user's sent AND received friend requests
-router.get('/friendrequests', isLoggedIn, async (req, res, next) => {
-    const yourId = req.body.user.id
+router.get('/:yourId/friendrequests', isLoggedIn, async (req, res, next) => {
+    const { yourId } = req.params;
     try {
         res.send(await getUserRequestsFromDb(yourId));
     } catch (err) {
@@ -46,9 +50,9 @@ router.get('/friendrequests', isLoggedIn, async (req, res, next) => {
 
 
 //add friend. should return an object with friend request info
-router.post('/addfriend', isLoggedIn, async (req, res, next) => {
-    const yourId = req.body.user.id
-    const { otherUserId } = req.body;
+router.post('/:yourId/addfriend', isLoggedIn, async (req, res, next) => {
+    const { yourId } = req.params;
+    const { otherUserId }: IOtherUserId = req.body;
     try {
         res.send(await sendFriendRequest(yourId, otherUserId));
     } catch (err) {
@@ -57,23 +61,23 @@ router.post('/addfriend', isLoggedIn, async (req, res, next) => {
 });
 
 //accept a friend request
-router.post('/acceptfriend', isLoggedIn, async (req, res, next) => {
-    const yourId = req.body.user.id
-    const { otherUserId } = req.body;
+router.post('/:yourId/acceptfriend', isLoggedIn, async (req, res, next) => {
+    const { yourId } = req.params;
+    const { otherUserId }: IOtherUserId = req.body;
     try {
         res.send(await acceptFriendRequest(otherUserId, yourId));
-    } catch (err) {
+    } catch(err) {
         next(err);
     }
 });
 
 //reject friend request 
-router.post('/rejectfriend', isLoggedIn, async (req, res, next) => {
-    const yourId = req.body.user.id
-    const { otherUserId } = req.body;
+router.post('/:yourId/rejectfriend', isLoggedIn, async (req, res, next) => {
+    const { yourId } = req.params;
+    const { otherUserId }: IOtherUserId = req.body;
     try {
         res.send(await rejectFriendRequest(otherUserId, yourId));
-    } catch (err) {
+    } catch(err) {
         next(err);
     }
 });
@@ -82,9 +86,9 @@ router.post('/rejectfriend', isLoggedIn, async (req, res, next) => {
 
 //********************** methods on current friends 
 
-//get user friends. returns friends as array of objects
-router.get('/friends', isLoggedIn, async (req, res, next) => {
-    const yourId = req.body.user.id
+//get user friends. returns friends as object
+router.get('/:yourId/friends', isLoggedIn, async (req, res, next) => {
+    const { yourId } = req.params;
     try {
         res.send(await getUserFriendsFromDb(yourId));
     } catch (err) {
@@ -92,10 +96,10 @@ router.get('/friends', isLoggedIn, async (req, res, next) => {
     }
 });
 
-// deletes a friend. returns nothing really
-router.delete('/friends/:otherUserId', isLoggedIn, async (req, res, next) => {
-    const yourId = req.body.user.id
-    const { otherUserId } = req.params;
+// deletes a friend. returns a new list of all your friends
+router.delete('/:yourId/friends', isLoggedIn, async (req, res, next) => {
+    const { yourId } = req.params;
+    const { otherUserId }: IOtherUserId = req.body;
     try {
         res.send(await deleteFriend(yourId, otherUserId));
     } catch (err) {
@@ -105,77 +109,6 @@ router.delete('/friends/:otherUserId', isLoggedIn, async (req, res, next) => {
 
 //************************ end of methods on current friends 
 
-//************************ methods on groups
-
-// get all of the groups that a user is currently in
-router.get('/groups', isLoggedIn, async (req, res, next) => {
-    const userId = req.body.user.id
-    try {
-        res.send(await getUserGroups(userId));
-    } catch (err) {
-        next(err);
-    }
-});
-
-// gets a user's invitations to groups
-router.get('/invitations', isLoggedIn, async (req, res, next) => {
-    const userId = req.body.user.id
-    try {
-        res.send(await getUserGroupInvitations(userId));
-    } catch (err) {
-        next(err);
-    }
-});
-
-//************************ end of methods on groups
-
-//************************ methods on hashtags
-
-// assigns an already existing hashtag to a user
-router.post('/hashtags/assign', isLoggedIn, async (req, res, next) => {
-    const userId = req.body.user.id
-    const { hashtagId } = req.body
-    try {
-        const result = await assignHashtagToUser(hashtagId, userId)
-        res.send(result)
-    } catch (err) {
-        next(err)
-    }
-})
-
-// gets the user's saved hashtags
-router.get('/hashtags', isLoggedIn, async (req, res, next) => {
-    const userId = req.body.user.id
-    try {
-        const hashtags = await getUserHashtags(userId)
-        res.send(hashtags)
-    } catch (err) {
-        next(err)
-    }
-})
-
-//************************ end of methods on hashtags
-
-//************************ search methods
-
-// performs a user search based on email or on hash. returns array of users. If hash is duplicate,
-// it will just have a list with the actual name of the users, so they will know who to pick
-router.get('/search/:type/:text', isLoggedIn, async (req, res, next) => {
-    const { type, text } = req.params
-    try {
-        if (type === 'email') {
-            const users = await searchUsersByEmail(text)
-            res.send(users)
-        } else if (type === 'hash') {
-            const users = await searchUsersByHash(text)
-            res.send(users)
-        }
-    } catch (err) {
-        next(err)
-    }
-})
-
-//************************ end of search methods
 
 // admin id: 9e3eeb19-c1d2-4e53-be78-5a4c8ea6cdff
 // your id: 79014cfc-9298-4f49-afd1-0c26e9ecfc86

@@ -221,8 +221,7 @@ router.get('/search_hashtags/:text', isLoggedIn, async (req, res, next) => {
 router.get('/searcharea/:radius/:latitude/:longitude', isLoggedIn, async (req, res, next) => {
     try {
         const { radius, latitude, longitude } = req.params;
-
-        console.log(await searchEventsUsingRadius(Number(radius), Number(latitude), Number(longitude)));
+        res.send(await searchEventsUsingRadius(Number(radius), Number(latitude), Number(longitude)));
     } catch (err) {
         next(err);
     }

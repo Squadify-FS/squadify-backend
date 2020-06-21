@@ -120,6 +120,7 @@ const setEventGeolocationInDb = async (userId: string, eventId: string, localize
   } | undefined> => {
   try {
     const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation);
+    console.log(eventId, 'geolocation');
 
     const event = await getConnection().getRepository(Event).findOne({ id: eventId })
     if (!event) throw new Error('Cannot find event')
@@ -127,12 +128,6 @@ const setEventGeolocationInDb = async (userId: string, eventId: string, localize
     const userRelationToEvent = await getConnection().getRepository(UserEvent).findOne({ user: { id: userId }, event: { id: eventId } })
     if (!userRelationToEvent) throw new Error('User not related to event')
     if (userRelationToEvent.permissionLevel < 1) throw new Error('No permission to perform this action')
-
-    const oldGeolocation = await geolocationRepo.findOne({ id: event.geolocation.id })
-    if (oldGeolocation) {
-      oldGeolocation.events = oldGeolocation.events.filter((event: Event) => event.id !== eventId)
-      await getConnection().manager.save(oldGeolocation);
-    }
 
     const existingGeolocation: Geolocation | undefined = await geolocationRepo // find existing location if it exists
       .createQueryBuilder('geolocation')

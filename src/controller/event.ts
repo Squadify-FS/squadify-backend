@@ -22,7 +22,7 @@ const insertEventToDb = async ({ userId, name, description, startTime, endTime, 
     relation: InsertResult;
   } | undefined> => {
   try {
-    if (new Date(startTime) < new Date()) throw new Error('Cannot create an event for the past!')
+    // if (new Date(startTime) < new Date()) throw new Error('Cannot create an event for the past!')
 
     const event = await getConnection()
       .createQueryBuilder()
@@ -303,7 +303,6 @@ const searchEventsUsingRadius = async (radius: number, latitude: number, longitu
         .limit(50) //TODO
         .getMany()
         .then(geolocations => geolocations.reduce((acc: Event[], curr: Geolocation) => {
-          curr.events = curr.events.filter(event => !event.isPrivate)
           curr.events.forEach(event => {
             if(!event.isPrivate) acc.push(event)
           });

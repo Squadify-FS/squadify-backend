@@ -112,6 +112,73 @@ const getUserGeolocation = async (userId: string): Promise<Geolocation | undefin
   }
 }
 
+// sets event geolocation when eent is first created
+const setEventGeolocationInDb = async (userId: string, eventId: string, localized_address?: string, latitude?: number, longitude?: number):
+  Promise<{
+    event: Event;
+    geolocation: Geolocation;
+  } | undefined> => {
+  try {
+    const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation);
+    console.log(eventId, 'geolocation');
+
+    const event = await getConnection().getRepository(Event).findOne({ id: eventId })
+    if (!event) throw new Error('Cannot find event')
+
+    const userRelationToEvent = await getConnection().getRepository(UserEvent).findOne({ user: { id: userId }, event: { id: eventId } })
+    if (!userRelationToEvent) throw new Error('User not related to event')
+    if (userRelationToEvent.permissionLevel < 1) throw new Error('No permission to perform this action')
+
+    const existingGeolocation: Geolocation | undefined = await geolocationRepo // find existing location if it exists
+      .createQueryBuilder('geolocation')
+      .where(
+        `geolocation.localized_address = :localized_address`,
+        { localized_address: localized_address }
+      )
+      .orWhere(`latitude = :latitude AND longitude = :longitude`, { latitude, longitude })
+      .getOne();
+
+    if (existingGeolocation) {
+
+      await getConnection()
+        .createQueryBuilder()
+        .relation(Geolocation, 'events')
+        .of(existingGeolocation)
+        .add(event)
+      event.geolocation = existingGeolocation
+      await getConnection().manager.save(event)
+      await getConnection().manager.save(existingGeolocation)
+      return { event, geolocation: existingGeolocation }
+
+    } else {
+
+      const newGeolocationId: string = (await getConnection()
+        .createQueryBuilder()
+        .insert()
+        .into(Geolocation)
+        .values({ localized_address: localized_address, latitude, longitude })
+        .execute()).identifiers[0].id;
+
+      const newGeolocation: Geolocation | undefined = await geolocationRepo.findOne({ id: newGeolocationId })
+      if (!newGeolocation) throw new Error('Something went wrong with new geolocation')
+
+      await getConnection()
+        .createQueryBuilder()
+        .relation(Geolocation, 'events')
+        .of(newGeolocation)
+        .add(event)
+      event.geolocation = newGeolocation
+      await getConnection().manager.save(event)
+      await getConnection().manager.save(newGeolocation)
+
+      return { event, geolocation: newGeolocation }
+    }
+
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
 // same as update user geolocation but with event
 const setEventGeolocationInDb = async (userId: string, eventId: string, localized_address?: string, latitude?: number, longitude?: number):
   Promise<{

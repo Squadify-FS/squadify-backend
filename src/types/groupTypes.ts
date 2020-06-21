@@ -13,7 +13,7 @@ export interface INewGroupInterface {
   creatorId: string;
   friendIds?: string[];
   followersReadOnly?: boolean;
-  avatarUrl: string;
+  avatarUrl?: string;
 }
 
 export interface IUserGroupIds {

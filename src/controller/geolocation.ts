@@ -120,6 +120,7 @@ const setEventGeolocationInDb = async (userId: string, eventId: string, localize
   } | undefined> => {
   try {
     const geolocationRepo: Repository<Geolocation> = await getConnection().getRepository(Geolocation);
+    console.log(eventId, 'geolocation');
 
     const event = await getConnection().getRepository(Event).findOne({ id: eventId })
     if (!event) throw new Error('Cannot find event')

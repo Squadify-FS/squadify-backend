@@ -9,8 +9,8 @@ export default router;
 
 //***************** user methods
 
-//get user object
-router.get('/:email', isLoggedIn, async (req, res, next) => {
+// get user object
+router.get('/findfriend/:email', isLoggedIn, async (req, res, next) => {
     const { email } = req.params;
     try {
         res.send(await getUserFromDb(email))

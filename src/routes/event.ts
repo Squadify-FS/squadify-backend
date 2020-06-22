@@ -1,6 +1,6 @@
 import express from 'express';
 import { insertEventToDb, getGroupEvents, setEventGeolocationInDb, assignEventToGroup, getEventGeolocation, searchEventsUsingRadius, unassignEventFromGroup, assignEventToUser, unassignEventFromUser, getUserEvents, updateEvent, insertHashtagToDb, getHashtagByText, assignHashtagToEvent, unassignHashtagFromEvent, getEventHashtags, searchHashtags, searchEventsByName, searchEventsByHashtags } from '../controller';
-import { isLoggedIn, isGroupUser, isGroupFriend, isEventHost } from '../common/middleware';
+import { isLoggedIn, isGroupUser, isGroupFriend, isEventHost, isEventUser } from '../common/middleware';
 const router = express.Router()
 
 //base route is /event
@@ -208,7 +208,7 @@ router.delete('/unassign_hashtag/:eventId/:hashtagId', isLoggedIn, isEventHost, 
 })
 
 // gets the event's hashtags
-router.get('/:eventId/hashtags', isLoggedIn, async (req, res, next) => {
+router.get('/:eventId/hashtags', isLoggedIn, isEventUser, async (req, res, next) => {
     try {
         const { eventId } = req.params
 

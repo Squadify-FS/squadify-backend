@@ -44,9 +44,9 @@ router.post('/user', isLoggedIn, async (req, res, next) => {
 // gets the event's geolocation
 router.get('/event/:eventId', isLoggedIn, isPrivateEvent, async (req, res, next) => {
   const userId = req.body.user.id
-  const { eventId } = req.params
+  const { eventId, isPrivate } = req.params
   try {
-    if (req.params.isPrivate) {
+    if (isPrivate) {
       const relation = await getUserEventRelation(userId, eventId)
       if (!relation || relation.permissionLevel < 1) next()
     }

@@ -79,7 +79,7 @@ router.put('/:groupId/update/read_only', isLoggedIn, isGroupAdmin, async (req, r
 //************************ invitations and user relations routes
 
 // invites a person to the group
-router.post('/invititations/:groupId/send', isLoggedIn, isGroupFriend, async (req, res, next) => {
+router.post('/invitations/:groupId/send', isLoggedIn, isGroupFriend, async (req, res, next) => {
     try {
         const { groupId } = req.params;
         const inviterId = req.body.user.id

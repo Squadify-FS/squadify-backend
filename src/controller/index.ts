@@ -22,16 +22,15 @@ import {
   getHashtagById,
   insertHashtagToDb,
   assignHashtagToEvent,
+  unassignHashtagFromEvent,
   getEventHashtags
 } from './event'
 
 import {
   insertGeolocationToDb,
   setUserGeolocationInDb,
-  updateUserGeolocationInDb,
   getUserGeolocation,
   setEventGeolocationInDb,
-  updateEventGeolocationInDb,
   getEventGeolocation
 } from './geolocation'
 
@@ -54,8 +53,8 @@ import {
   followPublicGroup,
   setGroupIsPrivate,
   setGroupFollowersReadOnly,
-  searchGroupByName,
-  searchGroupByHash
+  searchGroupsByName,
+  searchGroupsByHash
 } from './group'
 
 import {
@@ -80,8 +79,8 @@ import {
   updateUser,
   assignHashtagToUser,
   getUserHashtags,
-  searchUserByEmail,
-  searchUserByHash
+  searchUsersByEmail,
+  searchUsersByHash
 } from './user'
 //
 //
@@ -117,15 +116,14 @@ export {
   getHashtagById,
   insertHashtagToDb,
   assignHashtagToEvent,
+  unassignHashtagFromEvent,
   getEventHashtags,
   // 
   // geolocation
   insertGeolocationToDb,
   setUserGeolocationInDb,
-  updateUserGeolocationInDb,
   getUserGeolocation,
   setEventGeolocationInDb,
-  updateEventGeolocationInDb,
   getEventGeolocation,
   //
   // group
@@ -147,8 +145,8 @@ export {
   followPublicGroup,
   setGroupIsPrivate,
   setGroupFollowersReadOnly,
-  searchGroupByName,
-  searchGroupByHash,
+  searchGroupsByName,
+  searchGroupsByHash,
   // 
   // iou
   insertIOUToDb,
@@ -171,6 +169,6 @@ export {
   updateUser,
   assignHashtagToUser,
   getUserHashtags,
-  searchUserByEmail,
-  searchUserByHash
+  searchUsersByEmail,
+  searchUsersByHash
 }

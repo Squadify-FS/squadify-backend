@@ -2,7 +2,6 @@ import express from 'express'
 
 import { createConnection } from 'typeorm';
 import { User, Group, Chat, Message, Event, UserUser, UserGroup, UserEvent, Geolocation, IOU, Hashtag } from './models/'
-import { insertNewUserToDb, sendFriendRequest, getUserFriendsFromDb, getUserRequestsFromDb } from './controller/user'
 
 // import routes 
 import authRouter from './routes/auth';
@@ -65,7 +64,8 @@ app.use((req, res, next) => {
 
   const PORT = process.env.PORT || 3000;
 
-  app.listen(PORT, () => console.log(`listening on port ${PORT}`));
+  // must be commented for testing TODO
+  // app.listen(PORT, () => console.log(`listening on port ${PORT}`));
 })();
 
 export { app };

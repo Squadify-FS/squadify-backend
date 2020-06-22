@@ -1,13 +1,13 @@
-import { getConnection, InsertResult, DeleteResult, UpdateResult, Like } from 'typeorm';
+import { getConnection, InsertResult, DeleteResult, UpdateResult } from 'typeorm';
 
 import { Event, Group, User, UserGroup, UserEvent, Geolocation, Hashtag } from '../models'
 import { insertGeolocationToDb } from './geolocation';
 import { INewEventDetails, IUserEventGroup, IUserEventInviter, IUserEvent, IUpdateEventDetails, IEventHashtag } from '../types/eventTypes';
 
-const getUserEventRelation = async (userId: string, groupId: string): Promise<UserEvent | undefined> => {
+const getUserEventRelation = async (userId: string, eventId: string): Promise<UserEvent | undefined> => {
   const relation = await getConnection()
     .getRepository(UserEvent)
-    .findOne({ user: { id: userId }, event: { id: groupId } })
+    .findOne({ user: { id: userId }, event: { id: eventId } })
 
   if (relation) return relation
 }
@@ -187,7 +187,7 @@ const assignEventToUser = async ({ userId, eventId, inviterId }: IUserEventInvit
       .returning('*')
       .execute()
 
-    return { event, relation }
+    return { event, relation: relation.raw[0] }
   } catch (ex) {
     console.log(ex)
   }
@@ -246,9 +246,7 @@ const getGroupEvents = async (groupId: string): Promise<Event[] | undefined> => 
 // updates event info and privacy setting. handles user permission to perform this action
 const updateEvent = async ({ userId, eventId, name, description, startTime, endTime, isPrivate }: IUpdateEventDetails): Promise<UpdateResult | undefined> => {
   try {
-    const userRelation = await getConnection()
-      .getRepository(UserEvent)
-      .findOne({ user: { id: userId }, event: { id: eventId } })
+    const userRelation = await getUserEventRelation(userId, eventId)
     if (!userRelation || userRelation.permissionLevel < 1) throw new Error('No relation or permission level insufficient')
 
     if ((isPrivate === true || isPrivate === false)) {
@@ -305,10 +303,11 @@ const searchEventsUsingRadius = async (radius: number, latitude: number, longitu
         .limit(50) //TODO
         .getMany()
         .then(geolocations => geolocations.reduce((acc: Event[], curr: Geolocation) => {
-          curr.events = curr.events.filter(event => !event.isPrivate)
-          curr.events.forEach(event => acc.push(event));
+          curr.events.forEach(event => {
+            if(!event.isPrivate) acc.push(event)
+          });
           return acc
-        }, [])) //TODO
+      }, [])) //TODO
 
       // const results = await getConnection()
       //   .createQueryBuilder()
@@ -365,6 +364,25 @@ const assignHashtagToEvent = async ({ hashtagId, eventId }: IEventHashtag):
   }
 }
 
+const unassignHashtagFromEvent = async ({ hashtagId, eventId }: IEventHashtag) => {
+  try {
+    const event = await getConnection().getRepository(Event).findOne({ id: eventId })
+    const hashtag = await getConnection().getRepository(Hashtag).findOne({ id: hashtagId })
+
+    if (event && hashtag) {
+
+      await getConnection()
+        .createQueryBuilder()
+        .relation(Event, 'hashtags')
+        .of(event)
+        .remove(hashtag)
+
+      return { event, hashtag }
+    }
+  } catch (ex) {
+    console.log(ex)
+  }
+}
 
 const getHashtagByText = async (text: string): Promise<Hashtag | undefined> => {
   try {
@@ -402,12 +420,9 @@ const searchHashtags = async (searchVal: string): Promise<Hashtag[] | undefined>
 
     const results = await getConnection()
       .getRepository(Hashtag)
-      .find({ text: Like(`%${searchVal}%`) })
-    // .createQueryBuilder()
-    // .select()
-    // .from(Hashtag, 'hashtag')
-    // .where(`hashtag."text" ILIKE '%${searchVal}%'`)
-    // .getMany()
+      .createQueryBuilder('hashtag')
+      .where(`hashtag."text" ILIKE '%${searchVal}%'`)
+      .getMany()
 
     return results
 
@@ -422,13 +437,10 @@ const searchEventsByName = async (searchVal: string): Promise<Event[] | undefine
 
     const results = await getConnection()
       .getRepository(Event)
-      .find({ name: Like(`%${searchVal}%`) }) // TODO CASE INSENSITIVE
-    // .createQueryBuilder()
-    // .select()
-    // .from(Event, 'event')
-    // .where(`event."name" ILIKE '%${searchVal}%'`)
-    // .andWhere(`event."isPrivate" = false`)
-    // .getMany()
+      .createQueryBuilder('event')
+      .where(`event."name" ILIKE '%${searchVal}%'`)
+      .andWhere(`event."isPrivate" = false`)
+      .getMany()
 
     return results
 
@@ -442,16 +454,13 @@ const searchEventsByHashtags = async (searchVal: string): Promise<Event[] | unde
 
     const results = await getConnection()
       .getRepository(Hashtag)
-      .find({ relations: ['events'], where: { text: Like(`%${searchVal}%`) } })
-      // .createQueryBuilder()
-      // .select()
-      // .from(Hashtag, 'hashtag')
-      // .leftJoinAndSelect('hashtag.events', 'events')
-      // .where(`hashtag."text" ILIKE '%${searchVal}%'`)
-      // .getMany()
+      .createQueryBuilder('hashtag')
+      .leftJoinAndSelect('hashtag.events', 'events')
+      .where(`hashtag."text" ILIKE '%${searchVal}%'`)
+      .getMany()
       .then(hashtags => hashtags.reduce((acc: Event[], curr) => {
         curr.events = curr.events.filter(event => !event.isPrivate) //TODO
-        curr.events.forEach(event => acc.push(event))
+        curr.events.filter(event => !acc.find(e => e.id === event.id)).forEach(event => acc.push(event))// TODOOOOOOOO
         return acc
       }, []))
 
@@ -482,5 +491,6 @@ export {
   getHashtagById,
   insertHashtagToDb,
   assignHashtagToEvent,
+  unassignHashtagFromEvent,
   getEventHashtags
 }

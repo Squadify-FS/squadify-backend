@@ -11,7 +11,7 @@ beforeAll(async () => {
 });
 
 
-xdescribe('Register and login', () => {
+describe('Register and login', () => {
 
   xtest('Create test user', async () => {
     const testuser = await supertest(app).post(`/auth/register`).send({

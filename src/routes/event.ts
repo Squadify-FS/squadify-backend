@@ -13,13 +13,14 @@ export default router;
 router.post('/create', isLoggedIn, async (req, res, next) => {
     try {
         const userId = req.body.user.id
-        const { name, description, isPrivate, startTime, endTime, addressOfEvent, coordsOfEvent } = req.body;
+        const { name, description, isPrivate, startTime, endTime, address, coordsOfEvent } = req.body;
 
         const createdEvent = await insertEventToDb({ userId, name, description, isPrivate, startTime, endTime });
         const eventId = createdEvent?.event.identifiers[0].id;
-        const geolocation = await setEventGeolocationInDb(userId, eventId, addressOfEvent, coordsOfEvent.latitude, coordsOfEvent.longitude);
-        res.json({ event: createdEvent, geolocation });
+        const geolocationInsert = await setEventGeolocationInDb(userId, eventId, address, coordsOfEvent.latitude, coordsOfEvent.longitude);
+        res.status(201).json({ event: geolocationInsert?.event, geolocation: geolocationInsert?.geolocation });
     } catch (err) {
+        console.log(err)
         next(err);
     }
 });
@@ -33,7 +34,7 @@ router.post('/update/:eventId', isLoggedIn, isEventHost, async (req, res, next) 
         const { name, description, isPrivate, startTime, endTime } = req.body;
 
         const updatedEvent = await updateEvent({ eventId, userId, name, description, isPrivate, startTime, endTime });
-        res.send(updatedEvent);
+        res.send({ event: updatedEvent?.raw[0] });
     } catch (err) {
         next(err);
     }
@@ -93,10 +94,27 @@ router.get('/my_events', isLoggedIn, async (req, res, next) => {
     }
 })
 
-// assign event to user. Private events must have inviterId.
-router.post('/assign_user', isLoggedIn, async (req, res, next) => {
+// assign event to user. 
+// Also used to follow public events, private events must use inviterId
+router.post('/assign_self', isLoggedIn, async (req, res, next) => {
     try {
-        const { eventId, userId, inviterId } = req.body
+
+        const userId = req.body.user.id
+        const { eventId } = req.body
+
+        const eventToUser = await assignEventToUser({ userId, eventId })
+        res.send(eventToUser)
+    } catch (err) {
+        next(err);
+    }
+})
+
+// current user assigns another user to event (like invite). used for private events.
+router.post('/assign_user/:eventId/:userId', isLoggedIn, async (req, res, next) => {
+    try {
+
+        const inviterId = req.body.user.id
+        const { userId, eventId } = req.params
 
         const eventToUser = await assignEventToUser({ userId, eventId, inviterId })
         res.send(eventToUser)

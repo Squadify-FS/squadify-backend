@@ -187,7 +187,7 @@ const assignEventToUser = async ({ userId, eventId, inviterId }: IUserEventInvit
       .returning('*')
       .execute()
 
-    return { event, relation }
+    return { event, relation: relation.raw[0] }
   } catch (ex) {
     console.log(ex)
   }

@@ -128,10 +128,12 @@ const setEventGeolocationInDb = async (userId: string, eventId: string, localize
     if (!userRelationToEvent) throw new Error('User not related to event')
     if (userRelationToEvent.permissionLevel < 1) throw new Error('No permission to perform this action')
 
-    const oldGeolocation = await geolocationRepo.findOne({ id: event.geolocation.id })
-    if (oldGeolocation) {
-      oldGeolocation.events = oldGeolocation.events.filter((event: Event) => event.id !== eventId)
-      await getConnection().manager.save(oldGeolocation);
+    if (event.geolocation) {
+      const oldGeolocation = await geolocationRepo.findOne({ id: event.geolocation.id })
+      if (oldGeolocation) {
+        oldGeolocation.events = oldGeolocation.events.filter((event: Event) => event.id !== eventId)
+        await getConnection().manager.save(oldGeolocation);
+      }
     }
 
     const existingGeolocation: Geolocation | undefined = await geolocationRepo // find existing location if it exists

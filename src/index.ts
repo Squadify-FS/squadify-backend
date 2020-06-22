@@ -64,7 +64,8 @@ app.use((req, res, next) => {
 
   const PORT = process.env.PORT || 3000;
 
-  app.listen(PORT, () => console.log(`listening on port ${PORT}`));
+  // must be commented for testing TODO
+  // app.listen(PORT, () => console.log(`listening on port ${PORT}`));
 })();
 
 export { app };

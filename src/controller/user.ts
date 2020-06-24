@@ -131,9 +131,11 @@ const deleteFriend = async (userId: string, friendId: string): Promise<DeleteRes
 }
 
 // creates a friends relation (one way only) where it is not accepted yet
-const sendFriendRequest = async (requesterId: string, requestedId: string): Promise<InsertResult> => {
+const sendFriendRequest = async (requesterId: string, requestedId: string): Promise<{
+  relation: InsertResult;
+  requestedUser: User | undefined;
+}> => {
   try {
-
     const relation = await getConnection()
       .createQueryBuilder()
       .insert()
@@ -144,9 +146,8 @@ const sendFriendRequest = async (requesterId: string, requestedId: string): Prom
       })
       .returning('*')
       .execute();
-
-    return relation
-
+    const requestedUser = await getConnection().getRepository(User).createQueryBuilder('user').where(`user.id = :requestedId`, { requestedId }).getOne()
+    return { relation, requestedUser }
   } catch (ex) {
     console.log(ex)
     throw ex

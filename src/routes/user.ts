@@ -50,7 +50,7 @@ router.post('/addfriend', isLoggedIn, async (req, res, next) => {
     const yourId = req.body.user.id
     const { otherUserId } = req.body;
     try {
-        res.send(await sendFriendRequest(yourId, otherUserId));
+        res.send((await sendFriendRequest(yourId, otherUserId)).requestedUser);
     } catch (err) {
         next(err);
     }
@@ -73,6 +73,16 @@ router.post('/rejectfriend', isLoggedIn, async (req, res, next) => {
     const { otherUserId } = req.body;
     try {
         res.send(await rejectFriendRequest(otherUserId, yourId));
+    } catch (err) {
+        next(err);
+    }
+});
+
+router.post('/cancelrequest', isLoggedIn, async (req, res, next) => {
+    const yourId = req.body.user.id;
+    const { otherUserId } = req.body;
+    try {
+        res.send(await rejectFriendRequest(yourId, otherUserId));
     } catch (err) {
         next(err);
     }

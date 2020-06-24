@@ -8,6 +8,7 @@ import authRouter from './routes/auth';
 import userRouter from './routes/user';
 import groupsRouter from './routes/groups';
 import eventRouter from './routes/event';
+import geolocationRouter from './routes/geolocation';
 
 import "reflect-metadata";
 
@@ -61,11 +62,12 @@ app.use((req, res, next) => {
   app.use('/user', userRouter)
   app.use('/groups', groupsRouter)
   app.use('/event', eventRouter);
+  app.use('/geolocation', geolocationRouter);
 
   const PORT = process.env.PORT || 3000;
 
   // must be commented for testing TODO
-  // app.listen(PORT, () => console.log(`listening on port ${PORT}`));
+  app.listen(PORT, () => console.log(`listening on port ${PORT}`));
 })();
 
 export { app };

@@ -113,7 +113,7 @@ const getUserGeolocation = async (userId: string): Promise<Geolocation | undefin
 }
 
 // same as update user geolocation but with event
-const setEventGeolocationInDb = async (userId: string, eventId: string, localized_address?: string, latitude?: number, longitude?: number):
+const setEventGeolocationInDb = async (userId: string, eventId: string, localized_address: string, latitude?: number, longitude?: number):
   Promise<{
     event: Event;
     geolocation: Geolocation;

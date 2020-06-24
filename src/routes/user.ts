@@ -1,6 +1,7 @@
 import express from 'express';
 import { getUserFromDb, getUserFriendsFromDb, sendFriendRequest, getUserRequestsFromDb, deleteFriend, acceptFriendRequest, rejectFriendRequest, updateUser, getUserGroupInvitations, getUserGroups, assignHashtagToUser, getUserHashtags, searchUsersByEmail, searchUsersByHash } from '../controller';
 import { isLoggedIn } from '../common/middleware';
+import { socketServer } from '..';
 const router = express.Router()
 
 //base route is /user
@@ -50,6 +51,7 @@ router.post('/addfriend', isLoggedIn, async (req, res, next) => {
     const yourId = req.body.user.id
     const { otherUserId } = req.body;
     try {
+        socketServer().emit('send_friend_request', { userId: yourId, otherUserId })
         res.send(await sendFriendRequest(yourId, otherUserId));
     } catch (err) {
         next(err);
@@ -61,6 +63,7 @@ router.post('/acceptfriend', isLoggedIn, async (req, res, next) => {
     const yourId = req.body.user.id
     const { otherUserId } = req.body;
     try {
+        socketServer().emit('accept_friend_request', { userId: yourId, otherUserId })
         res.send(await acceptFriendRequest(otherUserId, yourId));
     } catch (err) {
         next(err);
@@ -72,6 +75,7 @@ router.post('/rejectfriend', isLoggedIn, async (req, res, next) => {
     const yourId = req.body.user.id
     const { otherUserId } = req.body;
     try {
+        socketServer().emit('reject_friend_request', { userId: yourId, otherUserId })
         res.send(await rejectFriendRequest(otherUserId, yourId));
     } catch (err) {
         next(err);

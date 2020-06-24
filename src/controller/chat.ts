@@ -29,7 +29,7 @@ const addMessageToChat = async ({ userId, chatId, groupId, text, imageUrl }: INe
       .returning('*')
       .execute();
 
-    socketServer().emit('message', { message })
+    socketServer().emit('message', { message: message.raw[0], chatId, userId })
 
     return message
   } catch (ex) {

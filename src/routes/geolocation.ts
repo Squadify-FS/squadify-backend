@@ -1,6 +1,7 @@
 import express from 'express';
 import { isLoggedIn, isEventHost, isPrivateEvent } from '../common/middleware';
 import { insertGeolocationToDb, setUserGeolocationInDb, getUserGeolocation, setEventGeolocationInDb, getEventGeolocation, getUserEventRelation } from '../controller';
+import { socketServer } from '..';
 const router = express.Router()
 
 // base route is /geolocation
@@ -65,9 +66,9 @@ router.post('/event/:eventId', isLoggedIn, isEventHost, async (req, res, next) =
   const { latitude, longitude, localized_address } = req.body
   try {
     const result = await setEventGeolocationInDb(userId, eventId, localized_address, latitude, longitude)
+    socketServer().emit('set_event_geolocation', { event: result?.event, geolocation: result?.geolocation })
     res.send(result)
   } catch (err) {
     next(err)
   }
 })
-

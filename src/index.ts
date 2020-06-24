@@ -13,7 +13,6 @@ import eventRouter from './routes/event';
 
 import "reflect-metadata";
 
-
 const app = express()
 const PORT = process.env.PORT || 3000;
 
@@ -45,11 +44,9 @@ const createApp = async () => {
       UserUser,
       UserGroup,
       UserEvent,
-      // UserGeolocation,
       Group,
       Message,
       Event,
-      // EventGeolocation,
       Chat,
       Geolocation,
       IOU,

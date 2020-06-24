@@ -1,6 +1,7 @@
 import express from 'express';
 import { insertEventToDb, getGroupEvents, setEventGeolocationInDb, assignEventToGroup, getEventGeolocation, searchEventsUsingRadius, unassignEventFromGroup, assignEventToUser, unassignEventFromUser, getUserEvents, updateEvent, insertHashtagToDb, getHashtagByText, assignHashtagToEvent, unassignHashtagFromEvent, getEventHashtags, searchHashtags, searchEventsByName, searchEventsByHashtags } from '../controller';
 import { isLoggedIn, isGroupUser, isGroupFriend, isEventHost, isEventUser } from '../common/middleware';
+import { socketServer } from '..';
 const router = express.Router()
 
 //base route is /event
@@ -34,6 +35,7 @@ router.post('/update/:eventId', isLoggedIn, isEventHost, async (req, res, next) 
         const { name, description, isPrivate, startTime, endTime } = req.body;
 
         const updatedEvent = await updateEvent({ eventId, userId, name, description, isPrivate, startTime, endTime });
+        socketServer().emit('update_event', { event: updatedEvent?.raw[0] })
         res.send({ event: updatedEvent?.raw[0] });
     } catch (err) {
         next(err);
@@ -64,6 +66,7 @@ router.post('/assign_group/:groupId', isLoggedIn, isGroupFriend, async (req, res
         const userId = req.body.user.id
 
         const eventToGroup = await assignEventToGroup({ userId, eventId, groupId });
+        socketServer().emit('assign_event_group', { event: eventToGroup?.event, group: eventToGroup?.group, user: eventToGroup?.user })
         res.send(eventToGroup);
     } catch (err) {
         next(err);
@@ -77,6 +80,7 @@ router.delete('/unassign_group/:eventId/:groupId', isLoggedIn, isGroupFriend, as
         const userId = req.body.user.id
 
         const deletedRelation = await unassignEventFromGroup({ userId, eventId, groupId });
+        socketServer().emit('unassign_event_group', { event: deletedRelation?.event, group: deletedRelation?.group, user: deletedRelation?.user })
         res.send(deletedRelation);
     } catch (err) {
         next(err);
@@ -103,6 +107,7 @@ router.post('/assign_self', isLoggedIn, async (req, res, next) => {
         const { eventId } = req.body
 
         const eventToUser = await assignEventToUser({ userId, eventId })
+        socketServer().emit('assign_self_to_event', { event: eventToUser?.event, userId })
         res.send(eventToUser)
     } catch (err) {
         next(err);
@@ -117,19 +122,21 @@ router.post('/assign_user/:eventId/:userId', isLoggedIn, async (req, res, next) 
         const { userId, eventId } = req.params
 
         const eventToUser = await assignEventToUser({ userId, eventId, inviterId })
+        socketServer().emit('assign_user_to_event', { event: eventToUser?.event, userId, inviterId })
         res.send(eventToUser)
     } catch (err) {
         next(err);
     }
 })
 
-// assign event to user. Private events must have inviterId.
+// 
 router.delete('/unassign_user/:eventId', isLoggedIn, async (req, res, next) => {
     try {
         const { eventId } = req.params
         const userId = req.body.user.id
 
         const eventToUser = await unassignEventFromUser({ userId, eventId })
+        socketServer().emit('unassign_event_from_user', { userId, eventId })
         res.send(eventToUser)
     } catch (err) {
         next(err);
@@ -142,6 +149,7 @@ router.delete('/kick_user/:eventId/:userId', isLoggedIn, isEventHost, async (req
         const { eventId, userId } = req.params
 
         const eventToUser = await unassignEventFromUser({ userId, eventId })
+        socketServer().emit('kick_user_from_event', { userId, eventId })
         res.send(eventToUser)
     } catch (err) {
         next(err);

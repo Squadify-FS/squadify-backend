@@ -1,9 +1,13 @@
 import express from 'express'
+import { resolve } from 'path';
+import { config } from 'dotenv'
 import socketio from 'socket.io'
 import { socket } from './socket'
 
 import { createConnection } from 'typeorm';
 import { User, Group, Chat, Message, Event, UserUser, UserGroup, UserEvent, Geolocation, IOU, Hashtag } from './models/'
+
+config({ path: resolve(__dirname, './.env') })
 
 // import routes 
 import authRouter from './routes/auth';

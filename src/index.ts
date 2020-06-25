@@ -63,6 +63,7 @@ const createApp = async () => {
   app.use('/groups', groupsRouter)
   app.use('/event', eventRouter);
   app.use('/geolocation', geolocationRouter);
+  app.get('/', (_, res) => res.send('hello'));
 }
 
 let _socketServer: socketio.Server

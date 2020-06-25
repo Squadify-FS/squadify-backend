@@ -82,6 +82,16 @@ router.post('/rejectfriend', isLoggedIn, async (req, res, next) => {
     }
 });
 
+router.post('/cancelrequest', isLoggedIn, async (req, res, next) => {
+    const yourId = req.body.user.id;
+    const { otherUserId } = req.body;
+    try {
+        res.send(await rejectFriendRequest(yourId, otherUserId));
+    } catch (err) {
+        next(err);
+    }
+});
+
 //********************** end of friend requests 
 
 //********************** methods on current friends 

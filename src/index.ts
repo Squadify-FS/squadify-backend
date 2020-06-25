@@ -10,6 +10,7 @@ import authRouter from './routes/auth';
 import userRouter from './routes/user';
 import groupsRouter from './routes/groups';
 import eventRouter from './routes/event';
+import geolocationRouter from './routes/geolocation';
 
 import "reflect-metadata";
 
@@ -61,6 +62,7 @@ const createApp = async () => {
   app.use('/user', userRouter)
   app.use('/groups', groupsRouter)
   app.use('/event', eventRouter);
+  app.use('/geolocation', geolocationRouter);
 }
 
 let _socketServer: socketio.Server

@@ -9,17 +9,20 @@
     "lint": "eslint . --ext .ts",
     "compile": "tsc",
     "seed": "tsc && node dist/scripts/seed.js",
+    "start": "npm run seed && npm run compile && node dist/index.js",
     "start:dev": "npm run compile && node dist/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/socket.io": "^2.1.8",
     "@types/supertest": "^2.0.9",
     "bcrypt": "^4.0.1",
     "jsonwebtoken": "^8.5.1",
     "pg": "^8.2.1",
     "reflect-metadata": "^0.1.13",
+    "socket.io": "^2.3.0",
     "typeorm": "^0.2.25"
   },
   "devDependencies": {

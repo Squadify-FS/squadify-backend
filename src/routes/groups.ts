@@ -1,6 +1,7 @@
 import express from 'express';
 import { insertNewGroupToDb, deleteGroup, inviteUserToGroup, acceptInviteToGroup, rejectInviteToGroup, removeUserFromGroup, followPublicGroup, updateGroupInfo, setGroupIsPrivate, setGroupFollowersReadOnly, getGroupUsers, getGroupUserInvitations, searchGroupsByHash, searchGroupsByName, getUserGroupRelation, addMessageToChat, getChatFromGroup, getMessagesFromChat } from '../controller';
 import { isLoggedIn, isGroupAdmin, isGroupFriend, isReadOnlyGroup, isGroupUser, isPrivateGroup } from '../common/middleware';
+import { socketServer } from '..';
 const router = express.Router()
 
 //base route is /groups
@@ -14,8 +15,10 @@ router.post('/create', isLoggedIn, async (req, res, next) => {
     try {
         const creatorId = req.body.user.id
         const { name, isPrivate, friendIds, avatarUrl } = req.body;
+        const group = await insertNewGroupToDb({ name, isPrivate, creatorId, friendIds, avatarUrl })
 
-        res.send(await insertNewGroupToDb({ name, isPrivate, creatorId, friendIds, avatarUrl }));
+        socketServer().emit('create_group', { group: group?.group.raw[0], friendIds })
+        res.send(group);
     } catch (err) {
         next(err);
     }
@@ -54,6 +57,7 @@ router.put('/:groupId/update/privacy', isLoggedIn, isGroupAdmin, async (req, res
         const { isPrivate } = req.body
 
         const updatedGroup = await setGroupIsPrivate({ userId, groupId }, isPrivate)
+        socketServer().emit('set_group_isprivate', { groupId, isPrivate })
         res.send(updatedGroup)
     } catch (err) {
         next(err)
@@ -68,6 +72,7 @@ router.put('/:groupId/update/read_only', isLoggedIn, isGroupAdmin, async (req, r
         const { followersReadOnly } = req.body
 
         const updatedGroup = await setGroupFollowersReadOnly({ userId, groupId }, followersReadOnly)
+        socketServer().emit('set_group_readonly', { groupId, followersReadOnly })
         res.send(updatedGroup)
     } catch (err) {
         next(err)
@@ -85,6 +90,7 @@ router.post('/invitations/:groupId/send', isLoggedIn, isGroupFriend, async (req,
         const inviterId = req.body.user.id
         const { inviteeId } = req.body;
 
+        socketServer().emit('invite_to_group', { groupId, inviterId, inviteeId })
         res.send(await inviteUserToGroup(groupId, inviterId, inviteeId));
     } catch (err) {
         next(err);
@@ -109,6 +115,7 @@ router.put('/invitations/:groupId/accept', isLoggedIn, async (req, res, next) =>
         const userId = req.body.user.id
         const { groupId } = req.params;
 
+        socketServer().emit('accept_invite_to_group', { userId, groupId })
         res.send(await acceptInviteToGroup({ userId, groupId }));
     } catch (err) {
         next(err);
@@ -120,6 +127,7 @@ router.delete('/invitations/:groupId/reject', isLoggedIn, async (req, res, next)
     try {
         const userId = req.body.user.id
         const { groupId } = req.params
+        socketServer().emit('reject_invite_to_group', { userId, groupId })
         res.send(await rejectInviteToGroup({ userId, groupId }));
     } catch (err) {
         next(err);
@@ -131,8 +139,9 @@ router.delete('/removeuser/:groupId', isLoggedIn, async (req, res, next) => {
     try {
         const { groupId } = req.params;
         const { removerId, userId } = req.body;
-        const data = await removeUserFromGroup(removerId, { userId, groupId });
-        res.send(data);
+
+        socketServer().emit('remove_user_from_group', { groupId, removerId, userId })
+        res.send(await removeUserFromGroup(removerId, { userId, groupId }));
     } catch (err) {
         next(err);
     }

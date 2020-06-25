@@ -303,10 +303,10 @@ const searchEventsUsingRadius = async (radius: number, latitude: number, longitu
         .getMany()
         .then(geolocations => geolocations.reduce((acc: Event[], curr: Geolocation) => {
           curr.events.forEach(event => {
-            if(!event.isPrivate) acc.push(event)
+            if (!event.isPrivate) acc.push(event)
           });
           return acc
-      }, [])) //TODO
+        }, [])) //TODO
 
       // const results = await getConnection()
       //   .createQueryBuilder()

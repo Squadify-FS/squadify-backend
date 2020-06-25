@@ -77,4 +77,7 @@ startListening()
 
 const socketServer = () => _socketServer
 
-export { app, socketServer };
+export {
+  app,
+  socketServer
+};

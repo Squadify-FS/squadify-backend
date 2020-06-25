@@ -1,4 +1,6 @@
 import express from 'express'
+import socketio from 'socket.io'
+import { socket } from './socket'
 
 import { createConnection } from 'typeorm';
 import { User, Group, Chat, Message, Event, UserUser, UserGroup, UserEvent, Geolocation, IOU, Hashtag } from './models/'
@@ -12,8 +14,8 @@ import geolocationRouter from './routes/geolocation';
 
 import "reflect-metadata";
 
-
 const app = express()
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json())
 
@@ -30,7 +32,7 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
+const createApp = async () => {
   await createConnection({
     type: 'postgres',
     host: 'localhost',
@@ -43,11 +45,9 @@ app.use((req, res, next) => {
       UserUser,
       UserGroup,
       UserEvent,
-      // UserGeolocation,
       Group,
       Message,
       Event,
-      // EventGeolocation,
       Chat,
       Geolocation,
       IOU,
@@ -63,11 +63,23 @@ app.use((req, res, next) => {
   app.use('/groups', groupsRouter)
   app.use('/event', eventRouter);
   app.use('/geolocation', geolocationRouter);
+}
 
-  const PORT = process.env.PORT || 3000;
+let _socketServer: socketio.Server
 
+const startListening = () => {
   // must be commented for testing TODO
-  app.listen(PORT, () => console.log(`listening on port ${PORT}`));
-})();
+  const server = app.listen(PORT, () => console.log(`listening on port ${PORT}`));
+  _socketServer = socketio(server)
+  socket(_socketServer)
+}
 
-export { app };
+createApp()
+startListening()
+
+const socketServer = () => _socketServer
+
+export {
+  app,
+  socketServer
+};

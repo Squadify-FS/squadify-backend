@@ -10,6 +10,7 @@ RUN npm install
 
 COPY src/ src/
 
+RUN npm run seed
 RUN npm run compile
 
 CMD ["node", "dist/index.js"]

@@ -1,7 +1,6 @@
-This is the backend for Squadify. It provides all the routes necessary for the app to communicate with it. The API is built with express, and runs on a docker.
+This is the backend for Squadify. It provides all the routes necessary for the app to communicate with it. The API is built with express.
 
-
-To start, run "npm install"
+Run "npm install"
 
 Create a .env file in the root folder, and add to it a JWT_SECRET. Make it whatever you want it to be (but don't be too obvious with it)
 

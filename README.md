@@ -7,7 +7,12 @@ Create a .env file in the root folder, and add to it a JWT_SECRET. Make it whate
 
 ## Running the backend as dev
 
+First seed the database. Create a postgres db with the name "squadify_db", and run "npm run seed"
+(If it gives you some error, go the /scripts/seed.ts and change "synchronize" on line 31 to the opposite of whatever it is. If it gives you another error, try changing it and running again.)
+
 Simply run "npm run start:dev" in the root folder. That should compile the dist/ folder and run the index.js in there.
+
+To test, run "npm run test"
 
 ## Composing and running with Docker
 

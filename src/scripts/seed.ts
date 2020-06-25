@@ -85,7 +85,7 @@ import "reflect-metadata";
    */
 
   await inviteUserToGroup(group1?.group.identifiers[0].id, admin.identifiers[0].id, user1.identifiers[0].id)
-  await inviteUserToGroup(group1?.group.identifiers[0].id, admin.identifiers[0].id, user2.identifiers[0].id)
+  // await inviteUserToGroup(group1?.group.identifiers[0].id, admin.identifiers[0].id, user2.identifiers[0].id)
   await acceptInviteToGroup({ userId: user1.identifiers[0].id, groupId: group1?.group.identifiers[0].id })
 
   console.log('**********FOLLOW PUBLIC GROUP (USER1, GROUP2)**********\n', await followPublicGroup({ userId: user1.identifiers[0].id, groupId: group2?.group.identifiers[0].id }))
@@ -163,10 +163,10 @@ import "reflect-metadata";
   if (!event1 || !event2 || !hashtag1 || !hashtag2) throw new Error('Not found')
 
   console.log('TEST', await assignHashtagToEvent({ hashtagId: hashtag1.id, eventId: event1?.event.identifiers[0].id }))
-  console.log('TEST', await assignHashtagToEvent({ hashtagId: hashtag1.id, eventId: event2?.event.identifiers[0].id }))
+  // console.log('TEST', await assignHashtagToEvent({ hashtagId: hashtag1.id, eventId: event2?.event.identifiers[0].id }))
 
-  console.log('TEST', await assignHashtagToEvent({ hashtagId: hashtag2.id, eventId: event1?.event.identifiers[0].id }))
-  console.log('TEST', await assignHashtagToEvent({ hashtagId: hashtag2.id, eventId: event1?.event.identifiers[0].id }))
+  console.log('TEST', await assignHashtagToEvent({ hashtagId: hashtag2.id, eventId: event2?.event.identifiers[0].id }))
+  // console.log('TEST', await assignHashtagToEvent({ hashtagId: hashtag2.id, eventId: event1?.event.identifiers[0].id }))
 
   console.log('GET HASHTAG1 BY TEXT', await getHashtagByText('hashtag1'))
 

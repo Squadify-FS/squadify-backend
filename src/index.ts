@@ -9,12 +9,14 @@ import { User, Group, Chat, Message, Event, UserUser, UserGroup, UserEvent, Geol
 config()
 
 // import routes 
+import iou from './routes/iou';
 import authRouter from './routes/auth';
 import userRouter from './routes/user';
-import groupsRouter from './routes/groups';
 import eventRouter from './routes/event';
 import iouRouter from './routes/iou'
-import geolocationRouter from './routes/geolocation'
+import groupsRouter from './routes/groups';
+import geolocationRouter from './routes/geolocation';
+
 
 import "reflect-metadata";
 
@@ -75,12 +77,14 @@ let _socketServer: any
   }
 
   // routes 
+  app.use('/iou', iou);
   app.use('/auth', authRouter)
   app.use('/user', userRouter)
-  app.use('/groups', groupsRouter)
   app.use('/event', eventRouter);
   app.use('/iou', iouRouter)
   app.use('/geolocation', geolocationRouter)
+  app.use('/groups', groupsRouter)
+  app.use('/geolocation', geolocationRouter);
 
   const server = app.listen(PORT, () => console.log(`listening on port ${PORT}`));
   _socketServer = socketio(server)

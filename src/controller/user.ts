@@ -136,7 +136,6 @@ const sendFriendRequest = async (requesterId: string, requestedId: string): Prom
   requestedUser: User | undefined;
 }> => {
   try {
-
     const relation = await getConnection()
       .createQueryBuilder()
       .insert()
@@ -151,7 +150,6 @@ const sendFriendRequest = async (requesterId: string, requestedId: string): Prom
     const requestedUser = await getConnection().getRepository(User).createQueryBuilder('user').where(`user.id = :requestedId`, { requestedId }).getOne()
 
     return { relation, requestedUser }
-
   } catch (ex) {
     console.log(ex)
     throw ex

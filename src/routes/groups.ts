@@ -127,7 +127,6 @@ router.delete('/invitations/:groupId/reject', isLoggedIn, async (req, res, next)
     try {
         const userId = req.body.user.id
         const { groupId } = req.params
-
         socketServer().emit('reject_invite_to_group', { userId, groupId })
         res.send(await rejectInviteToGroup({ userId, groupId }));
     } catch (err) {

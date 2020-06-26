@@ -10,7 +10,9 @@ export default router;
 
 // creates IOU for group. user can be payer or payee, so everything is handled in req.body, not using the id from isLoggedIn
 router.post('/create/:groupId', isLoggedIn, isGroupFriend, async (req, res, next) => {
-  const { amount, groupId, payerId, payeeIds, description } = req.body
+  const { groupId } = req.params;
+  const payerId = req.body.user.id;
+  const { amount, payeeIds, description } = req.body
   try {
     const result = await insertIOUToDb(amount, groupId, payerId, payeeIds, description)
     socketServer().emit('create_iou', { amount, groupId, payerId, payeeIds, description, splitAmount: result?.splitAmount })

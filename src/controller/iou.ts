@@ -2,6 +2,8 @@ import { getConnection, InsertResult } from 'typeorm';
 
 import { IOU, User } from '../models'
 
+// route is /iou
+
 //TODO  TEST
 // creates an IOU and inserts it to the group, handling who payed what to who
 const insertIOUToDb = async (amount: number, groupId: string, payerId: string, payeeIds: string[], description?: string):

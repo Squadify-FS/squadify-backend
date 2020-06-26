@@ -34,7 +34,7 @@ To stop this docker from running, run "docker stop <your username>/<your-app-nam
 To stop all dockers from running, run "docker stop $(docker ps -a -q)"
 
 To delete images and containers, first run "docker rmi $(docker images -a -q)"
-(If it says there's a docker using the image, just run "docker rm <container id>")
+(If it says there's docker/s using the image, just run "docker rm <container id>", id/s will be given in the error)
 
 ///////////////////////
 

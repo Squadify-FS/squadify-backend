@@ -1,6 +1,7 @@
 import express from 'express';
 import { getUserFromDb, insertNewUserToDb, comparePassword, generateJwt } from '../controller';
 import { isLoggedIn } from '../common/middleware';
+import { socketServer } from '..';
 const router = express.Router()
 
 export default router;

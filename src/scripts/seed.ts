@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { resolve } from 'path';
 import { config } from 'dotenv'
-config({ path: resolve(__dirname, './*.env') })
+config()
 
 import { createConnection } from "typeorm";
 import { User, Group, Message, Event, Chat, UserUser, UserGroup, Geolocation, UserEvent, IOU, Hashtag } from "../models";

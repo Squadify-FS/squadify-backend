@@ -1,8 +1,7 @@
 import express from 'express'
-// import { resolve } from 'path';
+
 import { config } from 'dotenv'
 import socketio from 'socket.io'
-import { socket } from './socket'
 
 import { createConnection } from 'typeorm';
 import { User, Group, Chat, Message, Event, UserUser, UserGroup, UserEvent, Geolocation, IOU, Hashtag } from './models/'
@@ -35,16 +34,16 @@ app.use((req, res, next) => {
   next();
 });
 
-console.log(process.env.DB_HOST)
 
-const createApp = async () => {
+let _socketServer: any
 
+(async () => {
   let retries = 5
   while (retries) {
     try {
       await createConnection({
         type: 'postgres',
-        host: process.env.DB_HOST,
+        host: process.env.DB_HOST, // must be 127.0.0.1 for localhost
         port: Number(process.env.DB_PORT),
         username: process.env.DB_USER, //can be changed, but each of us would have to make a user with this username in their psql
         database: process.env.DB_NAME,
@@ -79,19 +78,21 @@ const createApp = async () => {
   app.use('/user', userRouter)
   app.use('/groups', groupsRouter)
   app.use('/event', eventRouter);
-}
 
-let _socketServer: socketio.Server
-
-const startListening = () => {
-  // must be commented for testing TODO
   const server = app.listen(PORT, () => console.log(`listening on port ${PORT}`));
   _socketServer = socketio(server)
-  socket(_socketServer)
-}
+  _socketServer.on('connection', (socket: any) => {
+    console.log(`A socket connection to the server has been made: ${socket.id}`)
 
-createApp()
-startListening()
+    socket.on('disconnect', () => {
+      console.log(`Connection ${socket.id} has left the building`)
+    })
+  })
+
+  // console.log(_socketServer)
+  // Even though if you console.log(socketServer) outside this function it returns undefined, 
+  //after the server starts running it is defined when hitting any of the routes. So all good.
+})()
 
 const socketServer = () => _socketServer
 

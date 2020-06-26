@@ -212,8 +212,8 @@ router.post('/chat/:groupId', isLoggedIn, isGroupUser, isPrivateGroup, isReadOnl
         const chat = await getChatFromGroup(groupId)
         if (chat) {
             const message = await addMessageToChat({ userId, groupId, chatId: chat.id, text, imageUrl })
-            socketServer().emit('message', { message: message.raw[0], chatId: chat.id, userId })
-            res.send(message)
+            socketServer().emit('message', { message: message.message.raw[0], chatId: chat.id, user: message.user, groupId })
+            res.send(message.message.raw[0])
         }
     } catch (err) {
         next(err)

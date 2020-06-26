@@ -7,7 +7,7 @@ import { INewMessageInterface } from '../types/groupTypes';
 // adds message to chat (kinda like sendMessage). Handles the permission levels and if the user is permitted to write messages in the chat. 
 // also has an imageUrl option in case the message contains an image, which could be handled with an S3 imageUrl that then is displayed in the frontend.
 // returns the message object (identifiers, raw and generatedmaps)
-const addMessageToChat = async ({ userId, chatId, groupId, text, imageUrl }: INewMessageInterface): Promise<InsertResult> => {
+const addMessageToChat = async ({ userId, chatId, groupId, text, imageUrl }: INewMessageInterface) => {
   try {
     const group = await getConnection().getRepository(Group).findOne({ id: groupId })
 
@@ -32,7 +32,10 @@ const addMessageToChat = async ({ userId, chatId, groupId, text, imageUrl }: INe
       .getRepository(User)
       .findOne(userId)
 
-    return message
+    return {
+      message,
+      user
+    }
   } catch (ex) {
     console.log(ex)
     throw ex

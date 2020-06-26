@@ -12,30 +12,7 @@ import { insertNewGroupToDb, inviteUserToGroup, acceptInviteToGroup, getGroupUse
 import "reflect-metadata";
 
 (async () => {
-  await createConnection({
-    type: 'postgres',
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT),
-    username: process.env.DB_USER, //can be changed, but each of us would have to make a user with this username in their psql
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    entities: [
-      User,
-      UserUser,
-      UserGroup,
-      Group,
-      Message,
-      Event,
-      Chat,
-      Geolocation,
-      UserEvent,
-      IOU,
-      Hashtag
-    ], // DB models go here, have to be imported on top of this file
-    synchronize: true,
-    logging: false,
-  })
-
+  await new Promise(res => setTimeout(res, 3000))
   // *********************************************************************************************************************
   // *********************************************************************************************************************
   // *********************************************************************************************************************

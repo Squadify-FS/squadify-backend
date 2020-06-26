@@ -1,8 +1,7 @@
 import { getConnection, InsertResult } from 'typeorm';
 
-import { Message, UserGroup, Group, Chat } from '../models'
+import { Message, UserGroup, Group, Chat, User } from '../models'
 import { INewMessageInterface } from '../types/groupTypes';
-import { socketServer } from '..';
 
 
 // adds message to chat (kinda like sendMessage). Handles the permission levels and if the user is permitted to write messages in the chat. 
@@ -29,7 +28,9 @@ const addMessageToChat = async ({ userId, chatId, groupId, text, imageUrl }: INe
       .returning('*')
       .execute();
 
-    socketServer().emit('message', { message: message.raw[0], chatId, userId })
+    const user = await getConnection()
+      .getRepository(User)
+      .findOne(userId)
 
     return message
   } catch (ex) {
@@ -54,10 +55,15 @@ const getChatFromGroup = async (groupId: string): Promise<Chat | undefined> => {
 // gets the chat's messages. Should be modified later for pagination. Also add orderBy. TODO
 const getMessagesFromChat = async (chatId: string): Promise<Message[] | undefined> => {
   try {
-    const chat = await getConnection()
-      .getRepository(Chat)
-      .findOne(chatId, { relations: ['messages'] })
-    return chat?.messages
+    const messages = await getConnection()
+      .getRepository(Message)
+      .createQueryBuilder('message')
+      .leftJoinAndSelect('message.user', 'user')
+      .where('message."chatId" = :chatId', { chatId })
+      .orderBy('message."createdAt"', 'DESC')
+      .getMany()
+
+    return messages
 
   } catch (ex) {
     console.log(ex)

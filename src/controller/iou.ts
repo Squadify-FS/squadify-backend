@@ -77,7 +77,6 @@ const getUserExpenses = async (userId: string): Promise<IOU[] | undefined> => { 
     const ious: IOU[] = await getConnection()
       .getRepository(IOU)
       .createQueryBuilder('iou')
-      .select()
       .where(`iou."payerId" = :userId`, { userId })
       .orderBy('"createdAt"', 'ASC')
       .getMany()

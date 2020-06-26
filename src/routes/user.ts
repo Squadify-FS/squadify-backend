@@ -111,6 +111,7 @@ router.delete('/friends/:otherUserId', isLoggedIn, async (req, res, next) => {
     const yourId = req.body.user.id
     const { otherUserId } = req.params;
     try {
+        socketServer().emit('delete_friend', { userId: yourId, friendId: otherUserId })
         res.send(await deleteFriend(yourId, otherUserId));
     } catch (err) {
         next(err);

@@ -6,7 +6,6 @@ import { User, UserUser, Hashtag } from '../models'
 
 import { TokenBody, generateHashForName } from '../common/functions'
 import { IRegisterBody } from '../routes/auth'
-import { socketServer } from '..';
 
 
 const generateJwt = ({ id, email, firstName, lastName }: TokenBody): string => {
@@ -124,8 +123,6 @@ const deleteFriend = async (userId: string, friendId: string): Promise<DeleteRes
       .returning('*')
       .execute()
 
-    socketServer().emit('delete_friend', { userId, friendId })
-
     return deletedRelation
   } catch (ex) {
     console.log(ex)
@@ -152,8 +149,6 @@ const sendFriendRequest = async (requesterId: string, requestedId: string): Prom
       .execute();
 
     const requestedUser = await getConnection().getRepository(User).createQueryBuilder('user').where(`user.id = :requestedId`, { requestedId }).getOne()
-
-    socketServer().emit('send_friend_request', { requesterId, requestedId })
 
     return { relation, requestedUser }
 
@@ -191,8 +186,6 @@ const acceptFriendRequest = async (requesterId: string, requestedId: string):
       .returning('*')
       .execute();
 
-    socketServer().emit('accept_friend_request', { requesterId, requestedId })
-
     return ({ message: 'success', acceptedRelation, inverseRelation })
   } catch (ex) {
     console.log(ex)
@@ -211,8 +204,6 @@ const rejectFriendRequest = async (requesterId: string, requestedId: string): Pr
       .where('"userId" = :requesterId AND "friendId" = :requestedId', { requesterId, requestedId })
       .returning('*')
       .execute();
-
-    socketServer().emit('reject_friend_request', { requesterId, requestedId })
 
     return deletedRequestRelation
 

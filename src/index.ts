@@ -13,6 +13,8 @@ import authRouter from './routes/auth';
 import userRouter from './routes/user';
 import groupsRouter from './routes/groups';
 import eventRouter from './routes/event';
+import iouRouter from './routes/iou'
+import geolocationRouter from './routes/geolocation'
 
 import "reflect-metadata";
 
@@ -33,7 +35,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
 
 let _socketServer: any
 
@@ -78,6 +79,8 @@ let _socketServer: any
   app.use('/user', userRouter)
   app.use('/groups', groupsRouter)
   app.use('/event', eventRouter);
+  app.use('/iou', iouRouter)
+  app.use('/geolocation', geolocationRouter)
 
   const server = app.listen(PORT, () => console.log(`listening on port ${PORT}`));
   _socketServer = socketio(server)

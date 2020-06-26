@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { resolve } from 'path';
 import { config } from 'dotenv'
 config()
 
@@ -13,6 +12,40 @@ import "reflect-metadata";
 
 (async () => {
   await new Promise(res => setTimeout(res, 3000))
+  let retries = 5
+  while (retries) {
+    try {
+      await createConnection({
+        type: 'postgres',
+        host: process.env.DB_HOST, // must be 127.0.0.1 for localhost
+        port: Number(process.env.DB_PORT),
+        username: process.env.DB_USER, //can be changed, but each of us would have to make a user with this username in their psql
+        database: process.env.DB_NAME,
+        password: process.env.DB_PASSWORD,
+        entities: [
+          User,
+          UserUser,
+          UserGroup,
+          UserEvent,
+          Group,
+          Message,
+          Event,
+          Chat,
+          Geolocation,
+          IOU,
+          Hashtag
+        ], // DB models go here, have to be imported on top of this file
+        synchronize: true,
+        logging: false,
+      });
+      break
+    } catch (err) {
+      console.log(err)
+      retries -= 1;
+      console.log(`retries left: ${retries}`)
+      await new Promise(res => setTimeout(res, 3000))
+    }
+  }
   // *********************************************************************************************************************
   // *********************************************************************************************************************
   // *********************************************************************************************************************

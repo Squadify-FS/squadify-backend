@@ -2,7 +2,6 @@ import { getConnection, InsertResult } from 'typeorm';
 
 import { Message, UserGroup, Group, Chat, User } from '../models'
 import { INewMessageInterface } from '../types/groupTypes';
-import { socketServer } from '..';
 
 
 // adds message to chat (kinda like sendMessage). Handles the permission levels and if the user is permitted to write messages in the chat. 
@@ -32,8 +31,6 @@ const addMessageToChat = async ({ userId, chatId, groupId, text, imageUrl }: INe
     const user = await getConnection()
       .getRepository(User)
       .findOne(userId)
-
-    socketServer().emit('message', { message: message.raw[0], chatId, user })
 
     return message
   } catch (ex) {

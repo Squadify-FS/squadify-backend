@@ -281,7 +281,7 @@ const searchEventsUsingRadius = async (radius: number, latitude: number, longitu
     let location = await getConnection().getRepository(Geolocation).findOne({ id: geolocationId })
 
     if (!location) {
-      if (latitude && longitude) {
+      if (latitude !== undefined && longitude !== undefined) {
         const newGeolocationId = (await insertGeolocationToDb(latitude, longitude))?.identifiers[0].id
         location = await getConnection().getRepository(Geolocation).findOne({ id: newGeolocationId })
       } else {

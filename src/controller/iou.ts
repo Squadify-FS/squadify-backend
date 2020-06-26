@@ -40,9 +40,10 @@ const getGroupIOUS = async (groupId: string) => {
     const ious: IOU[] = await getConnection()
       .getRepository(IOU)
       .createQueryBuilder('iou')
-      .select()
+      .leftJoinAndSelect('iou.payer', 'payer')
+      .leftJoinAndSelect('iou.payees', 'payees')
       .where(`iou."groupId" = :groupId`, { groupId })
-      .orderBy('"createdAt"', 'ASC')
+      .orderBy('iou."createdAt"', 'ASC')
       .getMany()
 
     return ious
@@ -74,7 +75,6 @@ const getUserExpenses = async (userId: string): Promise<IOU[] | undefined> => { 
     const ious: IOU[] = await getConnection()
       .getRepository(IOU)
       .createQueryBuilder('iou')
-      .select()
       .where(`iou."payerId" = :userId`, { userId })
       .orderBy('"createdAt"', 'ASC')
       .getMany()

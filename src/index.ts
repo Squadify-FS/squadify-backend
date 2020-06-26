@@ -6,10 +6,11 @@ import { createConnection } from 'typeorm';
 import { User, Group, Chat, Message, Event, UserUser, UserGroup, UserEvent, Geolocation, IOU, Hashtag } from './models/'
 
 // import routes 
+import iou from './routes/iou';
 import authRouter from './routes/auth';
 import userRouter from './routes/user';
-import groupsRouter from './routes/groups';
 import eventRouter from './routes/event';
+import groupsRouter from './routes/groups';
 import geolocationRouter from './routes/geolocation';
 
 import "reflect-metadata";
@@ -58,10 +59,11 @@ const createApp = async () => {
   });
 
   // routes 
+  app.use('/iou', iou);
   app.use('/auth', authRouter)
   app.use('/user', userRouter)
-  app.use('/groups', groupsRouter)
   app.use('/event', eventRouter);
+  app.use('/groups', groupsRouter)
   app.use('/geolocation', geolocationRouter);
   app.get('/', (_, res) => res.send('hello'));
 }

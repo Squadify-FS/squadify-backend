@@ -1,5 +1,5 @@
 import express from 'express'
-import { resolve } from 'path';
+// import { resolve } from 'path';
 import { config } from 'dotenv'
 import socketio from 'socket.io'
 import { socket } from './socket'
@@ -7,7 +7,7 @@ import { socket } from './socket'
 import { createConnection } from 'typeorm';
 import { User, Group, Chat, Message, Event, UserUser, UserGroup, UserEvent, Geolocation, IOU, Hashtag } from './models/'
 
-config({ path: resolve(__dirname, './.env') })
+config()
 
 // import routes 
 import authRouter from './routes/auth';
@@ -35,30 +35,44 @@ app.use((req, res, next) => {
   next();
 });
 
+console.log(process.env.DB_HOST)
+
 const createApp = async () => {
-  await createConnection({
-    type: 'postgres',
-    host: 'localhost',
-    port: 5432,
-    username: 'postgres', //can be changed, but each of us would have to make a user with this username in their psql
-    database: 'squadify_db',
-    password: '123456',
-    entities: [
-      User,
-      UserUser,
-      UserGroup,
-      UserEvent,
-      Group,
-      Message,
-      Event,
-      Chat,
-      Geolocation,
-      IOU,
-      Hashtag
-    ], // DB models go here, have to be imported on top of this file
-    synchronize: true,
-    logging: false,
-  });
+
+  let retries = 5
+  while (retries) {
+    try {
+      await createConnection({
+        type: 'postgres',
+        host: process.env.DB_HOST,
+        port: Number(process.env.DB_PORT),
+        username: process.env.DB_USER, //can be changed, but each of us would have to make a user with this username in their psql
+        database: process.env.DB_NAME,
+        password: process.env.DB_PASSWORD,
+        entities: [
+          User,
+          UserUser,
+          UserGroup,
+          UserEvent,
+          Group,
+          Message,
+          Event,
+          Chat,
+          Geolocation,
+          IOU,
+          Hashtag
+        ], // DB models go here, have to be imported on top of this file
+        synchronize: true,
+        logging: false,
+      });
+      break
+    } catch (err) {
+      console.log(err)
+      retries -= 1;
+      console.log(`retries left: ${retries}`)
+      await new Promise(res => setTimeout(res, 3000))
+    }
+  }
 
   // routes 
   app.use('/auth', authRouter)

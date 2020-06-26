@@ -1,5 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { createConnection, getConnection } from "typeorm";
+import { resolve } from 'path';
+import { config } from 'dotenv'
+config({ path: resolve(__dirname, './*.env') })
+
+import { createConnection } from "typeorm";
 import { User, Group, Message, Event, Chat, UserUser, UserGroup, Geolocation, UserEvent, IOU, Hashtag } from "../models";
 
 import { insertNewUserToDb, sendFriendRequest, getUserFriendsFromDb, getUserRequestsFromDb, acceptFriendRequest, getUserFromDb, deleteFriend, searchUsersByEmail, getChatFromGroup, addMessageToChat, getMessagesFromChat, insertEventToDb, assignEventToGroup, getUserEvents, getGroupEvents, assignEventToUser, insertHashtagToDb, assignHashtagToEvent, getHashtagByText, getEventHashtags, searchHashtags, searchEventsByName, searchEventsByHashtags } from '../controller'
@@ -10,11 +14,11 @@ import "reflect-metadata";
 (async () => {
   await createConnection({
     type: 'postgres',
-    host: 'localhost',
-    port: 5432,
-    username: 'postgres', //can be changed, but each of us would have to make a user with this username in their psql
-    database: 'squadify_db',
-    password: '123456',
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT),
+    username: process.env.DB_USER, //can be changed, but each of us would have to make a user with this username in their psql
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
     entities: [
       User,
       UserUser,

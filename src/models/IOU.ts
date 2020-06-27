@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable } from 'typeorm';
 import { User, Group } from '.';
 
 @Entity()
@@ -15,10 +15,12 @@ export class IOU {
   @ManyToOne(() => Group, group => group.ious)
   group: Group;
 
-  @ManyToOne(() => User, user => user.expenses)
+  @ManyToMany(() => User, user => user.expenses)
+  @JoinTable()
   payer: User;
 
-  @OneToMany(() => User, user => user.debts)
+  @ManyToMany(() => User, user => user.debts)
+  @JoinTable()
   payees: User[]
 
   @CreateDateColumn()

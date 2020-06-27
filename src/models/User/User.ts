@@ -45,10 +45,10 @@ export class User {
   @OneToMany(() => Message, message => message.user)
   sentMessages: Message[]
 
-  @OneToMany(() => IOU, iou => iou.payer)
+  @ManyToMany(() => IOU, iou => iou.payer)
   expenses: IOU[];
 
-  @ManyToOne(() => IOU, iou => iou.payees)
+  @ManyToMany(() => IOU, iou => iou.payees)
   debts: IOU[];
 
   @ManyToMany(() => Hashtag, hashtag => hashtag.users)

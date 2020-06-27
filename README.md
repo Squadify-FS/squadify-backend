@@ -3,6 +3,16 @@ This is the backend for Squadify. It provides all the routes necessary for the a
 Run "npm install"
 
 Create a .env file in the root folder, and add to it a JWT_SECRET. Make it whatever you want it to be (but don't be too obvious with it)
+*
+JWT_SECRET= whatever you want this to be
+DB_HOST=db <- must be 127.0.0.1 for start:dev, and "db" for docker
+DB_PORT=5432 <- default postgres port, leave it there
+DB_NAME=squadify_db <- call it whatever you want, but make sure to create one in your psql for start:dev. Docker will make its own with this name.
+DB_USER=postgres <- default postgres user
+DB_PASSWORD=postgres <- whatever
+PORT=3000 <- whatever port you want to use
+*
+
 
 ## Running the backend as dev
 
@@ -18,15 +28,6 @@ To test, run "npm run test"
 You will need to install Docker and have it running in your computer. Go to https://www.docker.com/products/docker-desktop and download it there. Create an account, and log into it in your desktop app.
 
 It comes with docker-compose, so all you will have to do is create a .env file in the root folder with the following things: 
-*
-JWT_SECRET= whatever you want this to be
-DB_HOST=db <- must be db
-DB_PORT=5432 <- default postgres port, leave it there
-DB_NAME=squadify_db <- call it whatever you want
-DB_USER=postgres <- default postgres user
-DB_PASSWORD=postgres <- whatever
-PORT=3000 <- whatever port you want to user
-*
 
 Next, you just have to run "docker-compose up". This will build the images and container for the app, and run it.
 

@@ -12,6 +12,6 @@ COPY src/ src/
 
 
 RUN npm run compile
-RUN npm run seed
+# RUN npm run seed # GOTTA FIX IT
 
 CMD ["node", "dist/index.js"]

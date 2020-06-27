@@ -1,4 +1,4 @@
-import { getConnection, InsertResult } from 'typeorm';
+import { getConnection, InsertResult, getRepository } from 'typeorm';
 
 import { IOU, User } from '../models'
 
@@ -8,12 +8,14 @@ import { IOU, User } from '../models'
 // creates an IOU and inserts it to the group, handling who payed what to who
 const insertIOUToDb = async (amount: number, groupId: string, payerId: string, payeeIds: string[], description?: string):
   Promise<{
-    iou: InsertResult;
+    iou: IOU | undefined;
     splitAmount: string;
+    payer: User | undefined
+    payees: Promise<User | undefined>[]
   } | undefined> => {
   try {
     // maybe should add functionality to verify relations to group
-    const iou = await getConnection()
+    const iouInsert = await getConnection()
       .createQueryBuilder()
       .insert()
       .into(IOU)
@@ -21,15 +23,32 @@ const insertIOUToDb = async (amount: number, groupId: string, payerId: string, p
         amount,
         description,
         group: { id: groupId },
-        payer: { id: payerId },
-        payees: payeeIds.map((id) => ({ id }))
       })
       .returning('*')
       .execute()
 
+    const iou = await getRepository(IOU).findOne(iouInsert.identifiers[0].id)
+
+    const payer = await getRepository(User).findOne(payerId)
+    await getConnection()
+      .createQueryBuilder()
+      .relation(IOU, 'payer')
+      .of(iou)
+      .add(payer)
+
+    const payees = payeeIds.map(async (payeeId: string) => {
+      const payee = await getRepository(User).findOne(payeeId)
+      await getConnection()
+        .createQueryBuilder()
+        .relation(IOU, 'payer')
+        .of(iou)
+        .add(payee)
+      return payee
+    })
+
     const splitAmount = Math.ceil(amount / payeeIds.length + 1).toFixed(2)
 
-    return { iou, splitAmount }
+    return { iou, splitAmount, payer, payees }
 
   } catch (ex) {
     console.log(ex)

@@ -42,7 +42,7 @@ const insertIOUToDb = async (amount: number, groupId: string, payerId: string, p
       const payee = await getRepository(User).findOne(payeeIds[i])
       await getConnection()
         .createQueryBuilder()
-        .relation(IOU, 'payer')
+        .relation(IOU, 'payees')
         .of(iou)
         .add(payee)
       payees.push(payee);

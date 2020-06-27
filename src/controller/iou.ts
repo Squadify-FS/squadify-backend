@@ -11,7 +11,7 @@ const insertIOUToDb = async (amount: number, groupId: string, payerId: string, p
     iou: IOU | undefined;
     splitAmount: string;
     payer: User | undefined
-    payees: Promise<User | undefined>[]
+    payees: (User | undefined)[];
   } | undefined> => {
   try {
     // maybe should add functionality to verify relations to group
@@ -36,15 +36,17 @@ const insertIOUToDb = async (amount: number, groupId: string, payerId: string, p
       .of(iou)
       .add(payer)
 
-    const payees = payeeIds.map(async (payeeId: string) => {
-      const payee = await getRepository(User).findOne(payeeId)
+    const payees = [];
+
+    for(let i = 0; i < payeeIds.length; i++) {
+      const payee = await getRepository(User).findOne(payeeIds[i])
       await getConnection()
         .createQueryBuilder()
         .relation(IOU, 'payer')
         .of(iou)
         .add(payee)
-      return payee
-    })
+      payees.push(payee);
+    }
 
     const splitAmount = Math.ceil(amount / payeeIds.length + 1).toFixed(2)
 

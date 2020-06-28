@@ -31,6 +31,7 @@ router.put('/updateProfile', isLoggedIn, async (req, res, next) => {
     }
 });
 
+
 //************** end of user methods
 
 //************************* friend requests 

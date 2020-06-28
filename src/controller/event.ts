@@ -1,7 +1,6 @@
 import { getConnection, InsertResult, DeleteResult, UpdateResult } from 'typeorm';
 
-import { Event, Group, User, UserGroup, UserEvent, Geolocation, Hashtag } from '../models'
-import { insertGeolocationToDb } from './geolocation';
+import { Event, Group, User, UserGroup, UserEvent, Hashtag } from '../models'
 import { INewEventDetails, IUserEventGroup, IUserEventInviter, IUserEvent, IUpdateEventDetails, IEventHashtag } from '../types/eventTypes';
 
 const getUserEventRelation = async (userId: string, eventId: string): Promise<UserEvent | undefined> => {
@@ -306,50 +305,22 @@ const updateEvent = async ({ userId, eventId, name, description, startTime, endT
 }
 
 // uses geolocation to draw a circle around and fetch all the events in those geolocations and return them
-const searchEventsUsingRadius = async (radius: number, latitude: number, longitude: number, geolocationId?: string): Promise<Event[] | undefined> => {
+const searchEventsUsingRadius = async (radius: number, latitude: number, longitude: number): Promise<Event[] | undefined> => {
   try {
-    let location = await getConnection().getRepository(Geolocation).findOne({ id: geolocationId })
-    if (!location) {
-      if (latitude !== undefined && longitude !== undefined) {
-        const newGeolocationId = (await insertGeolocationToDb(latitude, longitude))?.identifiers[0].id
-        location = await getConnection().getRepository(Geolocation).findOne({ id: newGeolocationId })
-      } else {
-        throw new Error('Something went wrong')
-      }
-    }
+    const radiusInKM = radius * 0.621371
+    const latitudeTolerance = (1 / 110.54) * radiusInKM
+    const longitudeTolerance = (1 / (111.320 * Math.cos(Number(latitude)))) * radiusInKM
 
-    if (location) {
-      const radiusInKM = radius * 0.621371
-      const latitudeTolerance = (1 / 110.54) * radiusInKM
-      const longitudeTolerance = (1 / (111.320 * Math.cos(Number(location.latitude)))) * radiusInKM
+    const results: Event[] = await getConnection()
+      .getRepository(Event)
+      .createQueryBuilder('event')
+      .where(`event."latitude" BETWEEN (:latitude - ${latitudeTolerance}) AND (:latitude + ${latitudeTolerance})`, { latitude })
+      .andWhere(`event."longitude" BETWEEN (:longitude - ${longitudeTolerance}) AND (:longitude + ${longitudeTolerance})`, { longitude })
+      .limit(50) //TODO
+      .getMany()
 
-      const results: Event[] = await getConnection()
-        .getRepository(Geolocation)
-        .createQueryBuilder('location')
-        .leftJoinAndSelect('location.events', 'events')
-        .where(`location."latitude" BETWEEN (location."latitude" - ${latitudeTolerance}) AND (location."latitude" + ${latitudeTolerance})`)
-        .andWhere(`location."longitude" BETWEEN (location."longitude" - ${longitudeTolerance}) AND (location."longitude" + ${longitudeTolerance})`)
-        .limit(50) //TODO
-        .getMany()
-        .then(geolocations => geolocations.reduce((acc: Event[], curr: Geolocation) => {
-          curr.events.forEach(event => {
-            if (!event.isPrivate) acc.push(event)
-          });
-          return acc
-        }, [])) //TODO
+    return results
 
-      // const results = await getConnection()
-      //   .createQueryBuilder()
-      //   .select()
-      //   .from(Event, 'event')
-      //   .leftJoin('event.geolocation', 'geolocation')
-      //   .where(`event.geolocation."latitude" BETWEEN (event.geolocation."latitude" - ${latitudeTolerance}) AND (event.geolocation."latitude" + ${latitudeTolerance})`)
-      //   .andWhere(`event.geolocation."longitude" BETWEEN (event.geolocation."longitude" - ${longitudeTolerance}) AND (event.geolocation."longitude" + ${longitudeTolerance})`)
-      //   .limit(50) //TODO
-      //   .getMany()
-
-      return results
-    }
   } catch (ex) {
     console.log(ex)
   }

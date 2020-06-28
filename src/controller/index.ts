@@ -7,6 +7,7 @@ import {
 import {
   insertEventToDb,
   assignEventToGroup,
+  addImageToEvent,
   unassignEventFromGroup,
   getUserEventRelation,
   assignEventToUser,
@@ -102,6 +103,7 @@ export {
   // events
   insertEventToDb,
   assignEventToGroup,
+  addImageToEvent,
   unassignEventFromGroup,
   getUserEventRelation,
   assignEventToUser,

@@ -11,6 +11,22 @@ const getUserEventRelation = async (userId: string, eventId: string): Promise<Us
   if (relation) return relation
 }
 
+const addImageToEvent = async (url: string, eventId: string) => {
+  try {
+    const event = await getConnection()
+      .getRepository(Event)
+      .findOne(eventId)
+
+    if (event) {
+      event.imageUrls = `${event.imageUrls}####$$$$####${url}`
+      await getConnection().manager.save(event)
+    }
+
+    return url
+  } catch (err) {
+    console.log(err)
+  }
+}
 
 // simple create event function. returns (ids, raw, generatedmaps) for both event and the relation between the user and the event.
 // user is the creator of the event, and has admin permission by default
@@ -481,6 +497,7 @@ const searchEventsByHashtags = async (searchVal: string): Promise<Event[] | unde
 export {
   insertEventToDb,
   assignEventToGroup,
+  addImageToEvent,
   unassignEventFromGroup,
   getUserEventRelation,
   assignEventToUser,

@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, ManyToMany, JoinTable, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Group, UserEvent, Hashtag } from '..';
 
 
@@ -12,6 +12,9 @@ export class Event {
 
   @Column()
   description: string;
+
+  @Column({ nullable: true })
+  imageUrls: string;
 
   @Column({ type: 'timestamp with time zone' })
   startTime: Date;

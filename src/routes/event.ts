@@ -1,5 +1,5 @@
 import express from 'express';
-import { insertEventToDb, getGroupEvents, setEventGeolocationInDb, assignEventToGroup, getEventGeolocation, searchEventsUsingRadius, unassignEventFromGroup, assignEventToUser, unassignEventFromUser, getUserEvents, updateEvent, insertHashtagToDb, getHashtagByText, assignHashtagToEvent, unassignHashtagFromEvent, getEventHashtags, searchHashtags, searchEventsByName, searchEventsByHashtags, getEventGroups, getUserEventRelation, getEventUsers } from '../controller';
+import { insertEventToDb, getGroupEvents, setEventGeolocationInDb, assignEventToGroup, getEventGeolocation, searchEventsUsingRadius, unassignEventFromGroup, assignEventToUser, unassignEventFromUser, getUserEvents, updateEvent, insertHashtagToDb, getHashtagByText, assignHashtagToEvent, unassignHashtagFromEvent, getEventHashtags, searchHashtags, searchEventsByName, searchEventsByHashtags, getEventGroups, getUserEventRelation, getEventUsers, addImageToEvent } from '../controller';
 import { isLoggedIn, isGroupUser, isGroupFriend, isEventHost, isEventUser, isPrivateEvent } from '../common/middleware';
 import { socketServer } from '..';
 const router = express.Router()
@@ -44,6 +44,18 @@ router.post('/update/:eventId', isLoggedIn, isEventHost, async (req, res, next) 
         res.send({ event: updatedEvent?.raw[0] });
     } catch (err) {
         next(err);
+    }
+})
+
+router.post('/:eventId/add_image', isLoggedIn, isEventHost, async (req, res, next) => {
+    try {
+        const { eventId } = req.params
+        const { imageUrl } = req.body
+
+        const addedUrl = await addImageToEvent(imageUrl, eventId)
+        res.status(201).json({ message: 'Image added!', url: addedUrl })
+    } catch (err) {
+        next(err)
     }
 })
 

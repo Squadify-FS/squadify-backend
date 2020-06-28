@@ -321,14 +321,16 @@ const searchEventsUsingRadius = async (radius: number, latitude: number, longitu
     if (location) {
       const radiusInKM = radius * 0.621371
       const latitudeTolerance = (1 / 110.54) * radiusInKM
-      const longitudeTolerance = (1 / (111.320 * Math.cos(Number(location.latitude)))) * radiusInKM
+      const longitudeTolerance = (1 / (111.320 * Math.cos(Number(latitude)))) * radiusInKM
+
 
       const results: Event[] = await getConnection()
         .getRepository(Geolocation)
         .createQueryBuilder('location')
         .leftJoinAndSelect('location.events', 'events')
-        .where(`location."latitude" BETWEEN (location."latitude" - ${latitudeTolerance}) AND (location."latitude" + ${latitudeTolerance})`)
-        .andWhere(`location."longitude" BETWEEN (location."longitude" - ${longitudeTolerance}) AND (location."longitude" + ${longitudeTolerance})`)
+        .leftJoinAndSelect('events.geolocation', 'geolocation')
+        .where(`location."latitude" > (location."latitude" - ${latitudeTolerance}) AND location."latitude" < (location."latitude" + ${latitudeTolerance})`)
+        .andWhere(`location."longitude" > (location."longitude" - ${longitudeTolerance}) AND location."longitude" < (location."longitude" + ${longitudeTolerance})`)
         .limit(50) //TODO
         .getMany()
         .then(geolocations => geolocations.reduce((acc: Event[], curr: Geolocation) => {
@@ -337,14 +339,15 @@ const searchEventsUsingRadius = async (radius: number, latitude: number, longitu
           });
           return acc
         }, [])) //TODO
+      console.log(longitude)
+      console.log(latitude)
 
-      // const results = await getConnection()
-      //   .createQueryBuilder()
-      //   .select()
-      //   .from(Event, 'event')
-      //   .leftJoin('event.geolocation', 'geolocation')
-      //   .where(`event.geolocation."latitude" BETWEEN (event.geolocation."latitude" - ${latitudeTolerance}) AND (event.geolocation."latitude" + ${latitudeTolerance})`)
-      //   .andWhere(`event.geolocation."longitude" BETWEEN (event.geolocation."longitude" - ${longitudeTolerance}) AND (event.geolocation."longitude" + ${longitudeTolerance})`)
+      // const results: Event[] = await getConnection()
+      //   .getRepository(Event)
+      //   .createQueryBuilder('event')
+      //   .leftJoinAndSelect('event.geolocation', 'geolocation')
+      //   .where(`geolocation."latitude" BETWEEN (:latitude - ${latitudeTolerance}) AND (:latitude + ${latitudeTolerance})`, { latitude })
+      //   .andWhere(`geolocation."longitude" BETWEEN (:longitude - ${longitudeTolerance}) AND (:longitude + ${longitudeTolerance})`, { longitude })
       //   .limit(50) //TODO
       //   .getMany()
 
@@ -468,6 +471,7 @@ const searchEventsByName = async (searchVal: string): Promise<Event[] | undefine
       .getRepository(Event)
       .createQueryBuilder('event')
       .where(`event."name" ILIKE '%${searchVal}%'`)
+      .leftJoinAndSelect('event.geolocation', 'geolocation')
       .andWhere(`event."isPrivate" = false`)
       .getMany()
 
@@ -485,6 +489,7 @@ const searchEventsByHashtags = async (searchVal: string): Promise<Event[] | unde
       .getRepository(Hashtag)
       .createQueryBuilder('hashtag')
       .leftJoinAndSelect('hashtag.events', 'events')
+      .leftJoinAndSelect('events.geolocation', 'geolocation')
       .where(`hashtag."text" ILIKE '%${searchVal}%'`)
       .getMany()
       .then(hashtags => hashtags.reduce((acc: Event[], curr) => {

@@ -239,7 +239,7 @@ const getEventUsers = async (eventId: string) => {
       .createQueryBuilder('relation')
       .leftJoinAndSelect('relation.user', 'user')
       .where('relation."eventId" = :eventId', { eventId })
-      .getOne()
+      .getMany()
 
     return results
   } catch (ex) {

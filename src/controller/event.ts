@@ -210,6 +210,36 @@ const unassignEventFromUser = async ({ userId, eventId }: IUserEvent): Promise<D
   }
 }
 
+const getEventUsers = async (eventId: string) => {
+  try {
+    const results = await getConnection()
+      .getRepository(UserEvent)
+      .createQueryBuilder('relation')
+      .leftJoinAndSelect('relation.user', 'user')
+      .where('relation."eventId" = :eventId', { eventId })
+      .getOne()
+
+    return results
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
+const getEventGroups = async (eventId: string) => {
+  try {
+    const results = await getConnection()
+      .getRepository(Event)
+      .createQueryBuilder('relation')
+      .leftJoinAndSelect('relation.groups', 'groups', 'groups."isPrivate" = false')
+      .where('relation."eventId" = :eventId', { eventId })
+      .getOne()
+
+    return results
+  } catch (ex) {
+    console.log(ex)
+  }
+}
+
 // gets all the events in my calendar
 const getUserEvents = async (userId: string): Promise<Event[] | undefined> => {
   try {
@@ -470,8 +500,6 @@ const searchEventsByHashtags = async (searchVal: string): Promise<Event[] | unde
   }
 }
 
-
-
 export {
   insertEventToDb,
   assignEventToGroup,
@@ -481,6 +509,8 @@ export {
   unassignEventFromUser,
   getUserEvents,
   getGroupEvents,
+  getEventUsers,
+  getEventGroups,
   updateEvent,
   searchHashtags,
   searchEventsUsingRadius,

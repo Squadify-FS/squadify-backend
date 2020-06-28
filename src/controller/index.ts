@@ -29,7 +29,6 @@ import {
 } from './event'
 
 import {
-  insertGeolocationToDb,
   setUserGeolocationInDb,
   getUserGeolocation,
   setEventGeolocationInDb,
@@ -124,7 +123,6 @@ export {
   getEventHashtags,
   // 
   // geolocation
-  insertGeolocationToDb,
   setUserGeolocationInDb,
   getUserGeolocation,
   setEventGeolocationInDb,

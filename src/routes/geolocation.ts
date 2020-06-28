@@ -1,6 +1,6 @@
 import express from 'express';
 import { isLoggedIn, isEventHost, isPrivateEvent } from '../common/middleware';
-import { insertGeolocationToDb, setUserGeolocationInDb, getUserGeolocation, setEventGeolocationInDb, getEventGeolocation, getUserEventRelation } from '../controller';
+import { setUserGeolocationInDb, getUserGeolocation, setEventGeolocationInDb, getEventGeolocation, getUserEventRelation } from '../controller';
 import { socketServer } from '..';
 const router = express.Router()
 
@@ -8,16 +8,6 @@ const router = express.Router()
 
 export default router;
 
-// create a new geolocation instance in db
-router.post('/create', isLoggedIn, async (req, res, next) => {
-  const { latitude, longitude, address, city, region, postalCode, country } = req.body
-  try {
-    const newGeolocation = insertGeolocationToDb(latitude, longitude, address, city, region, postalCode, country)
-    res.send(newGeolocation)
-  } catch (err) {
-    next(err)
-  }
-})
 
 // gets user current geolocation in db
 router.get('/user', isLoggedIn, async (req, res, next) => {
@@ -35,8 +25,14 @@ router.post('/user', isLoggedIn, async (req, res, next) => {
   const userId = req.body.user.id
   const { latitude, longitude, localized_address } = req.body
   try {
-    const result = await setUserGeolocationInDb(userId, localized_address, latitude, longitude)
-    res.send(result)
+    // mainly use address, but if not we can use latitude and longitude instead
+    const updatedUser = await setUserGeolocationInDb(userId, localized_address, latitude, longitude);
+    res.status(200).json({
+      user: updatedUser,
+      localized_address: updatedUser.localized_address,
+      latitude: updatedUser.latitude,
+      longitude: updatedUser.longitude
+    });
   } catch (err) {
     next(err)
   }
@@ -66,8 +62,20 @@ router.post('/event/:eventId', isLoggedIn, isEventHost, async (req, res, next) =
   const { latitude, longitude, localized_address } = req.body
   try {
     const result = await setEventGeolocationInDb(userId, eventId, localized_address, latitude, longitude)
-    socketServer().emit('set_event_geolocation', { event: result?.event, geolocation: result?.geolocation })
-    res.send(result)
+
+    socketServer().emit('set_event_geolocation', {
+      event: result,
+      localized_address: result?.event.localized_address,
+      latitude: result?.event.latitude,
+      longitude: result?.event.longitude
+    })
+
+    res.send({
+      event: result,
+      localized_address: result?.event.localized_address,
+      latitude: result?.event.latitude,
+      longitude: result?.event.longitude
+    })
   } catch (err) {
     next(err)
   }

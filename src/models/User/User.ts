@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, Index, OneToMany, ManyToOne, ManyToMany, CreateDateColumn, UpdateDateColumn, JoinTable } from 'typeorm';
 import { Message } from '../Group/Message';
-import { UserUser, UserGroup, Geolocation, IOU, Hashtag } from '..';
+import { UserUser, UserGroup, IOU, Hashtag } from '..';
 import { UserEvent } from './UserEvent';
 
 @Entity()
@@ -27,8 +27,14 @@ export class User {
   @Column({ nullable: true })
   avatarUrl: string;
 
-  @ManyToOne(() => Geolocation, geolocation => geolocation.users)
-  geolocation: Geolocation;
+  @Column({ nullable: true })
+  localized_address: string;
+
+  @Column({ type: "decimal", precision: 10, scale: 7, nullable: true })
+  latitude: number;
+
+  @Column({ type: "decimal", precision: 10, scale: 7, nullable: true })
+  longitude: number;
 
   @OneToMany(() => UserGroup, usergroup => usergroup.user)
   groups: UserGroup[]

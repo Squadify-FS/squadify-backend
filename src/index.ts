@@ -4,7 +4,7 @@ import { config } from 'dotenv'
 import socketio from 'socket.io'
 
 import { createConnection } from 'typeorm';
-import { User, Group, Chat, Message, Event, UserUser, UserGroup, UserEvent, Geolocation, IOU, Hashtag } from './models/'
+import { User, Group, Chat, Message, Event, UserUser, UserGroup, UserEvent, IOU, Hashtag } from './models/'
 
 config()
 
@@ -60,12 +60,11 @@ let _socketServer: any
           Message,
           Event,
           Chat,
-          Geolocation,
           IOU,
           Hashtag
         ], // DB models go here, have to be imported on top of this file
         synchronize: true,
-        logging: true,
+        logging: false,
       });
       break
     } catch (err) {
@@ -84,7 +83,6 @@ let _socketServer: any
   app.use('/iou', iouRouter)
   app.use('/geolocation', geolocationRouter)
   app.use('/groups', groupsRouter)
-  app.use('/geolocation', geolocationRouter);
 
   const server = app.listen(PORT, () => console.log(`listening on port ${PORT}`));
   _socketServer = socketio(server)

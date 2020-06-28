@@ -14,12 +14,17 @@ export default router;
 router.post('/create', isLoggedIn, async (req, res, next) => {
     try {
         const userId = req.body.user.id
-        const { name, description, isPrivate, startTime, endTime, address, coordsOfEvent } = req.body;
+        const { name, description, isPrivate, startTime, endTime, address } = req.body;
 
         const createdEvent = await insertEventToDb({ userId, name, description, isPrivate, startTime, endTime });
         const eventId = createdEvent?.event.identifiers[0].id;
-        const geolocationInsert = await setEventGeolocationInDb(userId, eventId, address, coordsOfEvent.latitude, coordsOfEvent.longitude);
-        res.status(201).json({ event: geolocationInsert?.event, geolocation: geolocationInsert?.geolocation });
+        const geolocationInsert = await setEventGeolocationInDb(userId, eventId, address);
+        res.status(201).json({
+            event: geolocationInsert?.event,
+            localized_address: geolocationInsert?.event.localized_address,
+            latitude: geolocationInsert?.event.latitude,
+            longitude: geolocationInsert?.event.longitude
+        });
     } catch (err) {
         console.log(err)
         next(err);
@@ -87,6 +92,7 @@ router.delete('/unassign_group/:eventId/:groupId', isLoggedIn, isGroupFriend, as
     }
 });
 
+// gets the event's groups
 router.get('/:eventId/groups', isLoggedIn, isPrivateEvent, async (req, res, next) => {
     try {
         const { eventId, isPrivate } = req.params
@@ -105,6 +111,7 @@ router.get('/:eventId/groups', isLoggedIn, isPrivateEvent, async (req, res, next
     }
 })
 
+// gets the event's users
 router.get('/:eventId/users', isLoggedIn, isPrivateEvent, async (req, res, next) => {
     try {
         const { eventId, isPrivate } = req.params
@@ -165,7 +172,7 @@ router.post('/assign_user/:eventId/:userId', isLoggedIn, async (req, res, next) 
     }
 })
 
-// 
+// remove self from event. also used to unfollow
 router.delete('/unassign_user/:eventId', isLoggedIn, async (req, res, next) => {
     try {
         const { eventId } = req.params
@@ -193,21 +200,6 @@ router.delete('/kick_user/:eventId/:userId', isLoggedIn, isEventHost, async (req
 })
 
 //************************ end of relations to groups and user's routes
-
-//************************ geolocation routes
-
-// gets the event's geolocation
-router.get('/:eventId/geolocation', isLoggedIn, async (req, res, next) => {
-    try {
-        const { eventId } = req.params;
-
-        res.send(await getEventGeolocation(eventId));
-    } catch (err) {
-        next(err);
-    }
-});
-
-//************************ end of geolocation routes
 
 //************************ hashtag routes
 

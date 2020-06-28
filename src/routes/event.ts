@@ -1,6 +1,6 @@
 import express from 'express';
-import { insertEventToDb, getGroupEvents, setEventGeolocationInDb, assignEventToGroup, getEventGeolocation, searchEventsUsingRadius, unassignEventFromGroup, assignEventToUser, unassignEventFromUser, getUserEvents, updateEvent, insertHashtagToDb, getHashtagByText, assignHashtagToEvent, unassignHashtagFromEvent, getEventHashtags, searchHashtags, searchEventsByName, searchEventsByHashtags } from '../controller';
-import { isLoggedIn, isGroupUser, isGroupFriend, isEventHost, isEventUser } from '../common/middleware';
+import { insertEventToDb, getGroupEvents, setEventGeolocationInDb, assignEventToGroup, getEventGeolocation, searchEventsUsingRadius, unassignEventFromGroup, assignEventToUser, unassignEventFromUser, getUserEvents, updateEvent, insertHashtagToDb, getHashtagByText, assignHashtagToEvent, unassignHashtagFromEvent, getEventHashtags, searchHashtags, searchEventsByName, searchEventsByHashtags, getEventGroups, getUserEventRelation, getEventUsers } from '../controller';
+import { isLoggedIn, isGroupUser, isGroupFriend, isEventHost, isEventUser, isPrivateEvent } from '../common/middleware';
 import { socketServer } from '..';
 const router = express.Router()
 
@@ -86,6 +86,42 @@ router.delete('/unassign_group/:eventId/:groupId', isLoggedIn, isGroupFriend, as
         next(err);
     }
 });
+
+router.get('/:eventId/groups', isLoggedIn, isPrivateEvent, async (req, res, next) => {
+    try {
+        const { eventId, isPrivate } = req.params
+        const userId = req.body.user.id
+
+        if (isPrivate) {
+            const userRelation = await getUserEventRelation(userId, eventId)
+            if (!userRelation || userRelation.permissionLevel < 1) res.status(403).json({ message: 'Not part of this private event' })
+        }
+
+        const groups = await getEventGroups(eventId)
+
+        res.send(groups)
+    } catch (err) {
+        next(err)
+    }
+})
+
+router.get('/:eventId/users', isLoggedIn, isPrivateEvent, async (req, res, next) => {
+    try {
+        const { eventId, isPrivate } = req.params
+        const userId = req.body.user.id
+
+        if (isPrivate) {
+            const userRelation = await getUserEventRelation(userId, eventId)
+            if (!userRelation || userRelation.permissionLevel < 1) res.status(403).json({ message: 'Not part of this private event' })
+        }
+
+        const users = await getEventUsers(eventId)
+
+        res.send(users)
+    } catch (err) {
+        next(err)
+    }
+})
 
 // get logged in user's events
 router.get('/my_events', isLoggedIn, async (req, res, next) => {

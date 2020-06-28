@@ -142,8 +142,9 @@ router.get('/my_events', isLoggedIn, async (req, res, next) => {
 })
 
 // assign event to user. 
-// Also used to follow public events, private events must use inviterId
-router.post('/assign_self', isLoggedIn, async (req, res, next) => {
+// used to follow public events,
+// for private events you must be in atleast 1 group where that event is assigned, if not use the other route with inviterId
+router.post('/:eventId/assign_self', isLoggedIn, async (req, res, next) => {
     try {
 
         const userId = req.body.user.id
@@ -158,7 +159,7 @@ router.post('/assign_self', isLoggedIn, async (req, res, next) => {
 })
 
 // current user assigns another user to event (like invite). used for private events.
-router.post('/assign_user/:eventId/:userId', isLoggedIn, async (req, res, next) => {
+router.post('/assign_user/:eventId/:userId', isLoggedIn, isEventHost, async (req, res, next) => {
     try {
 
         const inviterId = req.body.user.id

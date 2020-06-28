@@ -1,4 +1,4 @@
-import { getConnection, InsertResult, DeleteResult, UpdateResult } from 'typeorm';
+import { getConnection, InsertResult, DeleteResult, UpdateResult, getRepository } from 'typeorm';
 
 import { Event, Group, User, UserGroup, UserEvent, Hashtag } from '../models'
 import { INewEventDetails, IUserEventGroup, IUserEventInviter, IUserEvent, IUpdateEventDetails, IEventHashtag } from '../types/eventTypes';
@@ -164,13 +164,29 @@ const assignEventToUser = async ({ userId, eventId, inviterId }: IUserEventInvit
   try {
     const event = await getConnection().getRepository(Event).findOne({ id: eventId })
     if (event && event.isPrivate) {
-      if (!inviterId) throw new Error('Inviter has no permission')
+      if (inviterId) {
+        const inviterRelationToEvent = await getConnection()
+          .getRepository(UserEvent)
+          .findOne({ user: { id: inviterId }, event: { id: eventId } })
 
-      const inviterRelationToEvent = await getConnection()
-        .getRepository(UserEvent)
-        .findOne({ user: { id: inviterId }, event: { id: eventId } })
+        if (!inviterRelationToEvent || inviterRelationToEvent.permissionLevel < 1) throw new Error('User is not related or not enough permission')
+      } else {
+        const groupIds: string[] = await getConnection()
+          .getRepository(Event)
+          .createQueryBuilder('event')
+          .leftJoinAndSelect('event.groups', 'groups')
+          .where('event.id = :eventId', { eventId })
+          .getMany()
+          .then(({ groups }: any) => groups.map((group: Group) => group.id))
 
-      if (!inviterRelationToEvent || inviterRelationToEvent.permissionLevel < 1) throw new Error('User is not related or not enough permission')
+        const isInGroup = await getConnection()
+          .getRepository(UserGroup)
+          .createQueryBuilder('ug')
+          .where('ug."userId" = :userId AND ug."groupId" IN :groupIds', { userId, groupIds })
+          .getMany()
+
+        if (!isInGroup || !isInGroup.length) throw new Error('User has no permission for this')
+      }
     }
 
     const relation = await getConnection()

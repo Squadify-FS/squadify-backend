@@ -156,7 +156,7 @@ const unassignEventFromGroup = async ({ userId, eventId, groupId }: IUserEventGr
 // creates user event relation. handles if the event is private and if the user was invited to the event 
 // in that case, handles the permission level for both.
 // TODO maybe add an inviteUserToEvent controller?
-const assignEventToUser = async ({ userId, eventId, inviterId }: IUserEventInviter):
+const assignEventToUser = async ({ userId, eventId }: IUserEventInviter):
   Promise<{
     event: Event | undefined;
     relation: InsertResult;
@@ -164,29 +164,21 @@ const assignEventToUser = async ({ userId, eventId, inviterId }: IUserEventInvit
   try {
     const event = await getConnection().getRepository(Event).findOne({ id: eventId })
     if (event && event.isPrivate) {
-      if (inviterId) {
-        const inviterRelationToEvent = await getConnection()
-          .getRepository(UserEvent)
-          .findOne({ user: { id: inviterId }, event: { id: eventId } })
+      const groupIds: string[] = await getConnection()
+        .getRepository(Event)
+        .createQueryBuilder('event')
+        .leftJoinAndSelect('event.groups', 'groups')
+        .where('event.id = :eventId', { eventId })
+        .getMany()
+        .then(({ groups }: any) => groups.map((group: Group) => group.id))
 
-        if (!inviterRelationToEvent || inviterRelationToEvent.permissionLevel < 1) throw new Error('User is not related or not enough permission')
-      } else {
-        const groupIds: string[] = await getConnection()
-          .getRepository(Event)
-          .createQueryBuilder('event')
-          .leftJoinAndSelect('event.groups', 'groups')
-          .where('event.id = :eventId', { eventId })
-          .getMany()
-          .then(({ groups }: any) => groups.map((group: Group) => group.id))
+      const isInGroup = await getConnection()
+        .getRepository(UserGroup)
+        .createQueryBuilder('ug')
+        .where('ug."userId" = :userId AND ug."groupId" IN :groupIds', { userId, groupIds })
+        .getMany()
 
-        const isInGroup = await getConnection()
-          .getRepository(UserGroup)
-          .createQueryBuilder('ug')
-          .where('ug."userId" = :userId AND ug."groupId" IN :groupIds', { userId, groupIds })
-          .getMany()
-
-        if (!isInGroup || !isInGroup.length) throw new Error('User has no permission for this')
-      }
+      if (!isInGroup || !isInGroup.length) throw new Error('User has no permission for this')
     }
 
     const relation = await getConnection()
@@ -194,10 +186,9 @@ const assignEventToUser = async ({ userId, eventId, inviterId }: IUserEventInvit
       .insert()
       .into(UserEvent)
       .values({
-        inviter: { id: inviterId || undefined },
         user: { id: userId },
         event: { id: eventId },
-        permissionLevel: inviterId ? 1 : 0
+        permissionLevel: event?.isPrivate ? 1 : 0
       })
       .returning('*')
       .execute()

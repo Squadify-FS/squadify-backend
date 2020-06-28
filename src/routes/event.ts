@@ -159,19 +159,19 @@ router.post('/:eventId/assign_self', isLoggedIn, async (req, res, next) => {
 })
 
 // current user assigns another user to event (like invite). used for private events.
-router.post('/assign_user/:eventId/:userId', isLoggedIn, isEventHost, async (req, res, next) => {
-    try {
+// router.post('/assign_user/:eventId/:userId', isLoggedIn, isEventHost, async (req, res, next) => {
+//     try {
 
-        const inviterId = req.body.user.id
-        const { userId, eventId } = req.params
+//         const inviterId = req.body.user.id
+//         const { userId, eventId } = req.params
 
-        const eventToUser = await assignEventToUser({ userId, eventId, inviterId })
-        socketServer().emit('assign_user_to_event', { event: eventToUser?.event, userId, inviterId })
-        res.send(eventToUser)
-    } catch (err) {
-        next(err);
-    }
-})
+//         const eventToUser = await assignEventToUser({ userId, eventId, inviterId })
+//         // socketServer().emit('assign_user_to_event', { event: eventToUser?.event, userId, inviterId })
+//         res.send(eventToUser)
+//     } catch (err) {
+//         next(err);
+//     }
+// })
 
 // remove self from event. also used to unfollow
 router.delete('/unassign_user/:eventId', isLoggedIn, async (req, res, next) => {

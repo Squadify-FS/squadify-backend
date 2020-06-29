@@ -160,7 +160,7 @@ router.post('/:eventId/assign_self', isLoggedIn, async (req, res, next) => {
     try {
 
         const userId = req.body.user.id
-        const { eventId } = req.body
+        const { eventId } = req.params
 
         const eventToUser = await assignEventToUser({ userId, eventId })
         socketServer().emit('assign_self_to_event', { event: eventToUser?.event, userId })

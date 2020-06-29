@@ -213,7 +213,7 @@ const rejectFriendRequest = async (requesterId: string, requestedId: string): Pr
 
 // updates user info. must be sent all the info that will be changed as well as the info that won't be
 // also changes hash to firstname and lastname
-const updateUser = async (userId: string, firstName: string, lastName: string, email: string, password: string, avatarUrl: string): Promise<UpdateResult> => {
+const updateUser = async (userId: string, firstName: string, lastName: string, email: string, avatarUrl: string): Promise<UpdateResult> => {
   try {
 
     const hash = generateHashForName()
@@ -224,7 +224,7 @@ const updateUser = async (userId: string, firstName: string, lastName: string, e
       .getRepository(User)
       .createQueryBuilder()
       .update(User)
-      .set({ firstName: hashedFirstName, lastName: hashedLastName, email, password, avatarUrl })
+      .set({ firstName: hashedFirstName, lastName: hashedLastName, email, avatarUrl })
       .where({ id: userId })
       .returning('*')
       .execute();

@@ -23,9 +23,9 @@ router.get('/findfriend/:email', isLoggedIn, async (req, res, next) => {
 // updates user info
 router.put('/updateProfile', isLoggedIn, async (req, res, next) => {
     const yourId = req.body.user.id
-    const { firstName, lastName, email, password, avatarUrl } = req.body
+    const { firstName, lastName, email, avatarUrl } = req.body
     try {
-        res.send(await updateUser(yourId, firstName, lastName, email, password, avatarUrl));
+        res.send(await updateUser(yourId, firstName, lastName, email, avatarUrl));
     } catch (err) {
         next(err);
     }

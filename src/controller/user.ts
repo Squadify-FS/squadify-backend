@@ -280,9 +280,10 @@ const searchUsersByEmail = async (email: string): Promise<User[] | undefined> =>
     const results: User[] = await getConnection()
       .getRepository(User)
       .createQueryBuilder('user')
-      .select()
-      .where(`LOWER(user.email) LIKE '%${email.toLowerCase()}%'`)
+      .where(`LOWER(user.email) ILIKE '%${email.toLowerCase()}%'`)
       .getMany()
+
+    console.log(results)
 
     return results
   } catch (ex) {
@@ -296,7 +297,6 @@ const searchUsersByHash = async (hash: string): Promise<User[] | undefined> => {
     const results: User[] = await getConnection()
       .getRepository(User)
       .createQueryBuilder('user')
-      .select()
       .where(`user."firstName" LIKE '%${hash}%'`)
       .orWhere(`user."lastName" LIKE '%${hash}%'`)
       .getMany()

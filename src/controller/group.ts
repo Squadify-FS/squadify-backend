@@ -467,7 +467,6 @@ const searchGroupsByHash = async (hash: string): Promise<Group[] | undefined> =>
     const results: Group[] = await getConnection()
       .getRepository(Group)
       .createQueryBuilder('group')
-      .select()
       .where(`group.name LIKE '%#${hash}%'`)
       .getMany()
 

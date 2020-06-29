@@ -297,7 +297,7 @@ const searchUsersByHash = async (hash: string): Promise<User[] | undefined> => {
     const results: User[] = await getConnection()
       .getRepository(User)
       .createQueryBuilder('user')
-      .where(`user."firstName" ILIKE '%${hash}%' OR user."lastName" ILIKE '%${hash}%'`)
+      .where(`"user"."firstName" ILIKE '%${hash}%' OR "user"."lastName" ILIKE '%${hash}%'`)
       .getMany()
 
     return results

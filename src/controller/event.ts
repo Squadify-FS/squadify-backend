@@ -461,8 +461,8 @@ const searchEventsByName = async (searchVal: string): Promise<Event[] | undefine
     const results = await getConnection()
       .getRepository(Event)
       .createQueryBuilder('event')
-      .where(`event."name" ILIKE '%${searchVal}%'`)
-      .andWhere(`event."isPrivate" = false`)
+      .where(`"event"."name" ILIKE '%${searchVal}%'`)
+      .andWhere(`"event"."isPrivate" = false`)
       .getMany()
 
     return results
@@ -479,7 +479,7 @@ const searchEventsByHashtags = async (searchVal: string): Promise<Event[] | unde
       .getRepository(Hashtag)
       .createQueryBuilder('hashtag')
       .leftJoinAndSelect('hashtag.events', 'events')
-      .where(`hashtag."text" ILIKE '%${searchVal}%'`)
+      .where(`"hashtag"."text" ILIKE '%${searchVal}%'`)
       .getMany()
       .then(hashtags => hashtags.reduce((acc: Event[], curr) => {
         curr.events = curr.events.filter(event => !event.isPrivate) //TODO

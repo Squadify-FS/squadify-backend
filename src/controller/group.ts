@@ -65,7 +65,7 @@ const insertNewGroupToDb = async ({ name, isPrivate, creatorId, friendIds, follo
       .createQueryBuilder()
       .insert()
       .into(UserGroup)
-      .values({ user: { id: creatorId }, group: { id: groupId }, permissionLevel: 2, accepted: true })
+      .values({ inviter: { id: creatorId }, user: { id: creatorId }, group: { id: groupId }, permissionLevel: 2, accepted: true })
       .returning('*')
       .execute();
 

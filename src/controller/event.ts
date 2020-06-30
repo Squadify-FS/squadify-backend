@@ -345,6 +345,7 @@ const searchEventsUsingRadius = async (radius: number, latitude: number, longitu
       .createQueryBuilder('event')
       .where(`CAST("event"."latitude" AS decimal) > (:latitude - ${latitudeTolerance}) AND CAST("event"."latitude" AS decimal) < (:latitude + ${latitudeTolerance})`, { latitude })
       .andWhere(`CAST("event"."longitude" AS decimal) > (:longitude - ${longitudeTolerance}) AND CAST("event"."longitude" AS decimal) < (:longitude + ${longitudeTolerance})`, { longitude })
+      .andWhere('"event"."isPrivate" = false')
       .limit(50) //TODO
       .getMany()
 

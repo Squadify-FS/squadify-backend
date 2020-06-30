@@ -330,18 +330,25 @@ const updateEvent = async ({ userId, eventId, name, description, startTime, endT
 // uses geolocation to draw a circle around and fetch all the events in those geolocations and return them
 const searchEventsUsingRadius = async (radius: number, latitude: number, longitude: number): Promise<Event[] | undefined> => {
   try {
-    const radiusInKM = radius * 0.621371
-    const latitudeTolerance = (1 / 110.54) * radiusInKM
-    const longitudeTolerance = (1 / (111.320 * Math.cos(Number(latitude)))) * radiusInKM
+    const latitudeTolerance = (1 / 110.54) * radius
+    const longitudeTolerance = (1 / (111.320)) * radius
+
+    const events: Event[] = await getConnection()
+      .getRepository(Event)
+      .createQueryBuilder('event')
+      .getMany()
+
+    console.log('EVENTS', events)
 
     const results: Event[] = await getConnection()
       .getRepository(Event)
       .createQueryBuilder('event')
-      .where(`event."latitude" BETWEEN (:latitude - ${latitudeTolerance}) AND (:latitude + ${latitudeTolerance})`, { latitude })
-      .andWhere(`event."longitude" BETWEEN (:longitude - ${longitudeTolerance}) AND (:longitude + ${longitudeTolerance})`, { longitude })
+      .where(`CAST("event"."latitude" AS decimal) > (:latitude - ${latitudeTolerance}) AND CAST("event"."latitude" AS decimal) < (:latitude + ${latitudeTolerance})`, { latitude })
+      .andWhere(`CAST("event"."longitude" AS decimal) > (:longitude - ${longitudeTolerance}) AND CAST("event"."longitude" AS decimal) < (:longitude + ${longitudeTolerance})`, { longitude })
       .limit(50) //TODO
       .getMany()
 
+    console.log('RESULTS', results)
     return results
 
   } catch (ex) {

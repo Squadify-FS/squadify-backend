@@ -68,7 +68,7 @@ let _socketServer: any
           Hashtag
         ], // DB models go here, have to be imported on top of this file
         synchronize: true,
-        logging: false,
+        logging: true,
       });
       break
     } catch (err) {

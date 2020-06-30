@@ -287,6 +287,7 @@ router.get('/search_hashtags/:text', isLoggedIn, async (req, res, next) => {
 // const searchEventsUsingRadius = async (radius: number, latitude: number, longitude: number, geolocationId?: string) => {
 router.get('/searcharea/:radius/:latitude/:longitude', isLoggedIn, async (req, res, next) => {
     try {
+        console.log(req.params)
         const { radius, latitude, longitude } = req.params;
         res.send(await searchEventsUsingRadius(Number(radius), Number(latitude), Number(longitude)));
     } catch (err) {

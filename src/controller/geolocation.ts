@@ -60,8 +60,8 @@ const setEventGeolocationInDb = async (userId: string, eventId: string, localize
       console.log('LONGITUDE', longitude)
     } else {
       const location = (await axios.get(`https://maps.googleapis.com/maps/api/place/textsearch/json?query=${localized_address}&key=${process.env.API_KEY}`))?.data;
-      latitude = location.results[0].geometry.location.lat
-      longitude = location.results[0].geometry.location.lng
+      latitude = Number(location.results[0].geometry.location.lat)
+      longitude = Number(location.results[0].geometry.location.lng)
     }
     // get geolocation repo from db
     await getConnection()

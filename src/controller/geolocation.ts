@@ -39,7 +39,7 @@ const getUserGeolocation = async (userId: string) => {
 
     const user = await getConnection().getRepository(User).findOne(userId)
 
-    return { localized_addres: user?.localized_address, latitude: user?.latitude, longitude: user?.longitude }
+    return { localized_address: user?.localized_address, latitude: user?.latitude, longitude: user?.longitude }
 
   } catch (ex) {
     console.log(ex)
@@ -67,12 +67,12 @@ const setEventGeolocationInDb = async (userId: string, eventId: string, localize
     await getConnection()
       .createQueryBuilder()
       .update(Event)
+      .where({ id: eventId })
       .set({ localized_address, latitude, longitude })
       .execute()
 
     const event = await getConnection().getRepository(Event).findOne({ id: eventId })
     if (!event) throw new Error('Cannot find event')
-
 
     return { event }
 
@@ -87,7 +87,7 @@ const getEventGeolocation = async (eventId: string, userId?: any) => {
   try {
     const event = await getConnection().getRepository(Event).findOne(eventId)
 
-    return { localized_addres: event?.localized_address, latitude: event?.latitude, longitude: event?.longitude }
+    return { localized_address: event?.localized_address, latitude: event?.latitude, longitude: event?.longitude }
 
   } catch (ex) {
     console.log(ex)

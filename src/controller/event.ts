@@ -188,17 +188,17 @@ const assignEventToUser = async ({ userId, eventId }: IUserEventInviter):
         .getOne()
         .then(({ groups }: any) => groups.map((group: Group) => group.id))
 
-      let isInGroup
-      await groupIds.forEach(async (groupId: string) => {
+      console.log('GROUPIDS', groupIds)
+
+      await groupIds.forEach(async (groupId: string, idx: number) => {
         const exists = await getConnection()
           .getRepository(UserGroup)
           .createQueryBuilder('ug')
           .where('ug."userId" = :userId AND ug."groupId" = :groupId', { userId, groupId })
           .getMany()
-        if (exists) isInGroup = true
+        if (!exists && idx === groupIds.length - 1) throw new Error('User has no permission for this')
       })
 
-      if (!isInGroup) throw new Error('User has no permission for this')
     }
 
     const relation = await getConnection()

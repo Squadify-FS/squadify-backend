@@ -338,7 +338,6 @@ const searchEventsUsingRadius = async (radius: number, latitude: number, longitu
       .createQueryBuilder('event')
       .getMany()
 
-    console.log('EVENTS', events)
 
     const results: Event[] = await getConnection()
       .getRepository(Event)
@@ -349,7 +348,6 @@ const searchEventsUsingRadius = async (radius: number, latitude: number, longitu
       .limit(50) //TODO
       .getMany()
 
-    console.log('RESULTS', results)
     return results
 
   } catch (ex) {

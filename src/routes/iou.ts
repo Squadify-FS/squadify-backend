@@ -16,7 +16,7 @@ router.post('/create/:groupId', isLoggedIn, isGroupFriend, async (req, res, next
   const { amount, payeeIds, description } = req.body
   try {
     const result = await insertIOUToDb(amount, groupId, payerId, payeeIds, description)
-    socketServer().emit('create_iou', { amount, groupId, payer: result?.payer, payees: result?.payees, description, splitAmount: result?.splitAmount })
+    socketServer().emit('create_iou', { amount, groupId, payer: [result?.payer], payees: result?.payees, description, splitAmount: result?.splitAmount })
     res.send(result)
   } catch (err) {
     next(err)

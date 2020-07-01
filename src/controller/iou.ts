@@ -10,7 +10,7 @@ const insertIOUToDb = async (amount: number, groupId: string, payerId: string, p
   Promise<{
     iou: IOU | undefined;
     splitAmount: string;
-    payer: User | undefined
+    payer: (User | undefined)[];
     payees: (User | undefined)[];
   } | undefined> => {
   try {
@@ -38,7 +38,7 @@ const insertIOUToDb = async (amount: number, groupId: string, payerId: string, p
 
     const payees = [];
 
-    for(let i = 0; i < payeeIds.length; i++) {
+    for (let i = 0; i < payeeIds.length; i++) {
       const payee = await getRepository(User).findOne(payeeIds[i])
       await getConnection()
         .createQueryBuilder()
@@ -50,7 +50,7 @@ const insertIOUToDb = async (amount: number, groupId: string, payerId: string, p
 
     const splitAmount = Math.ceil(amount / payeeIds.length + 1).toFixed(2)
 
-    return { iou, splitAmount, payer, payees }
+    return { iou, splitAmount, payer: [payer], payees }
 
   } catch (ex) {
     console.log(ex)
